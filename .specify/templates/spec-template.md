@@ -1,9 +1,11 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
+**Feature Branch**: `[###-feature-name]`
+**Created**: [DATE]
+**Status**: Draft
 **Input**: User description: "$ARGUMENTS"
+
+> **Protocol**: Before working on this spec, run `./script/pre_flight`. After any code change, run `./script/test`. Before committing, run `./script/post_flight`. See `dna/agent-protocol.md` and `dna/guardrails.json` for full constraints.
 
 ## User Scenarios & Testing *(mandatory)*
 
