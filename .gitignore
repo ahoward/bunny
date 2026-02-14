@@ -9,6 +9,7 @@ bin/
 # env
 .env
 .env.*
+.envrc
 .envrc.local
 !.env.example
 
