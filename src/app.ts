@@ -8,6 +8,7 @@
 
 import type { Params, Result, Handler, Meta, Emit } from "./lib/types.ts"
 import { error, invalid_json } from "./lib/result.ts"
+import { log_call } from "./lib/log.ts"
 
 //
 // handler registry
@@ -43,7 +44,7 @@ export async function call(path: string, params: Params = null, emit?: Emit): Pr
   const handler = handlers.get(path)
 
   if (!handler) {
-    return {
+    const not_found: Result = {
       status:  "error",
       result:  null,
       errors:  {
@@ -54,14 +55,17 @@ export async function call(path: string, params: Params = null, emit?: Emit): Pr
       },
       meta: build_meta()
     }
+    log_call({ path, status: not_found.status, duration_ms: not_found.meta.duration_ms, timestamp: not_found.meta.timestamp })
+    return not_found
   }
 
   try {
     const result = await handler(params, emit)
     result.meta = { ...result.meta, ...build_meta() }
+    log_call({ path, status: result.status, duration_ms: result.meta.duration_ms, timestamp: result.meta.timestamp })
     return result
   } catch (err) {
-    return {
+    const caught: Result = {
       status:  "error",
       result:  null,
       errors:  {
@@ -72,6 +76,8 @@ export async function call(path: string, params: Params = null, emit?: Emit): Pr
       },
       meta: build_meta()
     }
+    log_call({ path, status: caught.status, duration_ms: caught.meta.duration_ms, timestamp: caught.meta.timestamp })
+    return caught
   }
 }
 

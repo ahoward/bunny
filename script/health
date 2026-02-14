@@ -1,0 +1,7 @@
+#!/usr/bin/env bun
+import app from "../src/app.ts"
+import "../src/index.ts"
+
+const result = await app.call("/health")
+process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+process.exit(result.status === "success" ? 0 : 1)

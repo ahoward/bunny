@@ -1,0 +1,118 @@
+#!/usr/bin/env bun
+//
+// post_flight - checks after completing work
+//
+// returns Result<boolean> to stdout as JSON.
+// exit 0 if all checks pass, exit 1 otherwise.
+//
+
+import type { Result, Meta } from "../src/lib/types.ts"
+import { success, error } from "../src/lib/result.ts"
+
+interface Check {
+  name:    string
+  ok:      boolean
+  message: string | null
+}
+
+async function run_checks(): Promise<Check[]> {
+  const checks: Check[] = []
+
+  // 1. type check passes
+  const tsc = Bun.spawn(["bunx", "tsc", "--noEmit"], { stdout: "pipe", stderr: "pipe" })
+  const tsc_exit = await tsc.exited
+  checks.push({
+    name:    "type_check",
+    ok:      tsc_exit === 0,
+    message: tsc_exit === 0 ? null : "tsc --noEmit failed"
+  })
+
+  // 2. tests pass
+  const test_proc = Bun.spawn(["bun", "test"], {
+    stdout: "pipe",
+    stderr: "pipe",
+    env: { ...process.env, BUNNY_LOG: "0" }
+  })
+  const test_exit = await test_proc.exited
+  checks.push({
+    name:    "tests_pass",
+    ok:      test_exit === 0,
+    message: test_exit === 0 ? null : "bun test exited non-zero"
+  })
+
+  // 3. no untracked source files
+  const untracked_proc = Bun.spawn(
+    ["git", "ls-files", "--others", "--exclude-standard", "--", "*.ts", "*.json", "*.md"],
+    { stdout: "pipe" }
+  )
+  const untracked_text = await new Response(untracked_proc.stdout).text()
+  const untracked = untracked_text.trim()
+  const has_untracked = untracked.length > 0
+  checks.push({
+    name:    "no_untracked_sources",
+    ok:      !has_untracked,
+    message: has_untracked ? `untracked: ${untracked.split("\n").join(", ")}` : null
+  })
+
+  // 4. no secrets in staged diff
+  const diff_proc = Bun.spawn(["git", "diff", "--cached"], { stdout: "pipe" })
+  const diff_text = await new Response(diff_proc.stdout).text()
+  const secret_patterns = [
+    /PRIVATE.KEY/i,
+    /sk-[a-zA-Z0-9]{20,}/,
+    /password\s*[:=]\s*["'][^"']+/i,
+    /secret\s*[:=]\s*["'][^"']+/i,
+  ]
+  const found_secrets = secret_patterns.some(p => p.test(diff_text))
+  checks.push({
+    name:    "no_secrets_in_diff",
+    ok:      !found_secrets,
+    message: found_secrets ? "potential secrets detected in staged diff" : null
+  })
+
+  // 5. blast radius within guardrails
+  const files_proc = Bun.spawn(["git", "diff", "--cached", "--name-only"], { stdout: "pipe" })
+  const files_text = await new Response(files_proc.stdout).text()
+  const changed_files = files_text.trim().split("\n").filter(Boolean)
+  let max_files = 20
+  try {
+    const guardrails = await Bun.file("dna/guardrails.json").json() as { blast_radius?: { max_files_per_pr?: number } }
+    max_files = guardrails.blast_radius?.max_files_per_pr ?? 20
+  } catch { /* guardrails not yet created */ }
+  const within_radius = changed_files.length <= max_files
+  checks.push({
+    name:    "blast_radius",
+    ok:      within_radius,
+    message: within_radius ? null : `${changed_files.length} files changed, max is ${max_files}`
+  })
+
+  return checks
+}
+
+const start = performance.now()
+const checks = await run_checks()
+const all_ok = checks.every(c => c.ok)
+
+const meta: Meta = {
+  path:        "/script/post_flight",
+  timestamp:   new Date().toISOString(),
+  duration_ms: Math.round((performance.now() - start) * 1000) / 1000
+}
+
+const result: Result<{ ok: boolean; checks: Check[] }> = all_ok
+  ? success({ ok: true, checks }, meta)
+  : {
+      ...error(
+        Object.fromEntries(
+          checks.filter(c => !c.ok).map(c => [
+            c.name,
+            [{ code: "post_flight_failed", message: c.message ?? "check failed" }]
+          ])
+        ),
+        meta
+      ),
+      result: { ok: false, checks }
+    } as Result<{ ok: boolean; checks: Check[] }>
+
+process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+process.exit(all_ok ? 0 : 1)

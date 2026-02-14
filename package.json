@@ -12,5 +12,8 @@
     "@types/bun": "latest",
     "typescript": "^5.0.0"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "engines": {
+    "bun": ">=1.1.0"
+  }
 }

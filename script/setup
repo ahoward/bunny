@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "installing dependencies..."
+bun install
+
+echo "configuring git hooks..."
+git config core.hooksPath .githooks
+
+echo "done."
