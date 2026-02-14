@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# build
+dist/
+bin/
+*.tsbuildinfo
+
+# env
+.env
+.env.*
+.envrc.local
+!.env.example
+
+# claude local settings
+.claude/settings.local.json*
+
+# editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# os
+.DS_Store
+Thumbs.db
+
+# test artifacts
+tests/.seeds/
+tmp/
+coverage/
