@@ -2,4 +2,7 @@
 // index.ts - entry point
 //
 
-console.log("bunny")
+import app from "./app.ts"
+import { handler as ping } from "./handlers/ping.ts"
+
+app.register("/ping", ping)
