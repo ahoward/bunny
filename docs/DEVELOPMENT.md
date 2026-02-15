@@ -12,33 +12,33 @@ How this repo works, end to end.
 
 ```bash
 git clone <repo>
-./script/setup
+./dev/setup
 ```
 
 That's it. Installs dependencies and configures git hooks.
 
 ## Scripts
 
-Everything is in `./script/`. No `npm run`, no `bun run`, no indirection.
+Everything is in `./dev/`. No `npm run`, no `bun run`, no indirection.
 
 ```bash
-./script/setup        # install deps, configure git hooks
-./script/test         # run tests
-./script/health       # check system health (JSON to stdout)
-./script/pre_flight   # validate before starting work
-./script/post_flight  # validate before committing
+./dev/setup        # install deps, configure git hooks
+./dev/test         # run tests
+./dev/health       # check system health (JSON to stdout)
+./dev/pre_flight   # validate before starting work
+./dev/post_flight  # validate before committing
 ```
 
 All scripts are executable with shebangs. Bash or Bun, depending on the task. Exit 0 = good, exit 1 = bad.
 
 ## Git Hooks
 
-Configured automatically by `./script/setup`. Lives in `.githooks/`.
+Configured automatically by `./dev/setup`. Lives in `.githooks/`.
 
 | Hook | Runs | Effect |
 |------|------|--------|
-| `pre-commit` | `./script/post_flight` | Blocks commit if types fail, tests fail, untracked sources exist, secrets in diff, or blast radius exceeded |
-| `pre-push` | `./script/test` | Blocks push if tests fail |
+| `pre-commit` | `./dev/post_flight` | Blocks commit if types fail, tests fail, untracked sources exist, secrets in diff, or blast radius exceeded |
+| `pre-push` | `./dev/test` | Blocks push if tests fail |
 
 No husky, no lefthook, no npm lifecycle scripts. Just `git config core.hooksPath .githooks`.
 
@@ -56,7 +56,7 @@ dna/              # Project knowledge
   technical/      #   development-loop.md
   guardrails.json #   agent constraints (machine-readable)
   decisions.md    #   append-only decision log
-script/           # Executable scripts (shebang, chmod +x)
+dev/              # Dev tooling (shebang, chmod +x)
 .githooks/        # Git hooks (pre-commit, pre-push)
 .specify/         # Spec-kit templates, scripts, and memory
 docs/             # You are here
@@ -93,7 +93,7 @@ Tests are locked after review. No changing them without human approval.
 All work is driven by `dna/product/ROADMAP.md`.
 
 ```
-./script/pre_flight       confirm environment is ready
+./dev/pre_flight       confirm environment is ready
 ROADMAP                   find the next item
   -> /speckit.specify     generate specs/{feature}/spec.md
   -> open PR              human reviews the spec
@@ -101,8 +101,8 @@ ROADMAP                   find the next item
   -> /speckit.tasks       generate task list
   -> Gemini review        antagonist reviews test cases
   -> /speckit.implement   execute tasks
-  -> ./script/test        after every change
-  -> ./script/post_flight before every commit (also enforced by git hook)
+  -> ./dev/test        after every change
+  -> ./dev/post_flight before every commit (also enforced by git hook)
   -> stuck?               human checkpoint
   -> done                 update ROADMAP.md, append to dna/decisions.md
 ```

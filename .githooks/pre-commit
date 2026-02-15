@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-BUNNY_LOG=0 exec ./script/post_flight
+BUNNY_LOG=0 exec ./dev/post_flight

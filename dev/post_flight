@@ -94,7 +94,7 @@ const checks = await run_checks()
 const all_ok = checks.every(c => c.ok)
 
 const meta: Meta = {
-  path:        "/script/post_flight",
+  path:        "/dev/post_flight",
   timestamp:   new Date().toISOString(),
   duration_ms: Math.round((performance.now() - start) * 1000) / 1000
 }

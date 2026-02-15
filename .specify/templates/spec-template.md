@@ -5,7 +5,7 @@
 **Status**: Draft
 **Input**: User description: "$ARGUMENTS"
 
-> **Protocol**: Before working on this spec, run `./script/pre_flight`. After any code change, run `./script/test`. Before committing, run `./script/post_flight`. See `dna/agent-protocol.md` and `dna/guardrails.json` for full constraints.
+> **Protocol**: Before working on this spec, run `./dev/pre_flight`. After any code change, run `./dev/test`. Before committing, run `./dev/post_flight`. See `dna/agent-protocol.md` and `dna/guardrails.json` for full constraints.
 
 ## User Scenarios & Testing *(mandatory)*
 

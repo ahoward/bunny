@@ -17,11 +17,11 @@ Bunny is a Bun + TypeScript project template with spec-kit and DNA systems.
 
 | When | Run | Why |
 |------|-----|-----|
-| Before starting work | `./script/pre_flight` | Confirms environment is ready |
-| After any code change | `./script/test` | Catches regressions immediately |
-| Before committing | `./script/post_flight` | Enforced by git hook — commit will fail if broken |
-| To check system health | `./script/health` | Exercises app infrastructure beyond ping |
-| After cloning | `./script/setup` | Installs deps, configures git hooks |
+| Before starting work | `./dev/pre_flight` | Confirms environment is ready |
+| After any code change | `./dev/test` | Catches regressions immediately |
+| Before committing | `./dev/post_flight` | Enforced by git hook — commit will fail if broken |
+| To check system health | `./dev/health` | Exercises app infrastructure beyond ping |
+| After cloning | `./dev/setup` | Installs deps, configures git hooks |
 
 All scripts return structured output (Result envelope or exit codes). Parse them, don't ignore them.
 
@@ -55,11 +55,11 @@ Append a one-liner to `dna/decisions.md` recording what you did and why.
 ## Commands
 
 ```bash
-./script/setup        # Install deps, configure git hooks
-./script/test         # Run tests
-./script/health       # Check system health
-./script/pre_flight   # Pre-work validation
-./script/post_flight  # Pre-commit validation
+./dev/setup        # Install deps, configure git hooks
+./dev/test         # Run tests
+./dev/health       # Check system health
+./dev/pre_flight   # Pre-work validation
+./dev/post_flight  # Pre-commit validation
 ```
 
 ## Directory Structure
@@ -74,14 +74,14 @@ specs/            # feature specs (from /speckit.specify)
 dna/              # project knowledge
   guardrails.json # agent constraints (machine-readable)
   decisions.md    # append-only decision log
-script/           # executable scripts (shebang, chmod +x)
+dev/              # dev tooling (shebang, chmod +x)
 .githooks/        # git hooks (pre-commit, pre-push)
 .specify/         # spec-kit templates and memory
 ```
 
 ## Workflow: Picking Up Work
 
-1. Run `./script/pre_flight` — confirm environment is ready
+1. Run `./dev/pre_flight` — confirm environment is ready
 2. Read `dna/product/ROADMAP.md` — find "Next" item
 3. Read `dna/guardrails.json` — know the constraints
 4. Run `/speckit.specify` — creates `specs/{feature}/spec.md`
@@ -89,8 +89,8 @@ script/           # executable scripts (shebang, chmod +x)
 6. After approval: `/speckit.plan` → `/speckit.tasks`
 7. Review tests with Gemini (antagonist)
 8. Implement via `/speckit.implement`
-9. Run `./script/test` after every change
-10. Run `./script/post_flight` before committing
+9. Run `./dev/test` after every change
+10. Run `./dev/post_flight` before committing
 11. If stuck (tests won't pass) → Human checkpoint
 12. On completion → Update ROADMAP.md, append to `dna/decisions.md`
 
@@ -101,6 +101,6 @@ script/           # executable scripts (shebang, chmod +x)
 - Implement without tests
 - Skip Gemini review
 - Change tests after review without human approval
-- Commit without running `./script/post_flight`
+- Commit without running `./dev/post_flight`
 - Ignore `dna/guardrails.json` constraints
 - Modify protected files without human approval
