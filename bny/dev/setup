@@ -1,0 +1,8 @@
+#!/usr/bin/env bun
+// bny dev setup — delegates to ./dev/setup
+import { resolve, dirname } from "node:path"
+const root = resolve(dirname(new URL(import.meta.url).pathname), "../..")
+const proc = Bun.spawn([resolve(root, "dev/setup"), ...process.argv.slice(2)], {
+  stdout: "inherit", stderr: "inherit", stdin: "inherit",
+})
+process.exitCode = await proc.exited
