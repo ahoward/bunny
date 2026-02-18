@@ -1,10 +1,16 @@
-# Bunny
+# bny
 
-A dark factory. AI agents build software autonomously — Claude implements, Gemini hardens, humans intervene only when stuck.
+<p align="center">
+  <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHFpazAyYzYzbXZsbGo1ajh0eGM1em5icjh3aDhhaGtya2E3b3VkbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3ohzdTDCUyuKnFQQrm/giphy.gif" alt="frank" width="480"/>
+  <br/>
+  <em>"why are you wearing that stupid man suit?"</em>
+</p>
 
-## TL;DR
+a dark factory. ai agents build software autonomously — claude implements, gemini hardens, humans intervene only when stuck.
 
-Bunny is a project template where AI does the work. You describe a feature, two AIs collaborate to build it (one codes, one attacks), and the system retries until tests pass or it gives up and asks a human.
+## tl;dr
+
+bny is a project template where ai does the work. you describe a feature, two ais collaborate to build it (one codes, one attacks), and the system retries until tests pass or it gives up and asks a human.
 
 ```bash
 git clone <repo> && cd bunny && ./dev/setup
@@ -16,15 +22,15 @@ bny review                                # gemini finds blind spots in the spec
 bny --ralph --max-iter 10 implement       # claude implements, retrying until green
 ```
 
-That's it. The factory runs. You review the PR.
+that's it. the factory runs. you review the pr.
 
-## What This Is
+## what this is
 
-- **Not a framework.** A template you clone and build on.
-- **Not a chatbot wrapper.** A development loop with structural guardrails.
-- **Not optional tooling.** The AI agents follow a protocol enforced by git hooks, pre/post-flight checks, and blast radius limits.
+- **not a framework.** a template you clone and build on.
+- **not a chatbot wrapper.** a development loop with structural guardrails.
+- **not optional tooling.** the ai agents follow a protocol enforced by git hooks, pre/post-flight checks, and blast radius limits.
 
-## How It Works
+## how it works
 
 ```
 human writes spec → gemini reviews (antagonist) → claude implements (autonomous)
@@ -34,23 +40,23 @@ human writes spec → gemini reviews (antagonist) → claude implements (autonom
                                               stuck?      → human checkpoint
 ```
 
-Two AIs, one human:
+two ais, one human:
 
-1. **Claude** designs tests and implements code
-2. **Gemini** reviews for blind spots, edge cases, security holes
-3. **Human** writes specs, reviews PRs, intervenes when stuck
+1. **claude** designs tests and implements code
+2. **gemini** reviews for blind spots, edge cases, security holes
+3. **human** writes specs, reviews prs, intervenes when stuck
 
-Tests are locked after Gemini review. No changing them without human approval.
+tests are locked after gemini review. no changing them without human approval.
 
-## Stack
+## stack
 
-- **Runtime:** [Bun](https://bun.sh) — fast TypeScript runtime
-- **Language:** TypeScript (strict mode)
-- **CLI:** `bin/bny` — git-style subcommand dispatcher
-- **Process management:** assassin (cleanup) + ralph (retry loops)
-- **No frameworks.** No ORMs. No build tools. Pure Unix.
+- **runtime:** [bun](https://bun.sh) — fast typescript runtime
+- **language:** typescript (strict mode)
+- **cli:** `bin/bny` — git-style subcommand dispatcher
+- **process management:** assassin (cleanup) + ralph (retry loops)
+- **no frameworks.** no orms. no build tools. pure unix.
 
-## Quick Start
+## quick start
 
 ```bash
 git clone <repo>
@@ -61,14 +67,14 @@ export PATH="./bin:$PATH"
 bny status           # see current state
 ```
 
-## Commands
+## commands
 
-### Dev (plumbing)
+### dev (plumbing)
 
 ```bash
 ./dev/setup          # bun install + git hooks
 ./dev/test           # run tests
-./dev/health         # system health check (JSON)
+./dev/health         # system health check (json)
 ./dev/pre_flight     # validate before starting work
 ./dev/post_flight    # validate before committing
 ```
@@ -86,14 +92,14 @@ bny dev test         # wraps ./dev/test
 bny dev pre-flight   # wraps ./dev/pre_flight
 ```
 
-### Ralph (retry loop)
+### ralph (retry loop)
 
 ```bash
 bny --ralph --max-iter 10 implement    # retry until green or max iterations
 bny --ralph --max-iter 5 review        # retry review too
 ```
 
-## Directory Layout
+## directory layout
 
 ```
 bin/bny           entry point — git-style dispatcher
@@ -119,21 +125,21 @@ dna/              project knowledge — context only, no operational deps
 .githooks/        pre-commit (post_flight), pre-push (test)
 ```
 
-## Coding Conventions
+## coding conventions
 
-| Rule | Convention |
+| rule | convention |
 |------|-----------|
-| Data | POD only — no classes, interfaces and type aliases |
-| Naming | `snake_case` vars/functions, `PascalCase` types, `SCREAMING_SNAKE` constants |
-| Absence | `null` over `undefined` |
-| Errors | Guard early, return errors at function top |
-| Simplicity | Three similar lines > one premature abstraction |
-| I/O | stdin/stdout/stderr, exit codes, JSON lines |
-| Terminology | `params` for input, `result` for output |
+| data | pod only — no classes, interfaces and type aliases |
+| naming | `snake_case` vars/functions, `PascalCase` types, `SCREAMING_SNAKE` constants |
+| absence | `null` over `undefined` |
+| errors | guard early, return errors at function top |
+| simplicity | three similar lines > one premature abstraction |
+| i/o | stdin/stdout/stderr, exit codes, json lines |
+| terminology | `params` for input, `result` for output |
 
-## More
+## more
 
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — full development process
-- [bny/agent-protocol.md](bny/agent-protocol.md) — the protocol AI agents must follow
+- [bny/agent-protocol.md](bny/agent-protocol.md) — the protocol ai agents must follow
 - [bny/guardrails.json](bny/guardrails.json) — machine-readable constraints
 - [bny/roadmap.md](bny/roadmap.md) — what's next
