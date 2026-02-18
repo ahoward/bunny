@@ -41,7 +41,7 @@ if (existsSync(paths.tasks)) {
 }
 
 // copy template
-const template = resolve(root, ".specify/templates/tasks-template.md")
+const template = resolve(root, "bny/templates/tasks-template.md")
 if (existsSync(template)) {
   copyFileSync(template, paths.tasks)
 } else {

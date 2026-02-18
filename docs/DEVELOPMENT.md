@@ -42,6 +42,7 @@ bny tasks          # generate task list
 bny implement      # drive AI implementation loop
 bny review         # antagonist review
 bny status         # show current state
+bny ai init        # bootstrap AI tool awareness (symlinks)
 bny dev test       # wraps ./dev/test
 bny dev pre-flight # wraps ./dev/pre_flight
 ```
@@ -75,16 +76,19 @@ bin/              # Executables
   bny             # dark factory CLI entry point
 bny/              # Dark factory CLI — operational state + tooling
   lib/            # shared modules (assassin, ralph, feature, prompt)
+  ai/             # ai subcommands (init)
+  dev/            # wrappers for ./dev/* scripts
+  templates/      # spec, plan, tasks templates
   specify         # create feature workspace
   plan            # create implementation plan
   tasks           # generate task list
   implement       # claude autonomous implementation
   review          # gemini antagonist review
   status          # show feature state
-  dev/            # wrappers for ./dev/* scripts
   roadmap.md      # what to work on next
   guardrails.json # agent constraints
   decisions.md    # append-only decision log
+  constitution.md # project principles
 dna/              # Project knowledge — context only
   technical/      # development loop, conventions
   research/       # papers, analysis
@@ -140,7 +144,7 @@ roadmap                   find the next item
 
 ## Principles
 
-The full set of project principles lives in `dna/technical/development-loop.md`. The short version:
+The full set of project principles lives in `bny/constitution.md`. The short version:
 
 1. **POD only** — plain old data in, plain old data out
 2. **Antagonistic testing** — Claude designs, Gemini hardens, then implement

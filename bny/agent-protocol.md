@@ -69,16 +69,25 @@ src/              # source code
   lib/            # shared types, result helpers, logging
 tests/            # tests
   fixtures/       # deterministic test inputs (POD)
-specs/            # feature specs
+specs/            # feature specs (one dir per feature)
 bin/              # executables (bny entry point)
 bny/              # dark factory CLI — operational state + tooling
-  lib/            # shared modules (assassin, ralph)
+  lib/            # shared modules (assassin, ralph, feature, prompt)
+  ai/             # ai subcommands (init)
+  dev/            # wrappers for ./dev/* scripts
+  templates/      # spec, plan, tasks templates
+  specify         # create feature branch + spec
+  plan            # create implementation plan
+  tasks           # generate task list
+  implement       # claude autonomous implementation
+  review          # gemini antagonist review
+  status          # show feature state
   roadmap.md      # what to work on next
   guardrails.json # agent constraints
   decisions.md    # append-only decision log
+  constitution.md # project principles
 dna/              # project knowledge — context only, no operational deps
   technical/      # development loop, conventions
-  research/       # papers, analysis
 dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 .githooks/        # git hooks (pre-commit, pre-push)
 ```

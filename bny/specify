@@ -68,7 +68,7 @@ if (git.exitCode !== 0) {
 const paths = feature_paths(root, branch_name)
 mkdirSync(paths.dir, { recursive: true })
 
-const template = resolve(root, ".specify/templates/spec-template.md")
+const template = resolve(root, "bny/templates/spec-template.md")
 if (existsSync(template)) {
   copyFileSync(template, paths.spec)
 } else {

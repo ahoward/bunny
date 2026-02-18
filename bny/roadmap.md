@@ -14,9 +14,7 @@ roadmap → bny specify (create spec.md)
 
 ## Next
 
-- [ ] bny ai init — bootstrap any AI tool's awareness of bny via symlinks
 - [ ] bny ps — show running bny processes
-- [ ] absorb .specify/ into bny/ — eliminate spec-kit dependency
 - [ ] slash commands — .claude/commands/bny.*.md wrappers
 
 ## Completed
@@ -28,3 +26,5 @@ roadmap → bny specify (create spec.md)
 - [x] bny specify/plan/tasks/status — feature lifecycle
 - [x] bny implement — claude -p autonomous implementation
 - [x] bny review — gemini antagonist + --prompt-only
+- [x] bny ai init — bootstrap AI tool awareness via symlinks
+- [x] absorb .specify/ into bny/ — templates, constitution, scripts eliminated

@@ -88,6 +88,7 @@ bny tasks            # generate task list
 bny review           # gemini antagonist review
 bny implement        # claude autonomous implementation
 bny status           # show feature state
+bny ai init          # bootstrap ai tool awareness (symlinks)
 bny dev test         # wraps ./dev/test
 bny dev pre-flight   # wraps ./dev/pre_flight
 ```
@@ -105,16 +106,19 @@ bny --ralph --max-iter 5 review        # retry review too
 bin/bny           entry point — git-style dispatcher
 bny/              operational state + tooling
   lib/            assassin, ralph, feature, prompt
+  ai/             ai subcommands (init)
+  dev/            wrappers for ./dev/* scripts
+  templates/      spec, plan, tasks templates
   specify         create feature workspace
   plan            create implementation plan
   tasks           generate task list
   implement       claude autonomous implementation
   review          gemini antagonist review
   status          show feature state
-  dev/            wrappers for ./dev/* scripts
   roadmap.md      what to work on next
   guardrails.json agent constraints (blast radius, protected files)
   decisions.md    append-only decision log
+  constitution.md project principles
 dev/              per-project customizable plumbing (shebangs, chmod +x)
 src/              application source
   handlers/       app.call handlers (one file per endpoint)
