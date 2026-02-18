@@ -1,0 +1,233 @@
+#!/usr/bin/env bun
+//
+// bny - the bunny dark factory CLI
+//
+// "why are you wearing that stupid man suit?"
+//
+// git-style subcommand dispatcher:
+//   bny <cmd> [args...]        → ./bny/<cmd> [args...]
+//   bny <cmd> <sub> [args...]  → ./bny/<cmd>/<sub> [args...]
+//   bny --ralph <opts> <cmd>   → ralph-loop wrapper around <cmd>
+//
+
+import { existsSync } from "node:fs"
+import { resolve, dirname } from "node:path"
+import * as assassin from "../bny/lib/assassin.ts"
+import { ralph } from "../bny/lib/ralph.ts"
+
+// -- find project root --
+
+function find_root(): string {
+  let dir = dirname(new URL(import.meta.url).pathname)
+  // bin/bny → project root is parent of bin/
+  dir = resolve(dir, "..")
+  if (existsSync(resolve(dir, "bny"))) return dir
+
+  // fallback: walk up from cwd
+  dir = process.cwd()
+  while (dir !== "/") {
+    if (existsSync(resolve(dir, "bny"))) return dir
+    dir = dirname(dir)
+  }
+  process.stderr.write("bny: cannot find project root (no bny/ directory found)\n")
+  process.exitCode = 1
+  return process.cwd()
+}
+
+const ROOT = find_root()
+const BNY_DIR = resolve(ROOT, "bny")
+
+// -- parse args --
+
+interface ParsedArgs {
+  ralph:       boolean
+  max_iter:    number
+  max_budget:  number
+  timeout_ms:  number
+  command:     string | null
+  subcommand:  string | null
+  rest:        string[]
+}
+
+function parse_args(argv: string[]): ParsedArgs {
+  const result: ParsedArgs = {
+    ralph:      false,
+    max_iter:   0,
+    max_budget: 0,
+    timeout_ms: 0,
+    command:    null,
+    subcommand: null,
+    rest:       [],
+  }
+
+  let i = 0
+
+  while (i < argv.length) {
+    const arg = argv[i]
+
+    if (arg === "--ralph") {
+      result.ralph = true
+      i++
+      continue
+    }
+
+    if (arg === "--max-iter" && i + 1 < argv.length) {
+      result.max_iter = parseInt(argv[i + 1], 10)
+      i += 2
+      continue
+    }
+
+    if (arg === "--max-budget" && i + 1 < argv.length) {
+      result.max_budget = parseFloat(argv[i + 1])
+      i += 2
+      continue
+    }
+
+    if (arg === "--timeout" && i + 1 < argv.length) {
+      result.timeout_ms = parseInt(argv[i + 1], 10) * 1000
+      i += 2
+      continue
+    }
+
+    if (arg.startsWith("-")) {
+      result.rest.push(arg)
+      i++
+      continue
+    }
+
+    // first positional = command
+    if (result.command === null) {
+      result.command = arg
+      i++
+
+      // check for nested subcommand: bny ai init → ./bny/ai/init
+      if (i < argv.length && !argv[i].startsWith("-")) {
+        const nested = resolve(BNY_DIR, result.command, argv[i])
+        if (existsSync(nested)) {
+          result.subcommand = argv[i]
+          i++
+        }
+      }
+      continue
+    }
+
+    result.rest.push(arg)
+    i++
+  }
+
+  return result
+}
+
+// -- resolve subcommand path --
+
+function resolve_command(cmd: string, subcmd: string | null): string | null {
+  if (subcmd) {
+    const nested = resolve(BNY_DIR, cmd, subcmd)
+    if (existsSync(nested)) return nested
+  }
+
+  const direct = resolve(BNY_DIR, cmd)
+  if (existsSync(direct)) return direct
+
+  return null
+}
+
+// -- usage --
+
+function usage(): void {
+  process.stderr.write(`bny - the bunny dark factory CLI
+
+usage:
+  bny <command> [args...]
+  bny --ralph [--max-iter N] [--max-budget USD] [--timeout S] <command> [args...]
+
+commands:
+  dev/pre-flight    run pre-flight checks
+  dev/post-flight   run post-flight checks
+  dev/test          run tests
+  dev/health        check system health
+  dev/setup         install deps, configure hooks
+
+  specify           create feature branch + spec
+  plan              create implementation plan
+  tasks             generate task list
+  implement         drive AI implementation loop
+  review            antagonist review
+
+  status            show current state
+  ps                show running bny processes
+  ai init           bootstrap AI tool integration
+
+options:
+  --ralph           wrap command in ralph retry loop
+  --max-iter N      max iterations for ralph loop (default: unlimited)
+  --max-budget USD  max budget for ralph loop (default: unlimited)
+  --timeout S       per-iteration timeout in seconds (default: unlimited)
+`)
+}
+
+// -- main --
+
+async function main(): Promise<void> {
+  // install assassin — pidfile at .bny/bny.pid, signal handlers
+  assassin.install(resolve(ROOT, ".bny"))
+
+  const args = parse_args(process.argv.slice(2))
+
+  if (!args.command) {
+    usage()
+    process.exitCode = 1
+    return
+  }
+
+  const cmd_path = resolve_command(args.command, args.subcommand)
+
+  if (!cmd_path) {
+    const full_cmd = args.subcommand ? `${args.command} ${args.subcommand}` : args.command
+    process.stderr.write(`bny: unknown command '${full_cmd}'\n`)
+    process.stderr.write(`bny: looked for ${resolve(BNY_DIR, args.command)}\n`)
+    usage()
+    process.exitCode = 1
+    return
+  }
+
+  const full_command = [cmd_path, ...args.rest]
+
+  // ralph mode: wrap in retry loop
+  if (args.ralph) {
+    const result = await ralph({
+      command:    full_command,
+      max_iter:   args.max_iter,
+      max_budget: args.max_budget,
+      timeout_ms: args.timeout_ms,
+      session_id: null,
+    })
+
+    process.stderr.write(JSON.stringify({
+      type:       "ralph_complete",
+      ...result,
+      timestamp:  new Date().toISOString(),
+    }) + "\n")
+
+    process.exitCode = result.status === "complete" ? 0 : 1
+    return
+  }
+
+  // normal mode: exec the subcommand
+  const proc = Bun.spawn(full_command, {
+    stdout: "inherit",
+    stderr: "inherit",
+    stdin:  "inherit",
+    detached: true,
+  })
+
+  assassin.track(proc.pid, proc.pid)
+
+  const exit_code = await proc.exited
+
+  assassin.untrack(proc.pid)
+
+  process.exitCode = exit_code
+}
+
+main()

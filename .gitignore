@@ -4,7 +4,11 @@ node_modules/
 # build
 dist/
 bin/
+!bin/bny
 *.tsbuildinfo
+
+# bny runtime state
+.bny/
 
 # env
 .env

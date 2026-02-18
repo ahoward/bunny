@@ -2,9 +2,9 @@
   "version": "1.0.0",
 
   "protected_files": [
-    ".specify/memory/constitution.md",
-    "dna/guardrails.json",
-    "dna/decisions.md"
+    "bny/guardrails.json",
+    "bny/decisions.md",
+    "dna/technical/development-loop.md"
   ],
 
   "protected_patterns": [

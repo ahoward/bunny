@@ -52,7 +52,7 @@ async function run_checks(): Promise<Check[]> {
 
   // 4. roadmap item exists
   try {
-    const roadmap = await Bun.file("dna/product/ROADMAP.md").text()
+    const roadmap = await Bun.file("bny/roadmap.md").text()
     const has_next = roadmap.includes("- [ ]") && !roadmap.includes("*your-first-feature*")
     checks.push({
       name:    "roadmap_item",
@@ -63,7 +63,7 @@ async function run_checks(): Promise<Check[]> {
     checks.push({
       name:    "roadmap_item",
       ok:      false,
-      message: "dna/product/ROADMAP.md not found"
+      message: "bny/roadmap.md not found"
     })
   }
 

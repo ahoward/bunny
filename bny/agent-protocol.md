@@ -2,14 +2,13 @@
 
 ## What This Is
 
-Bunny is a Bun + TypeScript project template with spec-kit and DNA systems.
+Bunny is a Bun + TypeScript project template with the bny dark factory CLI.
 
 ## Key Files
 
-- `./dna/product/ROADMAP.md` - **START HERE** — Driving task list for all development
-- `./.specify/memory/constitution.md` - Project principles
+- `./bny/roadmap.md` - **START HERE** — Driving task list for all development
+- `./bny/guardrails.json` - Machine-readable agent constraints
 - `./dna/technical/development-loop.md` - Antagonistic Testing process
-- `./dna/guardrails.json` - Machine-readable agent constraints
 
 ## Protocol
 
@@ -27,7 +26,7 @@ All scripts return structured output (Result envelope or exit codes). Parse them
 
 ### Guardrails
 
-Read `dna/guardrails.json` before starting work. It defines:
+Read `bny/guardrails.json` before starting work. It defines:
 - **protected_files** — never modify without human approval
 - **blast_radius** — max files/lines per PR, dependency rules
 - **forbidden_actions** — never do these autonomously
@@ -35,11 +34,11 @@ Read `dna/guardrails.json` before starting work. It defines:
 
 ### After completing work
 
-Append a one-liner to `dna/decisions.md` recording what you did and why.
+Append a one-liner to `bny/decisions.md` recording what you did and why.
 
 ## Development Process: Antagonistic Testing
 
-**See:** `./dna/technical/development-loop.md` and `.specify/memory/constitution.md`
+**See:** `./dna/technical/development-loop.md`
 
 1. Design interface → 2. Design tests (Claude) → 3. Review tests (Gemini)
 4. Implement → 5. Loop until green → 6. **Human checkpoint** (only if stuck)
@@ -70,29 +69,34 @@ src/              # source code
   lib/            # shared types, result helpers, logging
 tests/            # tests
   fixtures/       # deterministic test inputs (POD)
-specs/            # feature specs (from /speckit.specify)
-dna/              # project knowledge
-  guardrails.json # agent constraints (machine-readable)
+specs/            # feature specs
+bin/              # executables (bny entry point)
+bny/              # dark factory CLI — operational state + tooling
+  lib/            # shared modules (assassin, ralph)
+  roadmap.md      # what to work on next
+  guardrails.json # agent constraints
   decisions.md    # append-only decision log
-dev/              # dev tooling (shebang, chmod +x)
+dna/              # project knowledge — context only, no operational deps
+  technical/      # development loop, conventions
+  research/       # papers, analysis
+dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 .githooks/        # git hooks (pre-commit, pre-push)
-.specify/         # spec-kit templates and memory
 ```
 
 ## Workflow: Picking Up Work
 
 1. Run `./dev/pre_flight` — confirm environment is ready
-2. Read `dna/product/ROADMAP.md` — find "Next" item
-3. Read `dna/guardrails.json` — know the constraints
-4. Run `/speckit.specify` — creates `specs/{feature}/spec.md`
+2. Read `bny/roadmap.md` — find "Next" item
+3. Read `bny/guardrails.json` — know the constraints
+4. Run `/bny.specify` — creates `specs/{feature}/spec.md`
 5. Open PR for human review
-6. After approval: `/speckit.plan` → `/speckit.tasks`
+6. After approval: `/bny.plan` → `/bny.tasks`
 7. Review tests with Gemini (antagonist)
-8. Implement via `/speckit.implement`
+8. Implement via `/bny.implement`
 9. Run `./dev/test` after every change
 10. Run `./dev/post_flight` before committing
 11. If stuck (tests won't pass) → Human checkpoint
-12. On completion → Update ROADMAP.md, append to `dna/decisions.md`
+12. On completion → Update bny/roadmap.md, append to `bny/decisions.md`
 
 ## Don't
 
@@ -102,5 +106,5 @@ dev/              # dev tooling (shebang, chmod +x)
 - Skip Gemini review
 - Change tests after review without human approval
 - Commit without running `./dev/post_flight`
-- Ignore `dna/guardrails.json` constraints
+- Ignore `bny/guardrails.json` constraints
 - Modify protected files without human approval

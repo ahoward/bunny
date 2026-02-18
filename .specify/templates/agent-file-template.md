@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: [DATE]
 
 ## Protocol
 
-> Run `./dev/pre_flight` before starting work. Run `./dev/test` after every change. Run `./dev/post_flight` before every commit. See `dna/agent-protocol.md` and `dna/guardrails.json` for full constraints.
+> Run `./dev/pre_flight` before starting work. Run `./dev/test` after every change. Run `./dev/post_flight` before every commit. See `bny/agent-protocol.md` and `bny/guardrails.json` for full constraints.
 
 ## Active Technologies
 
