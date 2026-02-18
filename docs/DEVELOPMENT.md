@@ -6,7 +6,7 @@ How this repo works, end to end.
 
 - **Runtime:** [Bun](https://bun.sh)
 - **Language:** TypeScript (strict mode, ESNext)
-- **Binary:** `bun build --compile` produces a standalone executable
+- **CLI:** `bin/bny` — git-style subcommand dispatcher
 
 ## Getting Started
 
@@ -42,8 +42,8 @@ bny tasks          # generate task list
 bny implement      # drive AI implementation loop
 bny review         # antagonist review
 bny status         # show current state
-bny dev/test       # wraps ./dev/test
-bny dev/pre-flight # wraps ./dev/pre_flight
+bny dev test       # wraps ./dev/test
+bny dev pre-flight # wraps ./dev/pre_flight
 ```
 
 Ralph loop (retry wrapper):
@@ -74,7 +74,14 @@ specs/            # Feature specs
 bin/              # Executables
   bny             # dark factory CLI entry point
 bny/              # Dark factory CLI — operational state + tooling
-  lib/            # shared modules (assassin, ralph)
+  lib/            # shared modules (assassin, ralph, feature, prompt)
+  specify         # create feature workspace
+  plan            # create implementation plan
+  tasks           # generate task list
+  implement       # claude autonomous implementation
+  review          # gemini antagonist review
+  status          # show feature state
+  dev/            # wrappers for ./dev/* scripts
   roadmap.md      # what to work on next
   guardrails.json # agent constraints
   decisions.md    # append-only decision log
