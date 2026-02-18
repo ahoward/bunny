@@ -14,7 +14,6 @@ roadmap → bny specify (create spec.md)
 
 ## Next
 
-- [ ] bny ps — show running bny processes
 - [ ] slash commands — .claude/commands/bny.*.md wrappers
 
 ## Completed
@@ -28,3 +27,4 @@ roadmap → bny specify (create spec.md)
 - [x] bny review — gemini antagonist + --prompt-only
 - [x] bny ai init — bootstrap AI tool awareness via symlinks
 - [x] absorb .specify/ into bny/ — templates, constitution, scripts eliminated
+- [x] bny ps — process table scan via pgrep, no extra state

@@ -27,3 +27,4 @@ Each entry includes date, decision, and brief rationale.
 | 2026-02-18 | bny review shells out to gemini -p with --prompt-only fallback | Antagonist review automated; prompt-only mode when gemini unavailable |
 | 2026-02-18 | Absorbed .specify/ into bny/ — templates, constitution, scripts all moved or deleted | bny is now self-contained; no spec-kit dependency |
 | 2026-02-18 | bny ai init creates symlinks only, no content generation | agent-protocol.md is the single source of truth; symlinks point all agents to it |
+| 2026-02-18 | bny ps scans process table via pgrep, no extra state files | Pure Unix — pidfile + pgrep is sufficient for process discovery |
