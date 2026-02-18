@@ -2,7 +2,7 @@
 //
 // bny ai init — bootstrap AI tool awareness of bny
 //
-// creates symlinks pointing each agent's context file to bny/agent-protocol.md
+// creates symlinks pointing each agent's context file to bny/AGENTS.md
 //
 // usage:
 //   bny ai init                    # all known agents
@@ -23,7 +23,7 @@ interface AgentEntry {
 }
 
 function agent_registry(root: string): AgentEntry[] {
-  const protocol = "bny/agent-protocol.md"
+  const protocol = "bny/AGENTS.md"
 
   // for files at root level, target is just the protocol path
   // for nested files, compute relative path back to protocol

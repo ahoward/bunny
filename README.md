@@ -144,6 +144,6 @@ dna/              project knowledge — context only, no operational deps
 ## more
 
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — full development process
-- [bny/agent-protocol.md](bny/agent-protocol.md) — the protocol ai agents must follow
+- [bny/AGENTS.md](bny/AGENTS.md) — the protocol ai agents must follow
 - [bny/guardrails.json](bny/guardrails.json) — machine-readable constraints
 - [bny/roadmap.md](bny/roadmap.md) — what's next

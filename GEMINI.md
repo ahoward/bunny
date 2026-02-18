@@ -1,1 +1,1 @@
-bny/agent-protocol.md
+bny/AGENTS.md

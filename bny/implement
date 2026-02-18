@@ -67,7 +67,7 @@ if (claude_check.exitCode !== 0) {
 
 // -- build prompt --
 
-const protocol_path = resolve(root, "bny/agent-protocol.md")
+const protocol_path = resolve(root, "bny/AGENTS.md")
 
 const sections = [
   read_section("Agent Protocol", protocol_path),
