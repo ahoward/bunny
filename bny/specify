@@ -1,0 +1,90 @@
+#!/usr/bin/env bun
+//
+// bny specify — create a feature workspace
+//
+// creates: git branch + specs/<branch>/spec.md from template
+//
+// usage:
+//   bny specify "Add user authentication"
+//   bny specify "user auth" --number 5
+//
+
+import { mkdirSync, copyFileSync, existsSync } from "node:fs"
+import { resolve } from "node:path"
+import { success, error } from "../src/lib/result.ts"
+import {
+  find_root, next_feature_number, generate_branch_name,
+  clean_name, feature_paths,
+} from "./lib/feature.ts"
+
+// -- parse args --
+
+const argv = process.argv.slice(2)
+const args: string[] = []
+let number_override: number | null = null
+
+for (let i = 0; i < argv.length; i++) {
+  if (argv[i] === "--number") {
+    i++
+    if (!argv[i]) { process.stderr.write("error: --number requires a value\n"); process.exitCode = 1; process.exit() }
+    number_override = parseInt(argv[i], 10)
+    if (isNaN(number_override)) { process.stderr.write("error: --number must be a number\n"); process.exitCode = 1; process.exit() }
+  } else if (argv[i] === "--help" || argv[i] === "-h") {
+    process.stdout.write("usage: bny specify [--number N] <description>\n")
+    process.exit(0)
+  } else {
+    args.push(argv[i])
+  }
+}
+
+const description = args.join(" ").trim()
+if (!description) {
+  process.stderr.write("usage: bny specify [--number N] <description>\n")
+  process.exitCode = 1
+  process.exit()
+}
+
+// -- main --
+
+const root = find_root()
+const feature_num = number_override ?? next_feature_number(root)
+const suffix = generate_branch_name(description)
+const padded = String(feature_num).padStart(3, "0")
+const branch_name = `${padded}-${suffix}`
+
+// create git branch
+const git = Bun.spawnSync(["git", "checkout", "-b", branch_name], {
+  stdout: "pipe", stderr: "pipe", cwd: root,
+})
+if (git.exitCode !== 0) {
+  const msg = new TextDecoder().decode(git.stderr).trim()
+  const result = error({ git: [{ code: "branch_failed", message: msg || "git checkout -b failed" }] })
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+  process.exitCode = 1
+  process.exit()
+}
+
+// create spec dir + copy template
+const paths = feature_paths(root, branch_name)
+mkdirSync(paths.dir, { recursive: true })
+
+const template = resolve(root, ".specify/templates/spec-template.md")
+if (existsSync(template)) {
+  copyFileSync(template, paths.spec)
+} else {
+  // touch the file
+  Bun.write(paths.spec, "")
+}
+
+// output
+const meta = {
+  path: "/bny/specify",
+  timestamp: new Date().toISOString(),
+  duration_ms: 0,
+}
+const result = success({
+  branch_name,
+  feature_num: padded,
+  spec_file: paths.spec,
+}, meta)
+process.stdout.write(JSON.stringify(result, null, 2) + "\n")
