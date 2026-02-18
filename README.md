@@ -1,7 +1,7 @@
 # bny
 
 <p align="center">
-  <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHFpazAyYzYzbXZsbGo1ajh0eGM1em5icjh3aDhhaGtya2E3b3VkbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3ohzdTDCUyuKnFQQrm/giphy.gif" alt="frank" width="480"/>
+  <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDZ2N2ZscWE1YTduemtlaHFuZ2RkbXc4cmVkZ3dtNTRkZ2x2d3VhYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26vIemlpNzy5CSOli/giphy.gif" alt="frank" width="480"/>
   <br/>
   <em>"why are you wearing that stupid man suit?"</em>
 </p>
