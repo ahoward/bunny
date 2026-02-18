@@ -1,0 +1,113 @@
+#!/usr/bin/env bun
+//
+// bny implement — drive AI implementation via claude
+//
+// shells out to claude with a prompt built from spec/plan/tasks.
+// single-pass execution; use `bny --ralph implement` for retry loops.
+//
+// usage:
+//   bny implement                              # current feature branch
+//   bny implement 001-auth                     # explicit feature
+//   bny --ralph --max-iter 10 implement        # with retry loop
+//
+
+import { existsSync } from "node:fs"
+import { resolve } from "node:path"
+import { error } from "../src/lib/result.ts"
+import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
+import { read_section, build_prompt } from "./lib/prompt.ts"
+import * as assassin from "./lib/assassin.ts"
+
+// -- parse args --
+
+const argv = process.argv.slice(2)
+let target: string | null = null
+
+for (const arg of argv) {
+  if (arg === "--help" || arg === "-h") {
+    process.stdout.write("usage: bny implement [feature-name]\n")
+    process.stdout.write("\nshells out to claude -p with a prompt built from spec/plan/tasks.\n")
+    process.stdout.write("use bny --ralph --max-iter N implement for retry loops.\n")
+    process.exit(0)
+  } else if (!arg.startsWith("-")) {
+    target = arg
+  }
+}
+
+// -- resolve feature --
+
+const root = find_root()
+const name = target || current_feature()
+
+if (!name) {
+  const result = error({ feature: [{ code: "not_found", message: "no feature specified and not on a feature branch" }] })
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+  process.exitCode = 1
+  process.exit()
+}
+
+const paths = feature_paths(root, name)
+
+// -- guards --
+
+if (!existsSync(paths.tasks)) {
+  const result = error({ tasks: [{ code: "missing", message: `${paths.tasks} does not exist — run bny tasks first` }] })
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+  process.exitCode = 1
+  process.exit()
+}
+
+const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
+if (claude_check.exitCode !== 0) {
+  const result = error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] })
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+  process.exitCode = 1
+  process.exit()
+}
+
+// -- build prompt --
+
+const protocol_path = resolve(root, "bny/agent-protocol.md")
+
+const sections = [
+  read_section("Agent Protocol", protocol_path),
+  read_section("Feature Specification", paths.spec),
+  read_section("Implementation Plan", paths.plan),
+  read_section("Task List", paths.tasks),
+].filter((s): s is NonNullable<typeof s> => s !== null)
+
+const instructions = [
+  "Work through the unchecked tasks in the task list above, in order.",
+  "After each code change, run `./dev/test`.",
+  "Before committing, run `./dev/post_flight`.",
+  "Mark tasks as [x] in tasks.md as you complete them.",
+  "If you get stuck on a task after 3 attempts, stop and report the blocker.",
+  "Do not move to the next task until the current one passes tests.",
+].join("\n")
+
+const prompt = build_prompt(sections, instructions)
+
+// -- shell out to claude --
+
+assassin.install(resolve(root, ".bny"))
+
+const cmd = [
+  "claude",
+  "-p", prompt,
+  "--continue",
+  "--dangerously-skip-permissions",
+]
+
+const proc = Bun.spawn(cmd, {
+  stdout: "inherit",
+  stderr: "inherit",
+  stdin:  "inherit",
+  cwd:    root,
+  detached: true,
+})
+
+assassin.track(proc.pid, proc.pid)
+const exit_code = await proc.exited
+assassin.untrack(proc.pid)
+
+process.exitCode = exit_code

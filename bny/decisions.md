@@ -23,3 +23,5 @@ Each entry includes date, decision, and brief rationale.
 | 2026-02-18 | Moved roadmap, guardrails, decisions, agent-protocol from dna/ to bny/ | dna/ is pure context with zero operational dependencies; bny/ owns all operational state |
 | 2026-02-18 | bny dev wrappers delegate to dev/ scripts, don't replace them | Three-layer dispatch preserved; dev/ stays per-project customizable plumbing |
 | 2026-02-18 | Feature lifecycle ported from bash (.specify/) to bun (bny/lib/feature.ts) | Consistent with project language; shared module for specify/plan/tasks/status |
+| 2026-02-18 | bny implement shells out to claude -p --continue --dangerously-skip-permissions | Single-pass execution; ralph handles retries at dispatcher level |
+| 2026-02-18 | bny review shells out to gemini -p with --prompt-only fallback | Antagonist review automated; prompt-only mode when gemini unavailable |
