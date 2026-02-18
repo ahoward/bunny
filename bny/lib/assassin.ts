@@ -2,18 +2,19 @@
 // assassin.ts - process group tracking + cleanup
 //
 // ensures all child processes die when bny exits.
-// pure in-memory tracking. no database.
+// in-memory tracking + per-child pidfiles for orphan discovery.
 //
 // defense in depth:
 //   1. signal traps (SIGINT/SIGTERM/SIGHUP) → SIGTERM children → wait → SIGKILL
 //   2. exit event → synchronous SIGKILL (last resort)
 //   3. pidfile at .bny/bny.pid for stale process detection
+//   4. per-child pidfiles at .bny/children/<pid> for orphan discovery by bny ps
 //
 // every child is spawned with detached:true (own process group).
 // PGID = child PID, so kill -TERM -$PID kills the whole group.
 //
 
-import { existsSync, mkdirSync, writeFileSync, unlinkSync, readFileSync } from "node:fs"
+import { existsSync, mkdirSync, writeFileSync, unlinkSync, readFileSync, readdirSync } from "node:fs"
 import { resolve, dirname } from "node:path"
 
 interface TrackedChild {
@@ -25,16 +26,19 @@ const children: Map<number, TrackedChild> = new Map()
 let installed = false
 let shutting_down = false
 let pidfile_path: string | null = null
+let children_dir: string | null = null
 
 // -- public api --
 
 export function track(pid: number, pgid: number | null = null): void {
   const effective_pgid = pgid ?? pid
   children.set(pid, { pid, pgid: effective_pgid })
+  write_child_pidfile(pid, effective_pgid)
 }
 
 export function untrack(pid: number): void {
   children.delete(pid)
+  remove_child_pidfile(pid)
 }
 
 export function install(bny_dir: string | null = null): void {
@@ -44,9 +48,12 @@ export function install(bny_dir: string | null = null): void {
   // write pidfile
   if (bny_dir) {
     pidfile_path = resolve(bny_dir, "bny.pid")
+    children_dir = resolve(bny_dir, "children")
     const dir = dirname(pidfile_path)
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+    if (!existsSync(children_dir)) mkdirSync(children_dir, { recursive: true })
     reap_stale_pidfile()
+    reap_stale_children()
     writeFileSync(pidfile_path, String(process.pid))
   }
 
@@ -131,6 +138,7 @@ function force_kill_all(): void {
   for (const [pid, child] of children) {
     kill_group(child.pgid, "SIGKILL")
     kill_pid(pid, "SIGKILL")
+    remove_child_pidfile(pid)
   }
   children.clear()
 }
@@ -154,4 +162,31 @@ function reap_stale_pidfile(): void {
 function cleanup_pidfile(): void {
   if (!pidfile_path) return
   try { unlinkSync(pidfile_path) } catch {}
+}
+
+// -- child pidfiles --
+
+function write_child_pidfile(pid: number, pgid: number): void {
+  if (!children_dir) return
+  try {
+    if (!existsSync(children_dir)) mkdirSync(children_dir, { recursive: true })
+    writeFileSync(resolve(children_dir, String(pid)), `${pid}\n${pgid}`)
+  } catch {}
+}
+
+function remove_child_pidfile(pid: number): void {
+  if (!children_dir) return
+  try { unlinkSync(resolve(children_dir, String(pid))) } catch {}
+}
+
+function reap_stale_children(): void {
+  if (!children_dir || !existsSync(children_dir)) return
+  try {
+    for (const entry of readdirSync(children_dir)) {
+      const pid = parseInt(entry, 10)
+      if (pid > 0 && !is_alive(pid)) {
+        try { unlinkSync(resolve(children_dir, entry)) } catch {}
+      }
+    }
+  } catch {}
 }

@@ -2,15 +2,17 @@
 //
 // bny ps — show running bny processes
 //
-// scans the process table for bny-related processes.
-// no extra state files — pure unix.
+// discovers bny processes via:
+//   1. dispatcher pidfile (.bny/bny.pid)
+//   2. child pidfiles (.bny/children/<pid>) — catches orphans after dispatcher crash
+//   3. pgrep fallback — belt + suspenders
 //
 // usage:
 //   bny ps              # human-readable table
 //   bny ps --json       # Result envelope
 //
 
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync, unlinkSync } from "node:fs"
 import { resolve } from "node:path"
 import { success } from "../src/lib/result.ts"
 import { find_root } from "./lib/feature.ts"
@@ -119,7 +121,23 @@ if (existsSync(pidfile)) {
   } catch {}
 }
 
-// 2. find bny subcommand processes
+// 2. scan child pidfiles (catches orphans after dispatcher crash)
+const children_dir = resolve(root, ".bny/children")
+if (existsSync(children_dir)) {
+  try {
+    for (const entry of readdirSync(children_dir)) {
+      const pid = parseInt(entry, 10)
+      if (pid > 0 && is_alive(pid)) {
+        collect(pid)
+      } else if (pid > 0) {
+        // stale pidfile — reap it
+        try { unlinkSync(resolve(children_dir, entry)) } catch {}
+      }
+    }
+  } catch {}
+}
+
+// 3. find bny subcommand processes (belt + suspenders with pidfiles)
 for (const pid of pgrep("bny/(implement|review|specify|plan|tasks|status|ps)")) {
   collect(pid)
 }
