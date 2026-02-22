@@ -11,7 +11,7 @@
 //   bny review --prompt-only      # writes review-prompt.md instead
 //
 
-import { existsSync } from "node:fs"
+import { existsSync, unlinkSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "../src/lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
@@ -108,7 +108,7 @@ if (prompt_only) {
   process.exit(0)
 }
 
-// -- shell out to gemini --
+// -- shell out to gemini via bash (Bun.spawn hangs calling CLIs directly) --
 
 const gemini_check = Bun.spawnSync(["which", "gemini"], { stdout: "pipe", stderr: "pipe" })
 if (gemini_check.exitCode !== 0) {
@@ -120,18 +120,22 @@ if (gemini_check.exitCode !== 0) {
 
 assassin.install(resolve(root, ".bny"))
 
-const cmd = ["gemini", "-p", prompt]
+const prompt_tmp = resolve(root, ".bny/review-prompt.tmp")
+await Bun.write(prompt_tmp, prompt)
 
-const proc = Bun.spawn(cmd, {
-  stdout: "inherit",
-  stderr: "inherit",
-  stdin:  "inherit",
-  cwd:    root,
-  detached: true,
-})
+const proc = Bun.spawn(
+  ["bash", "-c", `gemini -p - < "${prompt_tmp}"`],
+  {
+    stdout: "inherit",
+    stderr: "inherit",
+    cwd:    root,
+  },
+)
 
 assassin.track(proc.pid, proc.pid)
 const exit_code = await proc.exited
 assassin.untrack(proc.pid)
+
+try { unlinkSync(prompt_tmp) } catch {}
 
 process.exitCode = exit_code

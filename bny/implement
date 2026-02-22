@@ -11,7 +11,7 @@
 //   bny --ralph --max-iter 10 implement        # with retry loop
 //
 
-import { existsSync } from "node:fs"
+import { existsSync, unlinkSync } from "node:fs"
 import { resolve } from "node:path"
 import { error } from "../src/lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
@@ -87,27 +87,26 @@ const instructions = [
 
 const prompt = build_prompt(sections, instructions)
 
-// -- shell out to claude --
+// -- shell out to claude via bash (Bun.spawn hangs calling claude directly) --
 
 assassin.install(resolve(root, ".bny"))
 
-const cmd = [
-  "claude",
-  "-p", prompt,
-  "--continue",
-  "--dangerously-skip-permissions",
-]
+const prompt_tmp = resolve(root, ".bny/implement-prompt.tmp")
+await Bun.write(prompt_tmp, prompt)
 
-const proc = Bun.spawn(cmd, {
-  stdout: "inherit",
-  stderr: "inherit",
-  stdin:  "inherit",
-  cwd:    root,
-  detached: true,
-})
+const proc = Bun.spawn(
+  ["bash", "-c", `claude -p - --continue --dangerously-skip-permissions < "${prompt_tmp}"`],
+  {
+    stdout: "inherit",
+    stderr: "inherit",
+    cwd:    root,
+  },
+)
 
 assassin.track(proc.pid, proc.pid)
 const exit_code = await proc.exited
 assassin.untrack(proc.pid)
+
+try { unlinkSync(prompt_tmp) } catch {}
 
 process.exitCode = exit_code
