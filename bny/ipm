@@ -1,0 +1,147 @@
+#!/usr/bin/env bun
+//
+// bny ipm — iteration planning meeting
+//
+// reads project context, shells out to claude -p to propose next features.
+// writes output to specs/ROADMAP.md.
+//
+// usage:
+//   bny ipm               # run planning meeting
+//   bny ipm --dry-run     # print prompt, don't run
+//
+
+import { existsSync, readdirSync } from "node:fs"
+import { resolve } from "node:path"
+import { success, error } from "../src/lib/result.ts"
+import { find_root } from "./lib/feature.ts"
+import { read_section, build_prompt } from "./lib/prompt.ts"
+
+// -- parse args --
+
+const argv = process.argv.slice(2)
+let dry_run = false
+
+for (const arg of argv) {
+  if (arg === "--dry-run") {
+    dry_run = true
+  } else if (arg === "--help" || arg === "-h") {
+    process.stdout.write("usage: bny ipm [--dry-run]\n")
+    process.stdout.write("\nreads project context, proposes next 5-10 features via claude.\n")
+    process.stdout.write("writes output to specs/ROADMAP.md.\n")
+    process.exit(0)
+  }
+}
+
+// -- gather context --
+
+const root = find_root()
+
+const context_files: [string, string][] = [
+  ["README", "README.md"],
+  ["Product Vision", "docs/product-vision.md"],
+  ["Business Model", "docs/business-model.md"],
+  ["Current Roadmap", "bny/roadmap.md"],
+]
+
+const sections = context_files
+  .map(([heading, rel]) => read_section(heading, resolve(root, rel)))
+  .filter((s): s is NonNullable<typeof s> => s !== null)
+
+// gather all existing specs
+const specs_dir = resolve(root, "specs")
+if (existsSync(specs_dir)) {
+  const spec_dirs = readdirSync(specs_dir, { withFileTypes: true })
+    .filter(e => e.isDirectory())
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  for (const dir of spec_dirs) {
+    const spec_path = resolve(specs_dir, dir.name, "spec.md")
+    const section = read_section(`Spec: ${dir.name}`, spec_path)
+    if (section) sections.push(section)
+  }
+}
+
+if (sections.length === 0) {
+  const result = error({ context: [{ code: "empty", message: "no project context files found" }] })
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+  process.exitCode = 1
+  process.exit()
+}
+
+// -- build prompt --
+
+const instructions = [
+  "You are conducting an Iteration Planning Meeting (IPM) for this project.",
+  "Review what has been built so far (existing specs and roadmap).",
+  "Compare against the project vision and goals.",
+  "Identify gaps between current state and vision.",
+  "",
+  "Produce a markdown document with these sections:",
+  "",
+  "## Current State",
+  "Brief summary of what exists.",
+  "",
+  "## Gaps",
+  "What's missing or incomplete relative to the vision.",
+  "",
+  "## Proposed Features (prioritized)",
+  "List 5-10 features, each with:",
+  "- **Title** — short name",
+  "- **Priority** — P0 (critical), P1 (important), P2 (nice to have)",
+  "- **Description** — 1-2 sentences",
+  "- **Rationale** — why this matters now",
+  "",
+  "Prioritize by: unblocking other work > user-facing value > technical debt.",
+  "Be specific and actionable. No vague suggestions.",
+].join("\n")
+
+const prompt = build_prompt(sections, instructions)
+
+// -- dry run --
+
+if (dry_run) {
+  process.stdout.write(prompt + "\n")
+  process.exit(0)
+}
+
+// -- guards --
+
+const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
+if (claude_check.exitCode !== 0) {
+  const result = error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] })
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+  process.exitCode = 1
+  process.exit()
+}
+
+// -- shell out to claude --
+
+const proc = Bun.spawnSync([
+  "claude", "-p", prompt,
+], { stdout: "pipe", stderr: "inherit", cwd: root })
+
+if (proc.exitCode !== 0) {
+  const result = error({ claude: [{ code: "failed", message: "claude -p exited with non-zero status" }] })
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+  process.exitCode = 1
+  process.exit()
+}
+
+const output = new TextDecoder().decode(proc.stdout).trim()
+
+// -- write output --
+
+const output_path = resolve(root, "specs/ROADMAP.md")
+const { mkdirSync } = await import("node:fs")
+mkdirSync(resolve(root, "specs"), { recursive: true })
+await Bun.write(output_path, output + "\n")
+
+// -- result --
+
+const meta = {
+  path: "/bny/ipm",
+  timestamp: new Date().toISOString(),
+  duration_ms: 0,
+}
+const result = success({ output_path, sections_read: sections.length }, meta)
+process.stdout.write(JSON.stringify(result, null, 2) + "\n")

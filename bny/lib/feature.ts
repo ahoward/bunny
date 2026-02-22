@@ -5,7 +5,7 @@
 //           next_feature_number, generate_branch_name, clean_name
 //
 
-import { existsSync, readdirSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { resolve, dirname, basename } from "node:path"
 
 // -- types --
@@ -15,14 +15,17 @@ export interface FeaturePaths {
   spec:  string
   plan:  string
   tasks: string
+  issue: string
 }
 
 export interface FeatureState {
-  name:      string
-  has_spec:  boolean
-  has_plan:  boolean
-  has_tasks: boolean
-  phase:     "none" | "specified" | "planned" | "tasked"
+  name:         string
+  has_spec:     boolean
+  has_plan:     boolean
+  has_tasks:    boolean
+  has_issue:    boolean
+  issue_number: string | null
+  phase:        "none" | "specified" | "planned" | "tasked"
 }
 
 // -- root finding --
@@ -71,6 +74,7 @@ export function feature_paths(root: string, name: string): FeaturePaths {
     spec:  resolve(dir, "spec.md"),
     plan:  resolve(dir, "plan.md"),
     tasks: resolve(dir, "tasks.md"),
+    issue: resolve(dir, "issue.txt"),
   }
 }
 
@@ -81,13 +85,15 @@ export function feature_state(root: string, name: string): FeatureState {
   const has_spec  = existsSync(paths.spec)
   const has_plan  = existsSync(paths.plan)
   const has_tasks = existsSync(paths.tasks)
+  const has_issue = existsSync(paths.issue)
+  const issue_number = has_issue ? readFileSync(paths.issue, "utf-8").trim() : null
 
   let phase: FeatureState["phase"] = "none"
   if (has_tasks) phase = "tasked"
   else if (has_plan) phase = "planned"
   else if (has_spec) phase = "specified"
 
-  return { name, has_spec, has_plan, has_tasks, phase }
+  return { name, has_spec, has_plan, has_tasks, has_issue, issue_number, phase }
 }
 
 // -- numbering --

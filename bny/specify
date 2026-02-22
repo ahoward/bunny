@@ -9,7 +9,7 @@
 //   bny specify "user auth" --number 5
 //
 
-import { mkdirSync, copyFileSync, existsSync } from "node:fs"
+import { mkdirSync, copyFileSync, existsSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "../src/lib/result.ts"
 import {
@@ -76,6 +76,37 @@ if (existsSync(template)) {
   Bun.write(paths.spec, "")
 }
 
+// open gh issue
+let issue_number: string | null = null
+
+// ensure bny label exists
+Bun.spawnSync(["gh", "label", "create", "bny", "--color", "6f42c1", "--force"], {
+  stdout: "pipe", stderr: "pipe", cwd: root,
+})
+
+const issue_title = `[${padded}] ${description}`
+const issue_body = [
+  `**Branch:** \`${branch_name}\``,
+  `**Spec:** \`specs/${branch_name}/spec.md\``,
+  `**Created:** ${new Date().toISOString()}`,
+].join("\n")
+
+const gh = Bun.spawnSync([
+  "gh", "issue", "create",
+  "--title", issue_title,
+  "--body", issue_body,
+  "--label", "bny",
+], { stdout: "pipe", stderr: "pipe", cwd: root })
+
+if (gh.exitCode === 0) {
+  const url = new TextDecoder().decode(gh.stdout).trim()
+  const match = url.match(/\/(\d+)$/)
+  if (match) {
+    issue_number = match[1]
+    writeFileSync(paths.issue, issue_number + "\n")
+  }
+}
+
 // output
 const meta = {
   path: "/bny/specify",
@@ -86,5 +117,6 @@ const result = success({
   branch_name,
   feature_num: padded,
   spec_file: paths.spec,
+  issue_number,
 }, meta)
 process.stdout.write(JSON.stringify(result, null, 2) + "\n")
