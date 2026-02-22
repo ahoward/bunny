@@ -117,8 +117,8 @@ if (claude_check.exitCode !== 0) {
 // -- shell out to claude --
 
 const proc = Bun.spawnSync([
-  "claude", "-p", prompt,
-], { stdout: "pipe", stderr: "inherit", cwd: root })
+  "claude", "-p", "-", "--output-format", "text", "--dangerously-skip-permissions",
+], { stdout: "pipe", stderr: "inherit", stdin: new TextEncoder().encode(prompt), cwd: root })
 
 if (proc.exitCode !== 0) {
   const result = error({ claude: [{ code: "failed", message: "claude -p exited with non-zero status" }] })
