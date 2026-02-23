@@ -7,8 +7,12 @@ bin/
 !bin/bny
 *.tsbuildinfo
 
-# bny runtime state
-.bny/
+# bny project state (tracked) + runtime (ignored)
+.bny/*
+!.bny/roadmap.md
+!.bny/decisions.md
+!.bny/guardrails.json
+!.bny/constitution.md
 
 # env
 .env

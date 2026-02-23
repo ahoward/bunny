@@ -18,18 +18,14 @@ import { ralph } from "../bny/lib/ralph.ts"
 // -- find project root --
 
 function find_root(): string {
-  let dir = dirname(new URL(import.meta.url).pathname)
-  // bin/bny → project root is parent of bin/
-  dir = resolve(dir, "..")
-  if (existsSync(resolve(dir, "bny"))) return dir
-
-  // fallback: walk up from cwd
-  dir = process.cwd()
+  // walk up from cwd — .bny/ is the primary project marker (works when bny/ is a symlink)
+  let dir = process.cwd()
   while (dir !== "/") {
+    if (existsSync(resolve(dir, ".bny"))) return dir
     if (existsSync(resolve(dir, "bny"))) return dir
     dir = dirname(dir)
   }
-  process.stderr.write("bny: cannot find project root (no bny/ directory found)\n")
+  process.stderr.write("bny: cannot find project root (no .bny/ or bny/ directory found)\n")
   process.exitCode = 1
   return process.cwd()
 }

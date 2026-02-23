@@ -31,18 +31,13 @@ export interface FeatureState {
 // -- root finding --
 
 export function find_root(): string {
-  // try relative to this file: bny/lib/feature.ts → project root is ../..
-  let dir = dirname(new URL(import.meta.url).pathname)
-  dir = resolve(dir, "../..")
-  if (existsSync(resolve(dir, "bny"))) return dir
-
-  // fallback: walk up from cwd
-  dir = process.cwd()
+  // walk up from cwd — .bny/ is the primary project marker (works when bny/ is a symlink)
+  let dir = process.cwd()
   while (dir !== "/") {
+    if (existsSync(resolve(dir, ".bny"))) return dir
     if (existsSync(resolve(dir, "bny"))) return dir
     dir = dirname(dir)
   }
-
   return process.cwd()
 }
 

@@ -40,7 +40,7 @@ const context_files: [string, string][] = [
   ["README", "README.md"],
   ["Product Vision", "docs/product-vision.md"],
   ["Business Model", "docs/business-model.md"],
-  ["Current Roadmap", "bny/roadmap.md"],
+  ["Current Roadmap", ".bny/roadmap.md"],
   ["Current ROADMAP", "specs/ROADMAP.md"],
 ]
 

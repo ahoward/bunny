@@ -104,7 +104,12 @@ bny --ralph --max-iter 5 review        # retry review too
 
 ```
 bin/bny           entry point — git-style dispatcher
-bny/              operational state + tooling
+.bny/             project state (git-tracked, per-project)
+  roadmap.md      what to work on next
+  guardrails.json agent constraints (blast radius, protected files)
+  decisions.md    append-only decision log
+  constitution.md project principles
+bny/              dark factory CLI — tool code (symlinkable)
   lib/            assassin, ralph, feature, prompt
   ai/             ai subcommands (init)
   dev/            wrappers for ./dev/* scripts
@@ -115,10 +120,6 @@ bny/              operational state + tooling
   implement       claude autonomous implementation
   review          gemini antagonist review
   status          show feature state
-  roadmap.md      what to work on next
-  guardrails.json agent constraints (blast radius, protected files)
-  decisions.md    append-only decision log
-  constitution.md project principles
 dev/              per-project customizable plumbing (shebangs, chmod +x)
 src/              application source
   handlers/       app.call handlers (one file per endpoint)
@@ -145,5 +146,5 @@ dna/              project knowledge — context only, no operational deps
 
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — full development process
 - [bny/AGENTS.md](bny/AGENTS.md) — the protocol ai agents must follow
-- [bny/guardrails.json](bny/guardrails.json) — machine-readable constraints
-- [bny/roadmap.md](bny/roadmap.md) — what's next
+- [.bny/guardrails.json](.bny/guardrails.json) — machine-readable constraints
+- [.bny/roadmap.md](.bny/roadmap.md) — what's next

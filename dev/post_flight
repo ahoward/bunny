@@ -76,7 +76,7 @@ async function run_checks(): Promise<Check[]> {
   const changed_files = files_text.trim().split("\n").filter(Boolean)
   let max_files = 20
   try {
-    const guardrails = await Bun.file("bny/guardrails.json").json() as { blast_radius?: { max_files_per_pr?: number } }
+    const guardrails = await Bun.file(".bny/guardrails.json").json() as { blast_radius?: { max_files_per_pr?: number } }
     max_files = guardrails.blast_radius?.max_files_per_pr ?? 20
   } catch { /* guardrails not yet created */ }
   const within_radius = changed_files.length <= max_files

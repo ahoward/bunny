@@ -74,7 +74,12 @@ tests/            # Tests
 specs/            # Feature specs
 bin/              # Executables
   bny             # dark factory CLI entry point
-bny/              # Dark factory CLI — operational state + tooling
+.bny/             # Project state (git-tracked, per-project)
+  roadmap.md      # what to work on next
+  guardrails.json # agent constraints
+  decisions.md    # append-only decision log
+  constitution.md # project principles
+bny/              # Dark factory CLI — tool code (symlinkable)
   lib/            # shared modules (assassin, ralph, feature, prompt)
   ai/             # ai subcommands (init)
   dev/            # wrappers for ./dev/* scripts
@@ -85,10 +90,6 @@ bny/              # Dark factory CLI — operational state + tooling
   implement       # claude autonomous implementation
   review          # gemini antagonist review
   status          # show feature state
-  roadmap.md      # what to work on next
-  guardrails.json # agent constraints
-  decisions.md    # append-only decision log
-  constitution.md # project principles
 dna/              # Project knowledge — context only
   technical/      # development loop, conventions
   research/       # papers, analysis
@@ -125,7 +126,7 @@ Tests are locked after review. No changing them without human approval.
 
 ## Workflow: Picking Up Work
 
-All work is driven by `bny/roadmap.md`.
+All work is driven by `.bny/roadmap.md`.
 
 ```
 ./dev/pre_flight       confirm environment is ready
@@ -139,12 +140,12 @@ roadmap                   find the next item
   -> ./dev/test           after every change
   -> ./dev/post_flight    before every commit (also enforced by git hook)
   -> stuck?               human checkpoint
-  -> done                 update bny/roadmap.md, append to bny/decisions.md
+  -> done                 update .bny/roadmap.md, append to .bny/decisions.md
 ```
 
 ## Principles
 
-The full set of project principles lives in `bny/constitution.md`. The short version:
+The full set of project principles lives in `.bny/constitution.md`. The short version:
 
 1. **POD only** — plain old data in, plain old data out
 2. **Antagonistic testing** — Claude designs, Gemini hardens, then implement
