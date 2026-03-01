@@ -31,6 +31,15 @@
 - **Remaining exposure:** auto-confirm when not a TTY means piped/scripted intake bypasses the gate silently
 - **Remaining exposure:** individual re-eats within `digest` auto-apply without per-source confirmation
 
+### Brane Output Trust (Provenance Gap)
+
+- `bny ask` queries the brane and returns LLM-generated answers
+- **Source provenance (iteration 002)** adds citation of worldview files and their original sources to every answer
+- Provenance is **prompt-enforced, not mechanical** — claude cites sources because the prompt instructs it to, not because the system parses or validates citations
+- An LLM could hallucinate sources, omit sources, or attribute claims to the wrong worldview file
+- No programmatic verification that cited sources actually contain the claimed information
+- The provenance chain (worldview file → original source) depends on the source manifest being accurate — a corrupted manifest propagates false attribution
+
 ### Blast Radius Limits
 
 - Max files/lines per PR bounds the damage from a single autonomous run
@@ -71,6 +80,11 @@
   - `confirm_intake()` reads y/n from `/dev/tty` so it works even when stdin is piped
   - `--yes` / `-y` flag for explicit opt-out of confirmation
   - Digest requires confirmation before clearing worldview (destructive operation protection)
+- **Source provenance in ask** — every answer cites worldview files and traces them to original ingested sources
+  - Full source manifest (label + timestamp) passed to LLM in ask prompt
+  - Structured `Sources:` footer on every response
+  - Leverages `list_sources()` from iteration 001's stashing work
+  - Prompt-enforced (social contract), not mechanically validated
 
 ## Gaps to Watch
 
@@ -84,5 +98,6 @@
 - **Brane gate auto-confirm on non-TTY** — piped/scripted `eat` operations bypass the gate without explicit `--yes`, which means automated pipelines skip the human review silently
 - **Digest re-eats not individually gated** — after confirming the initial worldview clear, each source is re-eaten without per-source confirmation. A corrupted source in the manifest would be silently re-ingested
 - **`--yes` flag is a social contract** — nothing prevents an autonomous agent from passing `--yes` to bypass the gate
-- **Deferred: source provenance in ask responses** — answers don't yet surface which sources informed them, limiting auditability of brane influence
+- **Source provenance is prompt-enforced** — citations depend on LLM compliance, not mechanical extraction. An adversarial prompt or model error could produce false attribution without detection
+- **No citation verification** — no system validates that cited worldview files actually support the claims attributed to them
 - **Deferred: digest preview** — no dry-run mode to see what digest would change before committing

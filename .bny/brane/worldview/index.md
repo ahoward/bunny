@@ -1,8 +1,20 @@
-The current index.md looks accurate and well-structured already. It covers both topic areas (Security, Architecture) with links to all 5 worldview files. The content matches what you've shown me.
+I need write permission to `.bny/brane/worldview/index.md`. The current file contains LLM meta-commentary ("The current index.md looks accurate...") instead of an actual index. Here's what the replacement should be:
 
-The existing index.md is concise, scannable, and complete — it has:
-- A one-line description of the knowledge base
-- Two section headers grouping the topics
-- Relative links to all files with short descriptions
+```markdown
+# Brane Worldview
 
-It looks like this was generated (or is about to be regenerated) as part of a `digest` operation. The current version already captures the full scope. Is there something specific you want changed about it, or were you running this through the brane digest pipeline?
+Knowledge base for the bunny/bny project — accumulated through the strange loop.
+
+## Security
+
+- [Autonomous Agent Risks](security/autonomous-agent-risks.md) — Attack surfaces, mitigations, and gaps in the dual-AI autonomous development model
+
+## Architecture
+
+- [Strange Loop](architecture/strange-loop.md) — The self-improving cycle: bny builds bny, brane drives what to build next
+- [Dual-AI Loop](architecture/dual-ai-loop.md) — Claude implements, Gemini reviews, human gatekeeps
+- [Guardrails System](architecture/guardrails-system.md) — Enforcement layers from constitution down to locked tests
+- [Project Structure](architecture/project-structure.md) — Directory layout, commands, coding conventions
+```
+
+Want me to retry the write, or would you prefer to handle it another way?

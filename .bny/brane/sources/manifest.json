@@ -23,6 +23,12 @@
       "filename": "2026-03-01T08-07-42-824Z-dna-iterations-001-brane-gate-md.txt",
       "eaten_at": "2026-03-01T08:07:42.824Z",
       "size": 4095
+    },
+    {
+      "label": "dna/iterations/002-source-provenance.md",
+      "filename": "2026-03-01T08-15-15-674Z-dna-iterations-002-source-provenance-md.txt",
+      "eaten_at": "2026-03-01T08:15:15.674Z",
+      "size": 2008
     }
   ]
 }

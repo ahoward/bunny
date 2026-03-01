@@ -24,7 +24,7 @@ research/feedback/decisions → brane (knowledge base)
 
 Software that can improve its own tooling converges faster than software built by tools that never learn. The brane is the memory that makes each iteration smarter than the last.
 
-## First Proof: Iteration 001
+## Proof: Iteration 001 — Brane Gate
 
 The strange loop's first full cycle validated the pattern:
 
@@ -42,8 +42,22 @@ The iteration established a prioritization heuristic — **high value × high fr
 
 1. Intake diff (high value, high frequency) — **built**
 2. `--yes` flag for ergonomics — **built**
-3. Source provenance in ask responses (traceability) — **deferred**
+3. Source provenance in ask responses (traceability) — **deferred → built in iteration 002**
 4. Digest preview (low frequency, nice to have) — **deferred**
+
+## Proof: Iteration 002 — Source Provenance
+
+The second cycle validated that the loop sustains itself and scales down gracefully:
+
+1. After iteration 001, asked the brane what to build next
+2. Brane identified source provenance — the output side of the trust boundary (iteration 001 gated input; 002 sources output)
+3. Built provenance via **prompt engineering alone** — no code changes to `brane.ts`
+4. Leveraged `list_sources()` that already existed from iteration 001's stashing work
+5. Iteration log eaten back into the brane
+
+### Key Insight
+
+Not every iteration demands a big feature. The highest-value change was making existing output more trustworthy — a prompt change, not a system change. Good decisions compound: the stashing work from iteration 001 provided the infrastructure iteration 002 needed. The loop rewards building well over building big.
 
 ## Why It's Safe
 
@@ -56,6 +70,7 @@ The loop is powerful because it's constrained:
 - **Brane remembers** why decisions were made (audit trail)
 - **Digest reprocesses** when lenses change (worldview stays current)
 - **Brane gate** shows intake diff before committing worldview changes (poisoning defense)
+- **Source provenance** traces answers back to their origins (output auditability)
 
 ## Relationship to Other Concepts
 
