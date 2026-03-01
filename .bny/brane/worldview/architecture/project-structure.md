@@ -43,6 +43,7 @@ These are internal libraries in `bny/lib/`, not external dependencies.
 
 | Command | Purpose |
 |---------|--------|
+| `bny next` | **Full pipeline** — reads roadmap, runs specify→plan→tasks→review→implement with one human gate |
 | `bny specify "..."` | Create feature branch + spec |
 | `bny plan` | Create implementation plan |
 | `bny tasks` | Generate task list |
@@ -52,6 +53,8 @@ These are internal libraries in `bny/lib/`, not external dependencies.
 | `bny ai init` | Bootstrap AI tool awareness (creates symlinks) |
 | `bny dev test` | Wraps `./dev/test` |
 | `bny dev pre-flight` | Wraps `./dev/pre_flight` |
+
+`bny next` supports `--dry-run` (shows plan without executing) and `--max-iter N` (ralph iterations, default 5).
 
 ## Coding Conventions
 

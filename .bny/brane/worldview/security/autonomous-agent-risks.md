@@ -40,6 +40,16 @@
 - No programmatic verification that cited sources actually contain the claimed information
 - The provenance chain (worldview file → original source) depends on the source manifest being accurate — a corrupted manifest propagates false attribution
 
+### Pipeline Orchestration (`bny next`)
+
+- `bny next` runs the full pipeline (pre_flight → specify → plan → tasks → review → implement → post_flight → roadmap update) with a single human gate at spec review
+- **Reduced oversight surface** — iterations 001-002 had multiple manual checkpoints; `bny next` collapses them to one. If a good-looking spec produces a bad implementation, the remaining gates are automated, not human
+- **Review failure is non-fatal** — gemini's antagonist role can be silently skipped if unavailable. This means a full pipeline run can complete with zero adversarial review, and the human may not notice unless they check the output logs
+- **Automatic roadmap mutation** — the orchestrator modifies `.bny/roadmap.md` and `.bny/decisions.md` on success. The system that decides what to build next also marks items as done. A successfully-run-but-subtly-wrong implementation gets checked off automatically
+- **Broad authority concentration** — the orchestrator has execute access to every stage. A bug or exploit in `bny next` itself could cascade through the entire pipeline in a single invocation
+- **`--dry-run` mitigates** — allows previewing the plan without executing, but only useful if someone actually runs it first
+- **Second confirm on failure** — implementation failure triggers "continue anyway?" defaulting to No, which is the correct safe default
+
 ### Blast Radius Limits
 
 - Max files/lines per PR bounds the damage from a single autonomous run
@@ -85,6 +95,11 @@
   - Structured `Sources:` footer on every response
   - Leverages `list_sources()` from iteration 001's stashing work
   - Prompt-enforced (social contract), not mechanically validated
+- **`bny next` safety features**
+  - `--dry-run` mode shows plan without executing
+  - Implementation failure confirm defaults to No (safe default)
+  - Bounded ralph iterations (`--max-iter N`, default 5)
+  - All existing guardrails (blast radius, protected files, post_flight) still enforced within the pipeline
 
 ## Gaps to Watch
 
@@ -101,3 +116,7 @@
 - **Source provenance is prompt-enforced** — citations depend on LLM compliance, not mechanical extraction. An adversarial prompt or model error could produce false attribution without detection
 - **No citation verification** — no system validates that cited worldview files actually support the claims attributed to them
 - **Deferred: digest preview** — no dry-run mode to see what digest would change before committing
+- **`bny next` reduces human gates to one** — spec review is the single checkpoint; a plausible-but-flawed spec passes the gate and the rest runs autonomously. The blast radius of a bad spec is now the entire pipeline, not just one step
+- **Non-fatal review weakens the dual-AI pattern** — the antagonist review can be silently skipped, meaning `bny next` may complete a full run with only the implementor's perspective. No alert or warning is surfaced to the human when review is skipped
+- **Automatic roadmap mutation** — the system marks its own work as done. Combined with non-fatal review, an unreviewed implementation could be marked complete in the roadmap. A human scanning the roadmap would see a checked item and might assume it was reviewed
+- **Pipeline-as-single-invocation** — all stages run in one process. A crash, timeout, or partial failure mid-pipeline could leave the project in an inconsistent state (e.g., branch created but not implemented, or implemented but roadmap not updated)

@@ -59,6 +59,27 @@ The second cycle validated that the loop sustains itself and scales down gracefu
 
 Not every iteration demands a big feature. The highest-value change was making existing output more trustworthy — a prompt change, not a system change. Good decisions compound: the stashing work from iteration 001 provided the infrastructure iteration 002 needed. The loop rewards building well over building big.
 
+## Proof: Iteration 003 — bny next
+
+The third cycle shifted from hardening to ergonomics — the brane looked at the workflow itself:
+
+1. After iteration 002, prompted the brane to think beyond security — what would make bny useful for daily work?
+2. Brane identified **orchestration overhead** as the gap: the 12-step manual workflow was fully automatable, with the human acting as scheduler for steps the system already knew
+3. Built `bny next` — single command that runs the full pipeline from roadmap to completion
+4. One human gate (spec review), everything else mechanical within guardrails
+5. Iteration log eaten back into the brane
+
+### Key Insight
+
+The brane diagnosed its own workflow by reading the workflow diagram in its own worldview. It proposed eliminating the human-as-scheduler pattern — the shift from toolkit to factory. Three iterations established the progression: **gate the input** (001) → **source the output** (002) → **automate the middle** (003). Each iteration built on the previous: the gate and provenance systems are what make single-command automation safe enough to trust.
+
+### Design Decisions
+
+- **One gate, not three** — spec review is where human judgment matters; downstream steps are mechanical within guardrails
+- **Review failure is non-fatal** — gemini might be unavailable; the pipeline shouldn't block on it
+- **Implementation failure gets a second confirm** — "continue anyway?" defaults to No (unlike spec review which defaults to Yes)
+- **Automatic roadmap update** — checks off the item and appends to decisions.md
+
 ## Why It's Safe
 
 The loop is powerful because it's constrained:
@@ -71,9 +92,11 @@ The loop is powerful because it's constrained:
 - **Digest reprocesses** when lenses change (worldview stays current)
 - **Brane gate** shows intake diff before committing worldview changes (poisoning defense)
 - **Source provenance** traces answers back to their origins (output auditability)
+- **Single-command pipeline** preserves all constraints while removing manual orchestration overhead
 
 ## Relationship to Other Concepts
 
 - The [Dual-AI Loop](dual-ai-loop.md) is the execution engine within each iteration
 - The [Guardrails System](guardrails-system.md) constrains what each iteration can do
 - The brane is the accumulator — it grows richer with each cycle
+- `bny next` is the orchestrator — it turns the loop from a manual checklist into an automated pipeline

@@ -29,6 +29,12 @@
       "filename": "2026-03-01T08-15-15-674Z-dna-iterations-002-source-provenance-md.txt",
       "eaten_at": "2026-03-01T08:15:15.674Z",
       "size": 2008
+    },
+    {
+      "label": "dna/iterations/003-bny-next.md",
+      "filename": "2026-03-01T08-25-24-257Z-dna-iterations-003-bny-next-md.txt",
+      "eaten_at": "2026-03-01T08:25:24.259Z",
+      "size": 2202
     }
   ]
 }
