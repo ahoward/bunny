@@ -13,6 +13,8 @@ bin/
 !.bny/decisions.md
 !.bny/guardrails.json
 !.bny/constitution.md
+!.bny/todos.md
+!.bny/brane/
 
 # env
 .env

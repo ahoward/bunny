@@ -1,0 +1,2 @@
+# git-lfs: brane sources (raw ingested content for digest/resharing)
+.bny/brane/sources/** filter=lfs diff=lfs merge=lfs -text
