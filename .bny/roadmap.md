@@ -14,9 +14,11 @@ roadmap → bny specify (create spec.md)
 
 ## Next
 
-- [ ] slash commands — .claude/commands/bny.*.md wrappers
+(empty — run `bny ipm` to plan the next iteration)
 
 ## Completed
+
+- [x] slash commands — .claude/commands/bny.*.md wrappers
 
 - [x] dark factory infrastructure — app.call, Result envelope, handlers, invariant tests, logging
 - [x] dev scripts — setup, test, health, pre_flight, post_flight

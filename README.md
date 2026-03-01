@@ -210,6 +210,29 @@ dna/              project knowledge — context only, no operational deps
 | i/o | stdin/stdout/stderr, exit codes, json lines |
 | terminology | `params` for input, `result` for output |
 
+## cheatsheet
+
+every `bny` command has a claude code slash command. type `/bny.` and tab-complete.
+
+| slash command | cli equivalent | what it does |
+|---------------|---------------|--------------|
+| `/bny.specify` | `bny specify "..."` | create feature branch + spec |
+| `/bny.plan` | `bny plan` | create implementation plan |
+| `/bny.tasks` | `bny tasks` | generate task list |
+| `/bny.implement` | `bny implement` | claude autonomous implementation |
+| `/bny.review` | `bny review` | gemini antagonist review |
+| `/bny.status` | `bny status` | show feature state |
+| `/bny.next` | `bny next` | full pipeline from roadmap item |
+| `/bny.spin` | `bny spin` | autonomous factory in detached tmux |
+| `/bny.ipm` | `bny ipm` | iteration planning meeting |
+| `/bny.ps` | `bny ps` | show running bny processes |
+| `/bny.brane-eat` | `bny brane eat` | feed file/dir/url into brane |
+| `/bny.brane-ask` | `bny brane ask` | query the worldview |
+| `/bny.brane-digest` | `bny brane digest` | rebuild worldview from sources |
+| `/bny.brane-pov` | `bny brane pov` | show/manage perspective lenses |
+
+three-layer dispatch: **slash command** → claude runs **bny cli** → bny handles everything.
+
 ## more
 
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — full development process
