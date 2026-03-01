@@ -6,7 +6,43 @@
   <em>"why are you wearing that stupid man suit?"</em>
 </p>
 
-a dark factory. ai agents build software autonomously — claude implements, gemini hardens, humans intervene only when stuck.
+## the idea
+
+most ai coding tools treat each task as isolated. write code, move on.
+knowledge evaporates between sessions.
+
+bny is different. it's a strange loop — a factory that learns from its own output.
+
+1. **seed** — you write a roadmap item. a sentence describing what you want.
+2. **build** — the factory runs autonomously: spec, plan, review, implement.
+3. **reflect** — after building, it ruminates: extracts patterns, decisions, gaps.
+4. **grow** — insights feed back into the worldview, making the next iteration smarter.
+
+each pass compounds knowledge. the factory doesn't just build — it learns to build better.
+
+the human's role: seed ideas, review output, course-correct.
+not scheduling. not gluing steps together.
+
+## the loop
+
+```
+seed idea → specify → plan → tasks → review → implement
+                                                   ↓
+                                               ruminate
+                                                   ↓
+                                             brane learns
+                                                   ↓
+                                         next iteration (smarter)
+```
+
+four actors:
+
+1. **claude** designs tests and implements code
+2. **gemini** reviews for blind spots, edge cases, security holes
+3. **brane** remembers — accumulates knowledge across iterations
+4. **human** seeds ideas, reviews output, intervenes when stuck
+
+tests are locked after gemini review. no changing them without human approval.
 
 ## tl;dr
 
@@ -28,6 +64,7 @@ bny plan                                     # implementation plan
 bny tasks                                    # task breakdown
 bny review                                   # gemini pokes holes
 bny --ralph --max-iter 10 implement          # claude builds, retries until green
+bny ruminate                                 # reflect on build, feed brane
 
 # --- knowledge base (brane) ---
 bny brane eat README.md                      # ingest a file
@@ -55,30 +92,6 @@ bny ipm                                      # interactive planning session
 ./dev/pre_flight                             # validate before work
 ./dev/post_flight                            # validate before commit
 ```
-
-## what this is
-
-- **not a framework.** a template you clone and build on.
-- **not a chatbot wrapper.** a development loop with structural guardrails.
-- **not optional tooling.** the ai agents follow a protocol enforced by git hooks, pre/post-flight checks, and blast radius limits.
-
-## how it works
-
-```
-human writes spec → gemini reviews (antagonist) → claude implements (autonomous)
-                                                    ↓
-                                              tests pass? → done
-                                              tests fail? → retry (ralph loop)
-                                              stuck?      → human checkpoint
-```
-
-two ais, one human:
-
-1. **claude** designs tests and implements code
-2. **gemini** reviews for blind spots, edge cases, security holes
-3. **human** writes specs, reviews prs, intervenes when stuck
-
-tests are locked after gemini review. no changing them without human approval.
 
 ## stack
 
@@ -119,6 +132,7 @@ bny plan             # create implementation plan
 bny tasks            # generate task list
 bny review           # gemini antagonist review
 bny implement        # claude autonomous implementation
+bny ruminate         # reflect on build, feed brane
 bny status           # show feature state
 bny ipm              # interactive planning session
 bny ai init          # bootstrap ai tool awareness (symlinks)
@@ -183,6 +197,7 @@ bny/              dark factory CLI — tool code (symlinkable)
   tasks           generate task list
   implement       claude autonomous implementation
   review          gemini antagonist review
+  ruminate        reflect on build, feed brane
   status          show feature state
   next            pick roadmap item, run full pipeline
   spin            autonomous — detached tmux factory run
@@ -221,6 +236,7 @@ every `bny` command has a claude code slash command. type `/bny.` and tab-comple
 | `/bny.tasks` | `bny tasks` | generate task list |
 | `/bny.implement` | `bny implement` | claude autonomous implementation |
 | `/bny.review` | `bny review` | gemini antagonist review |
+| `/bny.ruminate` | `bny ruminate` | reflect on build, feed brane |
 | `/bny.status` | `bny status` | show feature state |
 | `/bny.next` | `bny next` | full pipeline from roadmap item |
 | `/bny.spin` | `bny spin` | autonomous factory in detached tmux |

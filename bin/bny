@@ -149,6 +149,7 @@ commands:
   tasks             generate task list
   implement         drive AI implementation loop
   review            antagonist review
+  ruminate          reflect on build, feed brane
 
   status            show current state
   ps                show running bny processes

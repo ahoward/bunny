@@ -4,7 +4,7 @@
 //
 // reads .bny/roadmap.md, extracts the first unchecked item,
 // and orchestrates: specify → (human reviews spec) → plan → tasks →
-// review → implement → post_flight → update roadmap + decisions
+// review → implement → ruminate → post_flight → update roadmap + decisions
 //
 // usage:
 //   bny next                    # run the pipeline
@@ -43,9 +43,10 @@ picks the next roadmap item and runs the full pipeline:
   5. tasks
   6. review (gemini)
   7. implement (claude, with ralph)
-  8. post_flight
-  9. update roadmap + decisions
-  10. report
+  8. ruminate (reflect + feed brane)
+  9. post_flight
+  10. update roadmap + decisions
+  11. report
 
 flags:
   --dry-run       show what would run, don't execute
@@ -105,9 +106,10 @@ if (dry_run) {
   process.stderr.write(`  5. bny tasks\n`)
   process.stderr.write(`  6. bny review\n`)
   process.stderr.write(`  7. bny --ralph --max-iter ${max_iter} implement\n`)
-  process.stderr.write(`  8. ./dev/post_flight\n`)
-  process.stderr.write(`  9. update roadmap + decisions\n`)
-  process.stderr.write(` 10. report\n`)
+  process.stderr.write(`  8. bny ruminate\n`)
+  process.stderr.write(`  9. ./dev/post_flight\n`)
+  process.stderr.write(` 10. update roadmap + decisions\n`)
+  process.stderr.write(` 11. report\n`)
   process.exit(0)
 }
 
@@ -215,13 +217,20 @@ if (!run(impl_cmd, `implement (ralph, max-iter ${max_iter})`)) {
   }
 }
 
-// -- 8. post_flight --
+// -- 8. ruminate (reflect + feed brane) --
+
+const ruminate_args = auto_mode ? ["--yes"] : []
+if (!run(["bun", resolve(root, "bny/ruminate"), ...ruminate_args], "ruminate")) {
+  process.stderr.write("warning: ruminate failed, continuing...\n")
+}
+
+// -- 9. post_flight --
 
 if (!run(["./dev/post_flight"], "post_flight")) {
   process.stderr.write("warning: post_flight failed\n")
 }
 
-// -- 9. update roadmap + decisions --
+// -- 10. update roadmap + decisions --
 
 process.stderr.write(`\n--- updating roadmap + decisions ---\n`)
 
@@ -243,6 +252,6 @@ if (existsSync(decisions_path)) {
   process.stderr.write(`decisions: appended '${item_name}'\n`)
 }
 
-// -- 10. report --
+// -- 11. report --
 
 process.stderr.write(`\n[bny next] complete: ${item_text}\n`)

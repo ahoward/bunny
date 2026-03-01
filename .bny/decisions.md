@@ -29,3 +29,4 @@ Each entry includes date, decision, and brief rationale.
 | 2026-02-18 | bny ai init creates symlinks only, no content generation | agent-protocol.md is the single source of truth; symlinks point all agents to it |
 | 2026-02-18 | bny ps scans process table via pgrep, no extra state files | Pure Unix — pidfile + pgrep is sufficient for process discovery |
 | 2026-03-01 | Slash commands as .claude/commands/bny.*.md — thin wrappers that run bny CLI | Three-layer dispatch: /bny.specify → claude runs `bny specify` → bny handles everything |
+| 2026-03-01 | bny ruminate — post-implementation reflection feeding brane | Closes the strange loop: build → reflect → grow; reuses brane eat machinery, no source stash |
