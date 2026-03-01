@@ -16,6 +16,11 @@ git clone <repo> && cd bunny && ./dev/setup
 export PATH="./bin:$PATH"
 
 # --- build a feature (the dark factory) ---
+bny next                                     # pick roadmap item, run full pipeline
+bny next --dry-run                           # show what would run
+bny next --max-iter 10                       # more ralph retries
+
+# --- or step by step ---
 bny specify "add user authentication"       # branch + spec
 bny plan                                     # implementation plan
 bny tasks                                    # task breakdown

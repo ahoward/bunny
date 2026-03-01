@@ -20,6 +20,7 @@ No operational dependencies — bny does not require anything in this directory 
 - **iterations/** - Strange loop iteration logs (bny building bny)
   - `001-brane-gate.md` - First iteration: brane intake gating
   - `002-source-provenance.md` - Second iteration: source provenance in ask
+  - `003-bny-next.md` - Third iteration: bny next orchestrator
 
 - **research/** - Research, analysis, and exploration
 
