@@ -12,7 +12,10 @@
     "@types/bun": "latest",
     "typescript": "^5.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "tree-sitter-wasms": "^0.1.13",
+    "web-tree-sitter": "0.25.3"
+  },
   "engines": {
     "bun": ">=1.1.0"
   }

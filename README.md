@@ -65,6 +65,9 @@ bny tasks                                    # task breakdown
 bny review                                   # gemini pokes holes
 bny --ralph --max-iter 10 implement          # claude builds, retries until green
 bny ruminate                                 # reflect on build, feed brane
+bny map                                      # structural codebase map (tree-sitter)
+bny map src/ lib/                            # map specific directories
+bny map --json                               # machine-readable output
 
 # --- knowledge base (brane) ---
 bny brane eat README.md                      # ingest a file
@@ -99,6 +102,7 @@ bny ipm                                      # interactive planning session
 - **language:** typescript (strict mode)
 - **cli:** `bin/bny` — git-style subcommand dispatcher
 - **process management:** assassin (cleanup) + ralph (retry loops)
+- **code awareness:** [tree-sitter](https://tree-sitter.github.io/) via WASM — structural codebase maps
 - **no frameworks.** no orms. no build tools. pure unix.
 
 ## quick start
@@ -133,6 +137,7 @@ bny tasks            # generate task list
 bny review           # gemini antagonist review
 bny implement        # claude autonomous implementation
 bny ruminate         # reflect on build, feed brane
+bny map              # structural codebase map (tree-sitter)
 bny status           # show feature state
 bny ipm              # interactive planning session
 bny ai init          # bootstrap ai tool awareness (symlinks)
@@ -187,7 +192,7 @@ bin/bny           entry point — git-style dispatcher
     sources/      stashed raw inputs (for digest)
     state.json    active povs
 bny/              dark factory CLI — tool code (symlinkable)
-  lib/            assassin, ralph, feature, prompt, brane
+  lib/            assassin, ralph, feature, prompt, brane, map
   ai/             ai subcommands (init)
   brane/          eat, ask, pov, digest
   dev/            wrappers for ./dev/* scripts
@@ -198,6 +203,7 @@ bny/              dark factory CLI — tool code (symlinkable)
   implement       claude autonomous implementation
   review          gemini antagonist review
   ruminate        reflect on build, feed brane
+  map             structural codebase map (tree-sitter)
   status          show feature state
   next            pick roadmap item, run full pipeline
   spin            autonomous — detached tmux factory run
@@ -237,6 +243,7 @@ every `bny` command has a claude code slash command. type `/bny.` and tab-comple
 | `/bny.implement` | `bny implement` | claude autonomous implementation |
 | `/bny.review` | `bny review` | gemini antagonist review |
 | `/bny.ruminate` | `bny ruminate` | reflect on build, feed brane |
+| `/bny.map` | `bny map` | structural codebase map (tree-sitter) |
 | `/bny.status` | `bny status` | show feature state |
 | `/bny.next` | `bny next` | full pipeline from roadmap item |
 | `/bny.spin` | `bny spin` | autonomous factory in detached tmux |

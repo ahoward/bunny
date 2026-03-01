@@ -30,3 +30,5 @@ Each entry includes date, decision, and brief rationale.
 | 2026-02-18 | bny ps scans process table via pgrep, no extra state files | Pure Unix — pidfile + pgrep is sufficient for process discovery |
 | 2026-03-01 | Slash commands as .claude/commands/bny.*.md — thin wrappers that run bny CLI | Three-layer dispatch: /bny.specify → claude runs `bny specify` → bny handles everything |
 | 2026-03-01 | bny ruminate — post-implementation reflection feeding brane | Closes the strange loop: build → reflect → grow; reuses brane eat machinery, no source stash |
+| 2026-03-01 | bny map — tree-sitter WASM for structural codebase maps | Native bindings failed (C++20 node-gyp), WASM works clean; web-tree-sitter + tree-sitter-wasms = 2 deps, multi-language |
+| 2026-03-01 | bny map auto-generates extractors for unknown languages via Claude | Factory builds its own eyes: parse sample file → dump AST → Claude writes extractor → cache in .bny/map/extractors/ |
