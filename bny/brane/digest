@@ -17,6 +17,7 @@ import {
   ensure_brane, load_worldview, load_active_povs,
   call_claude, parse_json, apply_operations, worldview_dir,
   list_sources, load_stashed_source, clear_worldview,
+  confirm_intake,
 } from "../lib/brane.ts"
 import type { EatResponse } from "../lib/brane.ts"
 
@@ -24,15 +25,22 @@ import type { EatResponse } from "../lib/brane.ts"
 
 const argv = process.argv.slice(2)
 let dry_run = false
+let auto_yes = false
 
 for (const arg of argv) {
   if (arg === "--dry-run") {
     dry_run = true
+  } else if (arg === "--yes" || arg === "-y") {
+    auto_yes = true
   } else if (arg === "--help" || arg === "-h") {
-    process.stdout.write(`usage: bny brane digest [--dry-run]
+    process.stdout.write(`usage: bny brane digest [--dry-run] [--yes]
 
 clears the worldview and re-eats all stashed sources through
 current POVs. rebuilds the brane from scratch.
+
+flags:
+  --dry-run    list sources, don't re-eat
+  --yes, -y    skip confirmation
 `)
     process.exit(0)
   }
@@ -74,6 +82,18 @@ if (claude_check.exitCode !== 0) {
   process.stdout.write(JSON.stringify(error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] }, meta()), null, 2) + "\n")
   process.exitCode = 1
   process.exit()
+}
+
+// -- confirm --
+
+const total_size = sources.reduce((sum, s) => sum + s.size, 0)
+process.stderr.write(`\nwill clear worldview and re-eat ${sources.length} source(s) (${total_size} bytes)\n`)
+
+if (!auto_yes) {
+  if (!confirm_intake()) {
+    process.stderr.write("aborted\n")
+    process.exit(0)
+  }
 }
 
 // -- clear worldview --

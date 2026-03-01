@@ -42,8 +42,41 @@ Priority ordering:
 
 ## Decisions
 
-*Updated as we go.*
+1. Built intake diff + confirmation as the core gate (items 1 and 2 from priority list)
+2. Digest gets a confirmation gate before clearing worldview (destructive op), but individual re-eats within digest auto-apply (confirming each would be tedious)
+3. `confirm_intake()` reads from `/dev/tty` directly so it works even when stdin is piped. Auto-confirms when not a TTY.
+4. Deferred source provenance in ask responses and digest preview to a future iteration
 
 ## Implementation Log
 
-*Updated as we go.*
+**Added to `bny/lib/brane.ts`:**
+- `OpDiff` type — tracks old/new line counts, added/removed for each operation
+- `preview_operations(root, ops)` — reads existing files, computes line-level diff stats
+- `print_intake_diff(diffs, reasoning)` — prints compact diff summary to stderr
+- `confirm_intake()` — reads y/n from `/dev/tty`, auto-confirms if not TTY
+
+**Modified `bny/brane/eat`:**
+- Added `--yes` / `-y` flag
+- Injected gate between parse and apply: preview → confirm → apply
+- Removed duplicate reasoning output (now shown in intake diff)
+
+**Modified `bny/brane/digest`:**
+- Added `--yes` / `-y` flag
+- Added confirmation before clearing worldview: shows source count + total size
+
+**Output format:**
+```
+[intake]
+  + architecture/strange-loop.md          (42 lines)
+  ~ security/autonomous-agent-risks.md    (+8, -2)
+
+reasoning: absorbed strange loop concept...
+
+3 operations (1 new, 2 updated)
+
+apply? [Y/n]
+```
+
+## What I Learned
+
+The strange loop works. The brane identified its own vulnerability, proposed the fix, and we built it. The security POV earned its keep — without it, we might have built something shiny instead of something safe. The iteration log itself is a form of source that future iterations can eat.

@@ -174,6 +174,83 @@ export function apply_operations(root: string, ops: FileOp[]): void {
   }
 }
 
+// -- intake gate --
+
+export interface OpDiff {
+  op:        FileOp
+  is_new:    boolean
+  old_lines: number
+  new_lines: number
+  added:     number
+  removed:   number
+}
+
+export function preview_operations(root: string, ops: FileOp[]): OpDiff[] {
+  const wv_dir = worldview_dir(root)
+  const diffs: OpDiff[] = []
+
+  for (const op of ops) {
+    const target = resolve(wv_dir, op.path)
+    const new_content = op.content.trim() + "\n"
+    const new_lines = new_content.split("\n").length
+
+    if (existsSync(target)) {
+      const old_content = readFileSync(target, "utf-8")
+      const old_arr = old_content.split("\n")
+      const new_arr = new_content.split("\n")
+      const old_set = new Set(old_arr)
+      const new_set = new Set(new_arr)
+
+      let added = 0
+      let removed = 0
+      for (const line of new_arr) { if (!old_set.has(line)) added++ }
+      for (const line of old_arr) { if (!new_set.has(line)) removed++ }
+
+      diffs.push({ op, is_new: false, old_lines: old_arr.length, new_lines, added, removed })
+    } else {
+      diffs.push({ op, is_new: true, old_lines: 0, new_lines, added: new_lines, removed: 0 })
+    }
+  }
+
+  return diffs
+}
+
+export function print_intake_diff(diffs: OpDiff[], reasoning: string): void {
+  process.stderr.write("\n[intake]\n")
+
+  for (const d of diffs) {
+    if (d.is_new) {
+      process.stderr.write(`  + ${d.op.path}  (${d.new_lines} lines)\n`)
+    } else {
+      process.stderr.write(`  ~ ${d.op.path}  (+${d.added}, -${d.removed})\n`)
+    }
+  }
+
+  process.stderr.write(`\nreasoning: ${reasoning}\n`)
+
+  const new_count = diffs.filter(d => d.is_new).length
+  const update_count = diffs.filter(d => !d.is_new).length
+  const parts: string[] = []
+  if (new_count > 0) parts.push(`${new_count} new`)
+  if (update_count > 0) parts.push(`${update_count} updated`)
+  process.stderr.write(`\n${diffs.length} operation(s) (${parts.join(", ")})\n`)
+}
+
+export function confirm_intake(): boolean {
+  // auto-confirm if not a TTY (piped input)
+  if (!process.stdin.isTTY) return true
+
+  process.stderr.write("\napply? [Y/n] ")
+
+  const buf = Buffer.alloc(64)
+  const fd = require("node:fs").openSync("/dev/tty", "r")
+  const n = require("node:fs").readSync(fd, buf, 0, 64)
+  require("node:fs").closeSync(fd)
+
+  const answer = buf.slice(0, n).toString().trim().toLowerCase()
+  return answer === "" || answer === "y" || answer === "yes"
+}
+
 // -- initialization --
 
 const DEFAULT_POV = `# all

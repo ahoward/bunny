@@ -17,7 +17,7 @@ import { find_root } from "../lib/feature.ts"
 import {
   ensure_brane, load_source, load_worldview, load_active_povs,
   call_claude, parse_json, apply_operations, worldview_dir,
-  stash_source,
+  stash_source, preview_operations, print_intake_diff, confirm_intake,
 } from "../lib/brane.ts"
 import type { EatResponse } from "../lib/brane.ts"
 
@@ -25,16 +25,23 @@ import type { EatResponse } from "../lib/brane.ts"
 
 const argv = process.argv.slice(2)
 let dry_run = false
+let auto_yes = false
 let source: string | null = null
 
 for (const arg of argv) {
   if (arg === "--dry-run") {
     dry_run = true
+  } else if (arg === "--yes" || arg === "-y") {
+    auto_yes = true
   } else if (arg === "--help" || arg === "-h") {
-    process.stdout.write(`usage: bny brane eat [--dry-run] <source>
+    process.stdout.write(`usage: bny brane eat [--dry-run] [--yes] <source>
 
 source can be a file path, directory, or URL.
 directories are ingested recursively.
+
+flags:
+  --dry-run    print prompt, don't call claude
+  --yes, -y    skip confirmation, apply immediately
 `)
     process.exit(0)
   } else if (!arg.startsWith("-")) {
@@ -174,9 +181,21 @@ if (!response) {
   }
 }
 
-// -- apply operations --
+// -- intake gate --
 
 if (response.operations.length > 0) {
+  const diffs = preview_operations(root, response.operations)
+  print_intake_diff(diffs, response.reasoning)
+
+  if (!auto_yes) {
+    if (!confirm_intake()) {
+      process.stderr.write("aborted\n")
+      process.exit(0)
+    }
+  }
+
+  // -- apply operations --
+
   apply_operations(root, response.operations)
   process.stderr.write(`applied ${response.operations.length} operation(s)\n`)
 
@@ -213,8 +232,6 @@ Respond with ONLY the markdown content (no JSON, no fences).
 }
 
 // -- output --
-
-process.stderr.write(`reasoning: ${response.reasoning}\n`)
 
 const result_data = {
   source: loaded.label,
