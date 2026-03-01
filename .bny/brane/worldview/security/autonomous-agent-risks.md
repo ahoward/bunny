@@ -14,6 +14,21 @@
 - It should be listed in its own `protected_files` (self-referential protection)
 - Git hooks enforce `post_flight` but hooks can be skipped with `--no-verify` (the protocol forbids this but the system doesn't physically prevent it)
 
+### Constitution Integrity
+
+- The constitution defines foundational principles — if amended maliciously, all downstream behavior shifts
+- Amendment process requires rationale documentation but enforcement is social, not mechanical
+- Constitution should be in `protected_files` if not already
+- Version bumps provide change detection but not prevention
+
+### Brane Poisoning (Strange Loop Risk)
+
+- The brane accumulates knowledge that influences what gets built next
+- If poisoned data is eaten into the brane, it corrupts the worldview
+- Subsequent `digest` operations propagate the poison through all lenses
+- The loop amplifies: bad knowledge → bad specs → bad implementations → bad feedback → worse knowledge
+- **Mitigation gap:** human reviews PRs but may not review every brane eat/digest operation
+
 ### Blast Radius Limits
 
 - Max files/lines per PR bounds the damage from a single autonomous run
@@ -47,6 +62,7 @@
 - Append-only decision log for audit
 - Protected files list
 - Assassin process cleanup (prevents leaked child processes from autonomous runs)
+- Constitution versioning (change detection for principle modifications)
 
 ## Gaps to Watch
 
@@ -56,3 +72,5 @@
 - No mention of secrets management or credential handling
 - Symlink integrity — no validation that `bny/` points to trusted source
 - `bny ai init` symlink creation not audited
+- Brane eat/digest not gated by human review — poisoned sources propagate
+- Constitution amendments enforced socially, not mechanically

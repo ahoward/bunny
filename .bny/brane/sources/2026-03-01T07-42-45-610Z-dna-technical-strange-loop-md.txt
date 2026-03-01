@@ -1,0 +1,59 @@
+# The Strange Loop
+
+bny builds bny. The system improves its own tooling through the same process it uses to build anything else.
+
+## Why It Works
+
+The brane is project memory that compounds. Every iteration deposits knowledge — what was built, what broke, what the human thought about it, what the research said. The next iteration starts from a richer worldview. Specs get sharper because they're informed by everything that came before.
+
+Traditional dev cycles lose context between iterations. Decisions evaporate. Rationale disappears into slack threads. The brane doesn't forget. You can ask it *why* something is the way it is, and it knows, because someone ate the reasoning.
+
+## The Cycle
+
+```
+research / eat
+     ↓
+ask → what should we build?
+     ↓
+specify → plan → implement → review  (dark factory)
+     ↓
+human reviews
+     ↓
+eat feedback
+     ↓
+digest (if lenses changed)
+     ↓
+repeat
+```
+
+Each pass is waterfall-shaped. The iterations are tight. The brane bridges them.
+
+## Why It's Safe
+
+A self-improving system sounds dangerous. It is — without constraints. bny has five:
+
+1. **Blast radius.** Each iteration can only change N files, M lines. No single PR rewrites the system.
+2. **Antagonist review.** Gemini reviews every change Claude makes. Two AIs with different roles catch more than one.
+3. **Human checkpoint.** Every PR gets human review. The human writes the feedback that feeds the next iteration.
+4. **Locked tests.** After Gemini review, tests cannot change without human approval. The factory can't weaken its own acceptance criteria.
+5. **Protected files.** The constitution, guardrails, and decision log are off-limits to autonomous agents.
+
+The loop is powerful *because* it's bounded. An unconstrained self-improving system is a runaway train. A constrained one is a flywheel.
+
+## POVs As Iteration Lenses
+
+Early iterations run with broad lenses: `all`, `product`. As the project matures, you add `security`, `perf`, `ops`. Running `digest` reprocesses every stashed source through the new lenses. The worldview shifts. The next roadmap reflects concerns you weren't tracking before.
+
+This is how priorities evolve without losing history. The raw sources don't change. The perspective does.
+
+## Feedback As First-Class Knowledge
+
+Human feedback isn't a jira comment. It's a markdown file that gets eaten into the brane. "The auth flow is too complex" becomes a concept in the worldview. It influences every future spec, every future review, every future `ask`.
+
+This means the human's taste and judgment accumulate in the system over time. The factory doesn't just get smarter about the code — it gets smarter about what the human wants.
+
+## The Recursive Quality
+
+bny improving bny is not a gimmick. It's the hardest test case. If the system can safely modify its own tooling — the dispatcher, the brane, the guardrails enforcement, the prompt engineering — through the constrained loop, it can build anything.
+
+If it can't, that's valuable too. The failure modes of self-improvement are the most informative failures possible.

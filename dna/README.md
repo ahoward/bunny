@@ -15,6 +15,7 @@ No operational dependencies — bny does not require anything in this directory 
 
 - **technical/** - Technical documentation and conventions
   - `development-loop.md` - Antagonistic Testing process
+  - `strange-loop.md` - bny builds bny: the iterative brane cycle
 
 - **research/** - Research, analysis, and exploration
 

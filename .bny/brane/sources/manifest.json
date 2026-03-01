@@ -1,1 +1,16 @@
-{"sources":[]}
+{
+  "sources": [
+    {
+      "label": "dna/technical/strange-loop.md",
+      "filename": "2026-03-01T07-42-45-610Z-dna-technical-strange-loop-md.txt",
+      "eaten_at": "2026-03-01T07:42:45.611Z",
+      "size": 3063
+    },
+    {
+      "label": ".bny/constitution.md",
+      "filename": "2026-03-01T07-42-49-420Z-bny-constitution-md.txt",
+      "eaten_at": "2026-03-01T07:42:49.421Z",
+      "size": 4245
+    }
+  ]
+}
