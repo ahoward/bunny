@@ -19,6 +19,7 @@ No operational dependencies — bny does not require anything in this directory 
 
 - **iterations/** - Strange loop iteration logs (bny building bny)
   - `001-brane-gate.md` - First iteration: brane intake gating
+  - `002-source-provenance.md` - Second iteration: source provenance in ask
 
 - **research/** - Research, analysis, and exploration
 

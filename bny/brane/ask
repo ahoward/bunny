@@ -17,7 +17,7 @@ import { error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
   ensure_brane, load_source, load_worldview, load_active_povs,
-  call_claude,
+  call_claude, list_sources,
 } from "../lib/brane.ts"
 
 // -- parse args --
@@ -91,6 +91,17 @@ const worldview_block = worldview.length > 0
   ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
   : "(empty worldview)"
 
+// -- source provenance --
+
+const sources = list_sources(root)
+const provenance_block = sources.length > 0
+  ? sources.map(s => `- ${s.label} (${s.eaten_at})`).join("\n")
+  : "(no sources ingested yet)"
+
+// -- available files --
+
+const file_list = worldview.map(w => w.heading).join(", ")
+
 const ask_prompt = `# Points of View
 
 ${pov_block}
@@ -100,6 +111,14 @@ ${pov_block}
 # Worldview
 
 ${worldview_block}
+
+---
+
+# Source Provenance
+
+The worldview was built from these sources:
+
+${provenance_block}
 
 ---
 
@@ -115,8 +134,16 @@ Answer based on your worldview. Synthesize across all points of view.
 If the input is a document, evaluate it — note alignment, conflicts, gaps,
 and recommendations based on what you already know.
 If the input is a question, answer it from what you know.
-Cite which worldview files informed your answer.
 Be direct. No fluff.
+
+IMPORTANT: End every response with a "Sources:" section that lists:
+1. Which worldview files informed your answer (use the exact file paths: ${file_list})
+2. Which original sources (from the provenance list) contributed to those worldview files, if you can trace the connection
+
+Format:
+Sources:
+- worldview-file-path.md (from: original source label)
+- another-file.md
 `
 
 // -- dry run --
