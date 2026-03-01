@@ -215,6 +215,10 @@ src/              application source
   lib/            types, result helpers, logging
 tests/            tests + fixtures
 specs/            feature specs (one dir per feature)
+samples/          projects built entirely by bny (proof it works)
+  mood/           team mood tracker API
+  tldr/           CLI file/URL summarizer
+  shelf/          personal bookmarks with tags + search
 dna/              project knowledge — context only, no operational deps
 .githooks/        pre-commit (post_flight), pre-push (test)
 ```
@@ -255,6 +259,20 @@ every `bny` command has a claude code slash command. type `/bny.` and tab-comple
 | `/bny.brane-pov` | `bny brane pov` | show/manage perspective lenses |
 
 three-layer dispatch: **slash command** → claude runs **bny cli** → bny handles everything.
+
+## proof
+
+three projects built entirely by bny — from a one-paragraph seed to working code. no human wrote any application code.
+
+| sample | seed | what it builds |
+|--------|------|---------------|
+| [mood](samples/mood/) | "team mood tracker API" | JSON API — post moods, view 30-day trends |
+| [tldr](samples/tldr/) | "CLI file/URL summarizer" | CLI tool — pipe-friendly, cached summaries |
+| [shelf](samples/shelf/) | "personal bookmarks with tags" | JSON API — tags, search, markdown export |
+
+each sample is a standalone bny project. `cd samples/mood && bun bin/bny next --auto` to watch the factory build.
+
+see [samples/](samples/) for details.
 
 ## more
 

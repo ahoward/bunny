@@ -136,11 +136,15 @@ export function list_all_povs(root: string): string[] {
 // -- llm --
 
 export function call_claude(prompt: string, root: string): string | null {
+  // strip CLAUDECODE env var so nested claude sessions work
+  const env = { ...process.env }
+  delete env.CLAUDECODE
   const proc = Bun.spawnSync(["claude", "-p", "-"], {
     stdout: "pipe",
     stderr: "pipe",
     stdin: Buffer.from(prompt),
     cwd: root,
+    env,
   })
   if (proc.exitCode !== 0) {
     const err = new TextDecoder().decode(proc.stderr).trim()

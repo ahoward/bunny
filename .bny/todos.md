@@ -1,0 +1,2 @@
+- [ ] Consider --timeout and --budget flags for all bny commands. Ralph already has --max-iter/--max-budget/--timeout but these should be promoted as first-class bny flags. Also consider canned meta-limits like 'a little, a lot, hard, forever' for common use cases.
+- [ ] Add a permissive JSON parser throughout bny. LLM responses frequently include markdown fences, trailing commas, comments, or other non-strict JSON. Replace all JSON.parse calls in brane.ts and ruminate with a forgiving parser that handles these cases.

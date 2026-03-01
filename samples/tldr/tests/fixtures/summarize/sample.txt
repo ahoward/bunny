@@ -1,0 +1,3 @@
+This is a sample text file used for testing the summarizer.
+It contains a few lines of text that describe a simple concept.
+The summarizer should be able to read this file and produce a concise summary.

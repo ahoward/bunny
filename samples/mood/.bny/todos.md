@@ -1,0 +1,1 @@
+- [ ] Add a permissive JSON parser throughout bny. LLM responses frequently include markdown fences, trailing commas, comments, or other non-strict JSON. Replace all JSON.parse calls in brane.ts and ruminate with a forgiving parser that handles these cases.

@@ -9,7 +9,7 @@
 //   bny specify "user auth" --number 5
 //
 
-import { mkdirSync, copyFileSync, existsSync, writeFileSync } from "node:fs"
+import { mkdirSync, copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "../src/lib/result.ts"
 import {
@@ -70,7 +70,13 @@ mkdirSync(paths.dir, { recursive: true })
 
 const template = resolve(root, "bny/templates/spec-template.md")
 if (existsSync(template)) {
-  copyFileSync(template, paths.spec)
+  const today = new Date().toISOString().slice(0, 10)
+  let content = readFileSync(template, "utf-8")
+  content = content.replace("[FEATURE NAME]", description)
+  content = content.replace("[###-feature-name]", branch_name)
+  content = content.replace("[DATE]", today)
+  content = content.replace('"$ARGUMENTS"', `"${description}"`)
+  writeFileSync(paths.spec, content)
 } else {
   // touch the file
   Bun.write(paths.spec, "")

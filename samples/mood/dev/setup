@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+bun install
+echo "setup: ok" >&2

@@ -94,12 +94,17 @@ assassin.install(resolve(root, ".bny"))
 const prompt_tmp = resolve(root, ".bny/implement-prompt.tmp")
 await Bun.write(prompt_tmp, prompt)
 
+// strip CLAUDECODE env var so nested claude sessions work
+const spawn_env = { ...process.env }
+delete spawn_env.CLAUDECODE
+
 const proc = Bun.spawn(
   ["bash", "-c", `claude -p - --continue --dangerously-skip-permissions < "${prompt_tmp}"`],
   {
     stdout: "inherit",
     stderr: "inherit",
     cwd:    root,
+    env:    spawn_env,
   },
 )
 

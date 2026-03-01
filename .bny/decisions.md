@@ -32,3 +32,5 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-01 | bny ruminate — post-implementation reflection feeding brane | Closes the strange loop: build → reflect → grow; reuses brane eat machinery, no source stash |
 | 2026-03-01 | bny map — tree-sitter WASM for structural codebase maps | Native bindings failed (C++20 node-gyp), WASM works clean; web-tree-sitter + tree-sitter-wasms = 2 deps, multi-language |
 | 2026-03-01 | bny map auto-generates extractors for unknown languages via Claude | Factory builds its own eyes: parse sample file → dump AST → Claude writes extractor → cache in .bny/map/extractors/ |
+| 2026-03-01 | samples/ directory — 3 projects built entirely headless by bny | Proof the factory works: mood (API), tldr (CLI), shelf (API+sqlite); each from a one-paragraph seed, 3 spins |
+| 2026-03-01 | Sample projects symlink bny/ from parent, own .bny/ state | Real-world usage pattern: shared tooling, per-project state; demonstrates bny portability |

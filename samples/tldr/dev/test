@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -e
+
+# tolerate empty projects — no test files means nothing to fail
+shopt -s nullglob
+files=(tests/*.test.* tests/**/*.test.*)
+shopt -u nullglob
+
+if [ ${#files[@]} -eq 0 ]; then
+  exit 0
+fi
+
+BUNNY_LOG=0 exec bun test "$@"

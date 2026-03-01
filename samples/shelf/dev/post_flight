@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -e
+
+# type check — skip if no .ts files in src/
+if compgen -G "src/**/*.ts" > /dev/null 2>&1 || compgen -G "src/*.ts" > /dev/null 2>&1; then
+  bunx tsc --noEmit
+fi
+
+# tests
+./dev/test
+
+echo "post_flight: ok" >&2

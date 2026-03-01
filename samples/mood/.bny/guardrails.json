@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+
+  "protected_files": [
+    ".bny/guardrails.json",
+    ".bny/decisions.md"
+  ],
+
+  "blast_radius": {
+    "max_files_per_pr": 20,
+    "max_lines_changed_per_pr": 500,
+    "max_new_dependencies": 3,
+    "new_dependency_requires": "autonomous"
+  },
+
+  "forbidden_actions": [
+    "force_push_main",
+    "skip_tests"
+  ],
+
+  "require_human_approval": [
+    "remove_invariant_test"
+  ]
+}
