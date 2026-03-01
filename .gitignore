@@ -15,7 +15,6 @@ bin/
 !.bny/constitution.md
 !.bny/todos.md
 !.bny/brane/
-.bny/brane/sources/
 
 # env
 .env
