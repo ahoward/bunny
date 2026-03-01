@@ -35,6 +35,12 @@
       "filename": "2026-03-01T08-25-24-257Z-dna-iterations-003-bny-next-md.txt",
       "eaten_at": "2026-03-01T08:25:24.259Z",
       "size": 2202
+    },
+    {
+      "label": "dna/iterations/004-bny-spin.md",
+      "filename": "2026-03-01T08-44-53-572Z-dna-iterations-004-bny-spin-md.txt",
+      "eaten_at": "2026-03-01T08:44:53.573Z",
+      "size": 2491
     }
   ]
 }

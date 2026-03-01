@@ -14,6 +14,7 @@
 | `tests/` | Tests + fixtures |
 | `specs/` | Feature specs (one dir per feature) |
 | `.bny/` | Project state — git-tracked, per-project |
+| `.bny/spin/` | Spin logs — gitignored runtime state |
 | `bny/` | Dark factory CLI — tool code (**symlinkable** across projects) |
 | `dev/` | Dev tooling — per-project customizable plumbing |
 | `dna/` | Project knowledge — context only, no operational deps |
@@ -44,6 +45,10 @@ These are internal libraries in `bny/lib/`, not external dependencies.
 | Command | Purpose |
 |---------|--------|
 | `bny next` | **Full pipeline** — reads roadmap, runs specify→plan→tasks→review→implement with one human gate |
+| `bny next --auto` | **Autonomous pipeline** — same as `bny next` but skips all human checkpoints |
+| `bny spin` | **Detached factory** — launches `bny next --auto` in a tmux session, returns immediately |
+| `bny spin --attach` | Launch and attach to watch live |
+| `bny spin --log` | Tail the latest spin log |
 | `bny specify "..."` | Create feature branch + spec |
 | `bny plan` | Create implementation plan |
 | `bny tasks` | Generate task list |
@@ -54,7 +59,9 @@ These are internal libraries in `bny/lib/`, not external dependencies.
 | `bny dev test` | Wraps `./dev/test` |
 | `bny dev pre-flight` | Wraps `./dev/pre_flight` |
 
-`bny next` supports `--dry-run` (shows plan without executing) and `--max-iter N` (ralph iterations, default 5).
+`bny next` supports `--dry-run` (shows plan without executing), `--auto` (skip human gates), and `--max-iter N` (ralph iterations, default 5).
+
+`bny spin` supports `--attach` (watch live), `--log` (tail latest), `--dry-run` (show what would launch). Includes duplicate detection via `tmux has-session`.
 
 ## Coding Conventions
 

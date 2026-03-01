@@ -50,10 +50,22 @@
 - **`--dry-run` mitigates** — allows previewing the plan without executing, but only useful if someone actually runs it first
 - **Second confirm on failure** — implementation failure triggers "continue anyway?" defaulting to No, which is the correct safe default
 
+### Fully Autonomous Mode (`--auto` + `bny spin`)
+
+- **`--auto` eliminates the last human gate** — the spec review checkpoint that `bny next` preserved is now skippable. The pipeline runs end-to-end without any human interaction
+- **All existing guardrails still apply** (blast radius, gemini review, locked tests, post_flight), but the human checkpoint — the one gate designed to catch plausible-but-flawed specs — is gone
+- **Detached execution via `bny spin`** — the factory runs in a tmux session without the human present. The human reviews output asynchronously, after the fact
+- **Post-hoc review replaces pre-approval** — the security model shifts from "human approves before execution" to "human reviews after execution." This is fundamentally weaker: a bad implementation is already committed, merged, and marked done in the roadmap before the human sees it
+- **Clean env stripping** — `bny spin` strips `CLAUDECODE` and `CLAUDE_CODE_SESSION` vars to avoid nested-session detection. This is necessary for tmux to work, but it also means the spawned session has no knowledge that it was launched programmatically rather than by a human. Any tooling that checks for nested sessions as a safety measure is bypassed
+- **Duplicate detection is session-name-based** — `tmux has-session` prevents double-launch, but only for the same roadmap item. Multiple different items can spin concurrently, each autonomously modifying the codebase
+- **Log-only observability** — spin output goes to `.bny/spin/{timestamp}.log`. If the human doesn't read the log, bad output persists unreviewed. There's no alerting, no summary, no diff of what changed
+- **Feedback loop without verification** — the intended workflow is: spin → review log → write feedback → eat into brane → spin again. But the eat step is subject to all brane poisoning risks, and the spin step trusts the brane completely. A corrupted feedback cycle could compound across iterations with no human in the loop to notice drift
+
 ### Blast Radius Limits
 
 - Max files/lines per PR bounds the damage from a single autonomous run
 - But accumulated PRs could still introduce systemic issues if review is rubber-stamped
+- **With `bny spin`, PRs may accumulate faster than humans review them** — the factory doesn't wait for review before starting the next item
 
 ### Supply Chain
 
@@ -100,6 +112,12 @@
   - Implementation failure confirm defaults to No (safe default)
   - Bounded ralph iterations (`--max-iter N`, default 5)
   - All existing guardrails (blast radius, protected files, post_flight) still enforced within the pipeline
+- **`bny spin` safety features**
+  - Duplicate detection via `tmux has-session` (prevents double-launch)
+  - `--dry-run` mode shows what would launch
+  - Logs captured to `.bny/spin/` with `latest.log` symlink for easy review
+  - Clean env is targeted (strips specific vars, not `env -i`) — preserves PATH, HOME, shell config
+  - All existing guardrails still enforced within the spawned session
 
 ## Gaps to Watch
 
@@ -120,3 +138,9 @@
 - **Non-fatal review weakens the dual-AI pattern** — the antagonist review can be silently skipped, meaning `bny next` may complete a full run with only the implementor's perspective. No alert or warning is surfaced to the human when review is skipped
 - **Automatic roadmap mutation** — the system marks its own work as done. Combined with non-fatal review, an unreviewed implementation could be marked complete in the roadmap. A human scanning the roadmap would see a checked item and might assume it was reviewed
 - **Pipeline-as-single-invocation** — all stages run in one process. A crash, timeout, or partial failure mid-pipeline could leave the project in an inconsistent state (e.g., branch created but not implemented, or implemented but roadmap not updated)
+- **`--auto` removes the last human gate** — the spec review that `bny next` preserved is now optional. With `--auto`, a bad roadmap item flows through the entire pipeline without any human checkpoint. The guardrails (blast radius, locked tests) constrain *how much* damage, but not *what kind*
+- **Detached execution is post-hoc review** — `bny spin` shifts the security model from pre-approval to post-review. A committed-and-merged bad implementation requires active rollback rather than passive rejection
+- **No alerting on spin completion** — the human must actively check logs. No notification when a spin finishes, succeeds, or fails. Silent failures could go unnoticed
+- **Concurrent spins** — nothing prevents multiple spin sessions running simultaneously on different roadmap items, each autonomously modifying code. Merge conflicts and interaction effects between concurrent autonomous changes are unaddressed
+- **Env stripping bypasses nested-session safety** — removing `CLAUDECODE`/`CLAUDE_CODE_SESSION` vars is necessary for tmux but eliminates any tooling that uses these vars to detect and restrict programmatic invocation
+- **Compounding feedback loop** — the spin→review→eat→spin cycle is the strange loop at its most autonomous. Each cycle trusts the brane, which trusts the previous cycle's output. Drift or corruption compounds across iterations with diminishing human attention per cycle
