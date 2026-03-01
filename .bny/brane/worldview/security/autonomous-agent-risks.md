@@ -27,7 +27,9 @@
 - If poisoned data is eaten into the brane, it corrupts the worldview
 - Subsequent `digest` operations propagate the poison through all lenses
 - The loop amplifies: bad knowledge → bad specs → bad implementations → bad feedback → worse knowledge
-- **Mitigation gap:** human reviews PRs but may not review every brane eat/digest operation
+- **Brane gate (iteration 001)** mitigates intake poisoning — see Mitigations below
+- **Remaining exposure:** auto-confirm when not a TTY means piped/scripted intake bypasses the gate silently
+- **Remaining exposure:** individual re-eats within `digest` auto-apply without per-source confirmation
 
 ### Blast Radius Limits
 
@@ -63,6 +65,12 @@
 - Protected files list
 - Assassin process cleanup (prevents leaked child processes from autonomous runs)
 - Constitution versioning (change detection for principle modifications)
+- **Brane gate** — intake diff + human confirmation before worldview changes
+  - `preview_operations()` computes line-level diff stats (added/removed/new/updated)
+  - `print_intake_diff()` prints compact diff summary to stderr
+  - `confirm_intake()` reads y/n from `/dev/tty` so it works even when stdin is piped
+  - `--yes` / `-y` flag for explicit opt-out of confirmation
+  - Digest requires confirmation before clearing worldview (destructive operation protection)
 
 ## Gaps to Watch
 
@@ -72,5 +80,9 @@
 - No mention of secrets management or credential handling
 - Symlink integrity — no validation that `bny/` points to trusted source
 - `bny ai init` symlink creation not audited
-- Brane eat/digest not gated by human review — poisoned sources propagate
 - Constitution amendments enforced socially, not mechanically
+- **Brane gate auto-confirm on non-TTY** — piped/scripted `eat` operations bypass the gate without explicit `--yes`, which means automated pipelines skip the human review silently
+- **Digest re-eats not individually gated** — after confirming the initial worldview clear, each source is re-eaten without per-source confirmation. A corrupted source in the manifest would be silently re-ingested
+- **`--yes` flag is a social contract** — nothing prevents an autonomous agent from passing `--yes` to bypass the gate
+- **Deferred: source provenance in ask responses** — answers don't yet surface which sources informed them, limiting auditability of brane influence
+- **Deferred: digest preview** — no dry-run mode to see what digest would change before committing
