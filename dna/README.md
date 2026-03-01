@@ -21,6 +21,7 @@ No operational dependencies — bny does not require anything in this directory 
   - `001-brane-gate.md` - First iteration: brane intake gating
   - `002-source-provenance.md` - Second iteration: source provenance in ask
   - `003-bny-next.md` - Third iteration: bny next orchestrator
+  - `004-bny-spin.md` - Fourth iteration: autonomous detached factory runs
 
 - **research/** - Research, analysis, and exploration
 

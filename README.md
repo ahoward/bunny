@@ -18,7 +18,9 @@ export PATH="./bin:$PATH"
 # --- build a feature (the dark factory) ---
 bny next                                     # pick roadmap item, run full pipeline
 bny next --dry-run                           # show what would run
-bny next --max-iter 10                       # more ralph retries
+bny spin                                     # autonomous — run detached in tmux
+bny spin --attach                            # launch and watch live
+bny spin --log                               # tail the latest spin log
 
 # --- or step by step ---
 bny specify "add user authentication"       # branch + spec
@@ -182,6 +184,8 @@ bny/              dark factory CLI — tool code (symlinkable)
   implement       claude autonomous implementation
   review          gemini antagonist review
   status          show feature state
+  next            pick roadmap item, run full pipeline
+  spin            autonomous — detached tmux factory run
   todo            project chore tracking
   ipm             interactive planning session
 dev/              per-project customizable plumbing (shebangs, chmod +x)

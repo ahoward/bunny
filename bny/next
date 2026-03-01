@@ -20,22 +20,25 @@ import { find_root } from "./lib/feature.ts"
 
 const argv = process.argv.slice(2)
 let dry_run = false
+let auto_mode = false
 let max_iter = 5
 
 for (let i = 0; i < argv.length; i++) {
   const arg = argv[i]
   if (arg === "--dry-run") {
     dry_run = true
+  } else if (arg === "--auto") {
+    auto_mode = true
   } else if (arg === "--max-iter" && argv[i + 1]) {
     max_iter = parseInt(argv[i + 1], 10)
     i++
   } else if (arg === "--help" || arg === "-h") {
-    process.stdout.write(`usage: bny next [--dry-run] [--max-iter N]
+    process.stdout.write(`usage: bny next [--dry-run] [--auto] [--max-iter N]
 
 picks the next roadmap item and runs the full pipeline:
   1. pre_flight
   2. specify (create branch + spec)
-  3. human reviews spec
+  3. human reviews spec (skipped in --auto)
   4. plan
   5. tasks
   6. review (gemini)
@@ -46,6 +49,7 @@ picks the next roadmap item and runs the full pipeline:
 
 flags:
   --dry-run       show what would run, don't execute
+  --auto          skip human checkpoints (for bny spin)
   --max-iter N    ralph iterations for implement (default: 5)
 `)
     process.exit(0)
@@ -161,13 +165,17 @@ const paths = feature_paths(root, feature)
 
 // -- 3. human reviews spec --
 
-process.stderr.write(`\n--- human checkpoint ---\n`)
-process.stderr.write(`spec: ${paths.spec}\n`)
-process.stderr.write(`\nreview the spec, edit if needed.\n`)
+if (!auto_mode) {
+  process.stderr.write(`\n--- human checkpoint ---\n`)
+  process.stderr.write(`spec: ${paths.spec}\n`)
+  process.stderr.write(`\nreview the spec, edit if needed.\n`)
 
-if (!confirm("continue? [Y/n] ")) {
-  process.stderr.write("aborted by human\n")
-  process.exit(0)
+  if (!confirm("continue? [Y/n] ")) {
+    process.stderr.write("aborted by human\n")
+    process.exit(0)
+  }
+} else {
+  process.stderr.write(`\n--- auto: skipping spec review ---\n`)
 }
 
 // -- 4. plan --
@@ -195,11 +203,15 @@ if (!run(["bun", resolve(root, "bny/review")], "review")) {
 
 const impl_cmd = ["bun", resolve(root, "bin/bny"), "--ralph", "--max-iter", String(max_iter), "implement"]
 if (!run(impl_cmd, `implement (ralph, max-iter ${max_iter})`)) {
-  process.stderr.write(`\nimplementation did not complete cleanly.\n`)
-  if (!confirm("continue anyway? [y/N] ")) {
-    process.stderr.write("stopped at implement\n")
-    process.exitCode = 1
-    process.exit()
+  if (!auto_mode) {
+    process.stderr.write(`\nimplementation did not complete cleanly.\n`)
+    if (!confirm("continue anyway? [y/N] ")) {
+      process.stderr.write("stopped at implement\n")
+      process.exitCode = 1
+      process.exit()
+    }
+  } else {
+    process.stderr.write(`\nauto: implementation did not complete cleanly, continuing\n`)
   }
 }
 
