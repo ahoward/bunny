@@ -17,6 +17,9 @@ No operational dependencies — bny does not require anything in this directory 
   - `development-loop.md` - Antagonistic Testing process
   - `strange-loop.md` - bny builds bny: the iterative brane cycle
 
+- **iterations/** - Strange loop iteration logs (bny building bny)
+  - `001-brane-gate.md` - First iteration: brane intake gating
+
 - **research/** - Research, analysis, and exploration
 
 - **_/** - Internal (inbox, uncategorized, archive)
