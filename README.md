@@ -10,19 +10,44 @@ a dark factory. ai agents build software autonomously — claude implements, gem
 
 ## tl;dr
 
-bny is a project template where ai does the work. you describe a feature, two ais collaborate to build it (one codes, one attacks), and the system retries until tests pass or it gives up and asks a human.
-
 ```bash
+# --- setup ---
 git clone <repo> && cd bunny && ./dev/setup
+export PATH="./bin:$PATH"
 
-bny specify "add user authentication"    # create feature branch + spec
-bny plan                                  # create implementation plan
-bny tasks                                 # generate task list
-bny review                                # gemini finds blind spots in the spec
-bny --ralph --max-iter 10 implement       # claude implements, retrying until green
+# --- build a feature (the dark factory) ---
+bny specify "add user authentication"       # branch + spec
+bny plan                                     # implementation plan
+bny tasks                                    # task breakdown
+bny review                                   # gemini pokes holes
+bny --ralph --max-iter 10 implement          # claude builds, retries until green
+
+# --- knowledge base (brane) ---
+bny brane eat README.md                      # ingest a file
+bny brane eat docs/                          # ingest a directory
+bny brane eat https://example.com/api.html   # ingest a URL
+bny brane ask "what are the security risks?" # query the worldview
+bny brane ask competitor-spec.md             # review a doc against worldview
+bny brane pov add security "attack vectors, auth gaps, input validation"
+bny brane pov add perf "latency, memory, algorithmic complexity"
+bny brane digest                             # rebuild worldview through current lenses
+bny brane pov                                # list active povs
+
+# --- project chores ---
+bny todo add "upgrade bun to 1.4"           # add a todo
+bny todo                                     # list todos
+bny todo done 1                              # mark done
+bny todo promote 2                           # escalate to gh issue
+
+# --- iteration planning ---
+bny ipm                                      # interactive planning session
+
+# --- plumbing ---
+./dev/test                                   # run tests
+./dev/health                                 # system health (json)
+./dev/pre_flight                             # validate before work
+./dev/post_flight                            # validate before commit
 ```
-
-that's it. the factory runs. you review the pr.
 
 ## what this is
 
@@ -88,9 +113,34 @@ bny tasks            # generate task list
 bny review           # gemini antagonist review
 bny implement        # claude autonomous implementation
 bny status           # show feature state
+bny ipm              # interactive planning session
 bny ai init          # bootstrap ai tool awareness (symlinks)
 bny dev test         # wraps ./dev/test
 bny dev pre-flight   # wraps ./dev/pre_flight
+```
+
+### brane (knowledge graph)
+
+```bash
+bny brane eat <source>       # ingest file, directory, or URL
+bny brane ask <question>     # query worldview (read-only)
+bny brane ask <file>         # review a doc against worldview
+bny brane pov                # list points of view
+bny brane pov add <n> <desc> # add a perspective lens
+bny brane pov on|off <name>  # toggle a pov
+bny brane digest             # rebuild worldview from all stashed sources
+```
+
+sources are stashed on every eat. `digest` re-eats them all through your current lenses — add a pov, digest, get a new worldview. sources are git-tracked. for large branes, add a `.gitattributes` with git-lfs.
+
+### todo (project chores)
+
+```bash
+bny todo                     # list
+bny todo add "..."           # add
+bny todo done <n>            # mark done
+bny todo rm <n>              # remove
+bny todo promote <n>         # escalate to gh issue
 ```
 
 ### ralph (retry loop)
@@ -109,9 +159,16 @@ bin/bny           entry point — git-style dispatcher
   guardrails.json agent constraints (blast radius, protected files)
   decisions.md    append-only decision log
   constitution.md project principles
+  todos.md        project chores
+  brane/          knowledge graph
+    worldview/    self-organizing markdown knowledge base
+    povs/         perspective lenses (all.md is default)
+    sources/      stashed raw inputs (for digest)
+    state.json    active povs
 bny/              dark factory CLI — tool code (symlinkable)
-  lib/            assassin, ralph, feature, prompt
+  lib/            assassin, ralph, feature, prompt, brane
   ai/             ai subcommands (init)
+  brane/          eat, ask, pov, digest
   dev/            wrappers for ./dev/* scripts
   templates/      spec, plan, tasks templates
   specify         create feature workspace
@@ -120,6 +177,8 @@ bny/              dark factory CLI — tool code (symlinkable)
   implement       claude autonomous implementation
   review          gemini antagonist review
   status          show feature state
+  todo            project chore tracking
+  ipm             interactive planning session
 dev/              per-project customizable plumbing (shebangs, chmod +x)
 src/              application source
   handlers/       app.call handlers (one file per endpoint)
