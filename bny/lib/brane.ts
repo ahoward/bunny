@@ -26,6 +26,18 @@ export interface EatResponse {
   reasoning:  string
 }
 
+export interface StormSuggestion {
+  kind:   "pov" | "question" | "source"
+  value:  string
+  reason: string
+}
+
+export interface StormResponse {
+  operations:  FileOp[]
+  reasoning:   string
+  suggestions: StormSuggestion[]
+}
+
 export interface SourceEntry {
   label:    string
   filename: string
@@ -367,6 +379,53 @@ function read_dir_recursive(dir: string, base: string): string {
   }
   return parts.join("\n\n")
 }
+
+// -- index regeneration --
+
+export async function regenerate_index(root: string): Promise<void> {
+  const updated_worldview = load_worldview(root)
+  if (updated_worldview.length === 0) return
+
+  const index_prompt = `# Worldview Files
+
+${updated_worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")}
+
+---
+
+# Instructions
+
+Generate a concise index.md that summarizes what this knowledge base contains.
+Use markdown headers and bullet points. Link to files using relative paths.
+Keep it scannable — someone should understand the full scope in 30 seconds.
+Respond with ONLY the markdown content (no JSON, no fences).
+`
+
+  const index_raw = call_claude(index_prompt, root)
+  if (index_raw) {
+    let index_content = index_raw.trim()
+    if (index_content.startsWith("```")) {
+      index_content = index_content.replace(/^```(?:markdown)?\n?/, "").replace(/\n?```$/, "")
+    }
+    writeFileSync(resolve(worldview_dir(root), "index.md"), index_content.trim() + "\n")
+    process.stderr.write("regenerated index.md\n")
+  }
+}
+
+// -- storm suggestions --
+
+export function print_storm_suggestions(suggestions: StormSuggestion[]): void {
+  if (suggestions.length === 0) return
+
+  process.stderr.write("\n[suggestions]\n")
+  for (const s of suggestions) {
+    const tag = s.kind.toUpperCase().padEnd(8)
+    process.stderr.write(`  ${tag} ${s.value}\n`)
+    process.stderr.write(`           ${s.reason}\n`)
+  }
+  process.stderr.write(`\n${suggestions.length} suggestion(s)\n`)
+}
+
+// -- source loading --
 
 export function load_source(source: string, root: string): { content: string, label: string } | null {
   // URL

@@ -153,6 +153,9 @@ commands:
 
   map               structural codebase map (tree-sitter)
 
+  brane storm       divergent brainstorming against the worldview
+  brane enhance     convergent refinement of the worldview
+
   status            show current state
   ps                show running bny processes
   ai init           bootstrap AI tool integration

@@ -77,6 +77,10 @@ bny brane ask "what are the security risks?" # query the worldview
 bny brane ask competitor-spec.md             # review a doc against worldview
 bny brane pov add security "attack vectors, auth gaps, input validation"
 bny brane pov add perf "latency, memory, algorithmic complexity"
+bny brane storm "what about real-time collab?" # brainstorm — divergent expansion
+bny brane storm seed.md --rounds 2           # multi-round storm from a file
+bny brane enhance                            # refine — convergent sharpening
+bny brane enhance "security model"           # focus refinement on a topic
 bny brane digest                             # rebuild worldview through current lenses
 bny brane pov                                # list active povs
 
@@ -151,6 +155,8 @@ bny dev pre-flight   # wraps ./dev/pre_flight
 bny brane eat <source>       # ingest file, directory, or URL
 bny brane ask <question>     # query worldview (read-only)
 bny brane ask <file>         # review a doc against worldview
+bny brane storm [seed]       # divergent brainstorming (expand outward)
+bny brane enhance [focus]    # convergent refinement (sharpen inward)
 bny brane pov                # list points of view
 bny brane pov add <n> <desc> # add a perspective lens
 bny brane pov on|off <name>  # toggle a pov
@@ -194,7 +200,7 @@ bin/bny           entry point — git-style dispatcher
 bny/              dark factory CLI — tool code (symlinkable)
   lib/            assassin, ralph, feature, prompt, brane, map
   ai/             ai subcommands (init)
-  brane/          eat, ask, pov, digest
+  brane/          eat, ask, pov, digest, storm, enhance
   dev/            wrappers for ./dev/* scripts
   templates/      spec, plan, tasks templates
   specify         create feature workspace
@@ -255,6 +261,8 @@ every `bny` command has a claude code slash command. type `/bny.` and tab-comple
 | `/bny.ps` | `bny ps` | show running bny processes |
 | `/bny.brane-eat` | `bny brane eat` | feed file/dir/url into brane |
 | `/bny.brane-ask` | `bny brane ask` | query the worldview |
+| `/bny.brane-storm` | `bny brane storm` | divergent brainstorming |
+| `/bny.brane-enhance` | `bny brane enhance` | convergent refinement |
 | `/bny.brane-digest` | `bny brane digest` | rebuild worldview from sources |
 | `/bny.brane-pov` | `bny brane pov` | show/manage perspective lenses |
 

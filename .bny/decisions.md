@@ -34,3 +34,4 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-01 | bny map auto-generates extractors for unknown languages via Claude | Factory builds its own eyes: parse sample file → dump AST → Claude writes extractor → cache in .bny/map/extractors/ |
 | 2026-03-01 | samples/ directory — 3 projects built entirely headless by bny | Proof the factory works: mood (API), tldr (CLI), shelf (API+sqlite); each from a one-paragraph seed, 3 spins |
 | 2026-03-01 | Sample projects symlink bny/ from parent, own .bny/ state | Real-world usage pattern: shared tooling, per-project state; demonstrates bny portability |
+| 2026-03-01 | bny brane storm + enhance — divergent/convergent brane tools | Storm expands outward (brainstorm), enhance sharpens inward (refine); both use intake gate + regenerate_index; extracted shared regenerate_index() helper to brane.ts |
