@@ -160,7 +160,8 @@ function show_help(topic: string | null, json: boolean): void {
   process.stdout.write(`bny — the bunny dark factory CLI
 
 usage: bny <command> [args...]
-       bny --ralph [--max-iter N] <command>
+       bny --effort <level> <command>
+       bny --max-iter N <command>
 `)
 
   for (const group of GROUP_ORDER) {
@@ -175,10 +176,17 @@ usage: bny <command> [args...]
 
   process.stdout.write(`
 options:
+  --effort LEVEL      retry with canned limits (little, some, full, max)
   --ralph             wrap command in ralph retry loop
-  --max-iter N        max iterations (default: unlimited)
-  --max-budget USD    max budget (default: unlimited)
-  --timeout S         per-iteration timeout (default: unlimited)
+  --max-iter N        max iterations (implies --ralph)
+  --max-budget USD    max budget in dollars (implies --ralph)
+  --timeout S         per-iteration timeout in seconds (implies --ralph)
+
+effort presets:
+  little              2 iters, $0.50, 2min timeout
+  some                5 iters, $2, 5min timeout
+  full                10 iters, $5, 10min timeout
+  max                 unlimited
 
 run 'bny help <topic>' or 'bny <command> --help'
 `)
@@ -227,6 +235,21 @@ function get_root(quiet = false): string {
 }
 
 // -- parse args --
+
+// -- effort presets --
+
+interface EffortPreset {
+  max_iter:   number
+  max_budget: number
+  timeout_ms: number
+}
+
+const EFFORT_PRESETS: Record<string, EffortPreset> = {
+  little: { max_iter: 2,  max_budget: 0.50, timeout_ms: 120_000 },
+  some:   { max_iter: 5,  max_budget: 2.00, timeout_ms: 300_000 },
+  full:   { max_iter: 10, max_budget: 5.00, timeout_ms: 600_000 },
+  max:    { max_iter: 0,  max_budget: 0,    timeout_ms: 0 },
+}
 
 interface ParsedArgs {
   ralph:       boolean
@@ -278,6 +301,21 @@ function parse_args(argv: string[]): ParsedArgs {
       continue
     }
 
+    if (arg === "--effort" && i + 1 < argv.length) {
+      const preset = EFFORT_PRESETS[argv[i + 1]]
+      if (preset) {
+        result.ralph = true
+        result.max_iter = preset.max_iter
+        result.max_budget = preset.max_budget
+        result.timeout_ms = preset.timeout_ms
+      } else {
+        process.stderr.write(`bny: unknown effort level '${argv[i + 1]}' (use: little, some, full, max)\n`)
+        process.exitCode = 1
+      }
+      i += 2
+      continue
+    }
+
     if (arg.startsWith("-")) {
       result.rest.push(arg)
       i++
@@ -302,6 +340,11 @@ function parse_args(argv: string[]): ParsedArgs {
 
     result.rest.push(arg)
     i++
+  }
+
+  // implicitly enable ralph when any limit flag is set
+  if (!result.ralph && (result.max_iter > 0 || result.max_budget > 0 || result.timeout_ms > 0)) {
+    result.ralph = true
   }
 
   return result
