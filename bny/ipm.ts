@@ -1,0 +1,293 @@
+#!/usr/bin/env bun
+//
+// bny ipm — iteration planning meeting
+//
+// headless loop: claude reviews project, asks questions via CLI,
+// human answers, loop until roadmap is agreed on.
+//
+// usage:
+//   bny ipm               # run IPM
+//   bny ipm --dry-run     # print initial prompt, don't run
+//
+
+import { existsSync, readdirSync, mkdirSync } from "node:fs"
+import { resolve } from "node:path"
+import { createInterface } from "node:readline"
+import { find_root } from "./lib/feature.ts"
+import { read_section } from "./lib/prompt.ts"
+import type { PromptSection } from "./lib/prompt.ts"
+
+export async function main(argv: string[]): Promise<number> {
+  // -- parse args --
+
+  let dry_run = false
+
+  for (const arg of argv) {
+    if (arg === "--dry-run") {
+      dry_run = true
+    } else if (arg === "--help" || arg === "-h") {
+      process.stdout.write("usage: bny ipm [--dry-run]\n")
+      process.stdout.write("\nclaude reviews the project, interviews you, then writes specs/ROADMAP.md.\n")
+      return 0
+    }
+  }
+
+  // -- gather context --
+
+  const root = find_root()
+
+  const context_files: [string, string][] = [
+    ["README", "README.md"],
+    ["Product Vision", "docs/product-vision.md"],
+    ["Business Model", "docs/business-model.md"],
+    ["Current Roadmap", ".bny/roadmap.md"],
+    ["Current ROADMAP", "specs/ROADMAP.md"],
+  ]
+
+  const sections: PromptSection[] = context_files
+    .map(([heading, rel]) => read_section(heading, resolve(root, rel)))
+    .filter((s): s is NonNullable<typeof s> => s !== null)
+
+  // gather all existing specs
+  const specs_dir = resolve(root, "specs")
+  if (existsSync(specs_dir)) {
+    for (const entry of readdirSync(specs_dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue
+      const spec_path = resolve(specs_dir, entry.name, "spec.md")
+      const section = read_section(`Shipped: ${entry.name}`, spec_path)
+      if (section) sections.push(section)
+    }
+  }
+
+  // gather recent git history
+  const git_log = Bun.spawnSync(
+    ["git", "log", "--oneline", "--no-decorate", "-50"],
+    { stdout: "pipe", stderr: "pipe", cwd: root },
+  )
+  if (git_log.exitCode === 0) {
+    const log_text = new TextDecoder().decode(git_log.stdout).trim()
+    if (log_text.length > 0) {
+      sections.push({ heading: "Recent Commits (newest first)", content: log_text })
+    }
+  }
+
+  if (sections.length === 0) {
+    process.stderr.write("error: no project context files found\n")
+    return 1
+  }
+
+  // -- build context block --
+
+  const context_block = sections
+    .map(s => `# ${s.heading}\n\n${s.content}`)
+    .join("\n\n---\n\n")
+
+  // -- JSON protocol for claude responses --
+
+  const response_schema = [
+    "You MUST respond with valid JSON matching this schema (no markdown fences, just raw JSON):",
+    "",
+    "{",
+    '  "phase": "interview" | "proposal" | "final",',
+    '  "summary": "string — brief status or context for the human",',
+    '  "questions": ["string"] — 1-3 questions to ask (interview phase only)',
+    '  "proposal": "string — markdown roadmap proposal (proposal phase only)",',
+    '  "roadmap": "string — final markdown to write to file (final phase only)"',
+    "}",
+    "",
+    "Phase rules:",
+    '- "interview": you need more info. Ask 1-3 focused questions.',
+    '- "proposal": you have enough info. Present a prioritized roadmap proposal for review.',
+    '- "final": human approved. Return the finished roadmap markdown.',
+  ].join("\n")
+
+  const pm_instructions = [
+    "You are the project manager running an Iteration Planning Meeting (IPM).",
+    "You have full project context below. Your job: interview the human to develop the next roadmap.",
+    "",
+    "Interview approach:",
+    "- Start by summarizing where the project stands (brief, 3-5 bullets).",
+    "- Ask focused questions: what's working, what's broken, what's missing, what's next.",
+    "- Push back on vague answers. Ask 'why' and 'what if we don't'.",
+    "- After 3-5 rounds of questions, move to proposal phase.",
+    "- Be direct and specific. No fluff.",
+    "",
+    "Roadmap format (for proposal and final phases):",
+    "## Current State",
+    "## Gaps",
+    "## Proposed Features (prioritized)",
+    "Each: Title, Priority (P0/P1/P2), Description (1-2 sentences), Rationale",
+    "",
+    "Prioritize: unblocking work > user-facing value > technical debt.",
+  ].join("\n")
+
+  // -- helpers --
+
+  function call_claude(prompt: string): string | null {
+    const proc = Bun.spawnSync(["claude", "-p", "-"], {
+      stdout: "pipe",
+      stderr: "pipe",
+      stdin: Buffer.from(prompt),
+      cwd: root,
+    })
+    if (proc.exitCode !== 0) {
+      const err = new TextDecoder().decode(proc.stderr).trim()
+      process.stderr.write(`error: claude failed: ${err}\n`)
+      return null
+    }
+    return new TextDecoder().decode(proc.stdout).trim()
+  }
+
+  interface IpmResponse {
+    phase: "interview" | "proposal" | "final"
+    summary: string
+    questions?: string[]
+    proposal?: string
+    roadmap?: string
+  }
+
+  function parse_response(raw: string): IpmResponse | null {
+    // strip markdown fences if claude wraps anyway
+    let cleaned = raw.trim()
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
+    }
+    try {
+      return JSON.parse(cleaned) as IpmResponse
+    } catch {
+      process.stderr.write("warning: failed to parse claude response as JSON, retrying...\n")
+      return null
+    }
+  }
+
+  function ask(question: string): Promise<string> {
+    const rl = createInterface({ input: process.stdin, output: process.stdout })
+    return new Promise((resolve) => {
+      rl.question(question, (answer) => {
+        rl.close()
+        resolve(answer.trim())
+      })
+    })
+  }
+
+  // -- dry run --
+
+  if (dry_run) {
+    const initial_prompt = [context_block, pm_instructions, response_schema].join("\n\n---\n\n")
+    process.stdout.write(initial_prompt + "\n")
+    return 0
+  }
+
+  // -- guards --
+
+  const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
+  if (claude_check.exitCode !== 0) {
+    process.stderr.write("error: claude CLI not found on PATH\n")
+    return 1
+  }
+
+  mkdirSync(resolve(root, "specs"), { recursive: true })
+
+  // -- interview loop --
+
+  process.stderr.write("\n🐰 IPM — reviewing project...\n\n")
+
+  const transcript: { role: "pm" | "human", content: string }[] = []
+  let round = 0
+  const max_rounds = 15
+
+  while (round < max_rounds) {
+    round++
+
+    // build prompt with full history
+    const parts = [context_block, pm_instructions, response_schema]
+
+    if (transcript.length > 0) {
+      const history = transcript
+        .map(t => `[${t.role === "pm" ? "PM" : "Human"}]: ${t.content}`)
+        .join("\n\n")
+      parts.push(`# Conversation So Far\n\n${history}`)
+      parts.push("Continue the IPM. Respond with the next JSON object.")
+    } else {
+      parts.push("Start the IPM. Summarize the project state and ask your first questions.")
+    }
+
+    const prompt = parts.join("\n\n---\n\n")
+    const raw = call_claude(prompt)
+    if (!raw) { return 1 }
+
+    let response = parse_response(raw)
+    if (!response) {
+      // retry once
+      const retry = call_claude(prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.")
+      if (!retry) { return 1 }
+      const r2 = parse_response(retry)
+      if (!r2) {
+        process.stderr.write("error: could not get structured response from claude\n")
+        return 1
+      }
+      response = r2
+    }
+
+    const resp = response!
+
+    // -- display summary --
+    if (resp.summary) {
+      process.stdout.write(`\n${resp.summary}\n`)
+    }
+
+    // -- handle phases --
+
+    if (resp.phase === "final" && resp.roadmap) {
+      const out_path = resolve(root, "specs/ROADMAP.md")
+      await Bun.write(out_path, resp.roadmap + "\n")
+      process.stdout.write(`\n✅ Roadmap written to specs/ROADMAP.md\n`)
+      break
+    }
+
+    if (resp.phase === "proposal" && resp.proposal) {
+      process.stdout.write(`\n--- Proposed Roadmap ---\n\n${resp.proposal}\n\n`)
+      transcript.push({ role: "pm", content: resp.summary + "\n\n" + resp.proposal })
+
+      const feedback = await ask("Your take? (approve / edit / more questions): ")
+      if (!feedback || feedback === "approve" || feedback === "done" || feedback === "ship it" || feedback === "write it") {
+        // one more round to get final markdown
+        transcript.push({ role: "human", content: "Approved. Write the final roadmap." })
+        continue
+      }
+      transcript.push({ role: "human", content: feedback })
+      continue
+    }
+
+    if (resp.phase === "interview" && resp.questions && resp.questions.length > 0) {
+      const q_block = resp.questions.map((q, i) => `  ${i + 1}. ${q}`).join("\n")
+      transcript.push({ role: "pm", content: resp.summary + "\n" + resp.questions.join("\n") })
+
+      process.stdout.write(`\n${q_block}\n`)
+      const answer = await ask("\n> ")
+
+      if (answer === "done" || answer === "ship it" || answer === "write it") {
+        transcript.push({ role: "human", content: "I'm done answering questions. Propose a roadmap based on what you know." })
+        continue
+      }
+
+      transcript.push({ role: "human", content: answer })
+      continue
+    }
+
+    // fallback — shouldn't happen
+    process.stderr.write("warning: unexpected response phase, continuing...\n")
+    transcript.push({ role: "pm", content: resp.summary || raw })
+    const fallback_answer = await ask("\n> ")
+    transcript.push({ role: "human", content: fallback_answer })
+  }
+
+  if (round >= max_rounds) {
+    process.stderr.write("error: too many rounds, exiting\n")
+    return 1
+  }
+
+  return 0
+}
+
+if (import.meta.main) process.exit(await main(process.argv.slice(2)))

@@ -1,0 +1,75 @@
+#!/usr/bin/env bun
+//
+// bny map — structural codebase map via tree-sitter
+//
+// parses source files and extracts symbols (functions, classes, types, imports).
+// supports: typescript, javascript, ruby, python, go.
+//
+// usage:
+//   bny map                    # map from project root
+//   bny map src/ lib/          # map specific directories
+//   bny map --json             # JSON output with Result envelope
+//
+
+import { find_root } from "./lib/feature.ts"
+import { map_codebase, format_markdown, format_json } from "./lib/map.ts"
+import { success } from "../src/lib/result.ts"
+
+export async function main(argv: string[]): Promise<number> {
+  // -- parse args --
+
+  let json_mode = false
+  const dirs: string[] = []
+
+  for (const arg of argv) {
+    if (arg === "--json") {
+      json_mode = true
+    } else if (arg === "--help" || arg === "-h") {
+      process.stdout.write(`usage: bny map [--json] [directories...]
+
+generates a structural map of the codebase using tree-sitter.
+extracts exported symbols, classes, types, and imports.
+
+supports: typescript, javascript, ruby, python, go.
+
+flags:
+  --json       JSON output with Result envelope
+
+examples:
+  bny map              # map from project root
+  bny map src/         # map specific directory
+  bny map --json       # machine-readable output
+`)
+      return 0
+    } else if (!arg.startsWith("-")) {
+      dirs.push(arg)
+    }
+  }
+
+  // -- setup --
+
+  const root = find_root()
+
+  // default: scan from project root
+  if (dirs.length === 0) dirs.push(".")
+
+  // -- map --
+
+  const start = Date.now()
+  const map = await map_codebase(root, dirs)
+  const duration_ms = Date.now() - start
+
+  // -- output --
+
+  if (json_mode) {
+    const meta = { path: "/bny/map", timestamp: new Date().toISOString(), duration_ms }
+    process.stdout.write(JSON.stringify(success(map, meta), null, 2) + "\n")
+  } else {
+    process.stdout.write(format_markdown(map))
+    process.stderr.write(`\n${map.stats.total_files} files mapped in ${duration_ms}ms\n`)
+  }
+
+  return 0
+}
+
+if (import.meta.main) process.exit(await main(process.argv.slice(2)))

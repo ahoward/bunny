@@ -1,0 +1,279 @@
+#!/usr/bin/env bun
+//
+// bny next — pick the next roadmap item and run the full pipeline
+//
+// reads .bny/roadmap.md, extracts the first unchecked item,
+// and orchestrates: specify → (human reviews spec) → plan → tasks →
+// review → implement → ruminate → post_flight → update roadmap + decisions
+//
+// usage:
+//   bny next                    # run the pipeline
+//   bny next --dry-run          # show what would run
+//   bny next --max-iter 10      # ralph iterations for implement
+//
+
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { resolve } from "node:path"
+import { find_root } from "./lib/feature.ts"
+import { ralph } from "./lib/ralph.ts"
+import { main as specify_main } from "./specify.ts"
+import { main as plan_main } from "./plan.ts"
+import { main as tasks_main } from "./tasks.ts"
+import { main as review_main } from "./review.ts"
+import { main as implement_main } from "./implement.ts"
+import { main as ruminate_main } from "./ruminate.ts"
+
+export async function main(argv: string[]): Promise<number> {
+  // -- parse args --
+
+  let dry_run = false
+  let auto_mode = false
+  let max_iter = 5
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg === "--dry-run") {
+      dry_run = true
+    } else if (arg === "--auto") {
+      auto_mode = true
+    } else if (arg === "--max-iter" && argv[i + 1]) {
+      max_iter = parseInt(argv[i + 1], 10)
+      i++
+    } else if (arg === "--help" || arg === "-h") {
+      process.stdout.write(`usage: bny next [--dry-run] [--auto] [--max-iter N]
+
+picks the next roadmap item and runs the full pipeline:
+  1. pre_flight
+  2. specify (create branch + spec)
+  3. human reviews spec (skipped in --auto)
+  4. plan
+  5. tasks
+  6. review (gemini)
+  7. implement (claude, with ralph)
+  8. ruminate (reflect + feed brane)
+  9. post_flight
+  10. update roadmap + decisions
+  11. report
+
+flags:
+  --dry-run       show what would run, don't execute
+  --auto          skip human checkpoints (for bny spin)
+  --max-iter N    ralph iterations for implement (default: 5)
+`)
+      return 0
+    }
+  }
+
+  // -- setup --
+
+  const root = find_root()
+
+  // -- parse roadmap --
+
+  const roadmap_path = resolve(root, ".bny/roadmap.md")
+  if (!existsSync(roadmap_path)) {
+    process.stderr.write("error: .bny/roadmap.md not found\n")
+    return 1
+  }
+
+  const roadmap = readFileSync(roadmap_path, "utf-8")
+
+  // find ## Next section, extract first unchecked item
+  const next_match = roadmap.match(/## Next\n\n([\s\S]*?)(?=\n## |\n*$)/)
+  if (!next_match) {
+    process.stderr.write("error: no '## Next' section in roadmap\n")
+    return 1
+  }
+
+  const next_section = next_match[1]
+  const item_match = next_section.match(/^- \[ \] (.+)$/m)
+  if (!item_match) {
+    process.stderr.write("nothing to do — all roadmap items completed\n")
+    return 0
+  }
+
+  const item_text = item_match[1].trim()
+  // split on " — " to get name and description
+  const dash_idx = item_text.indexOf(" — ")
+  const item_name = dash_idx >= 0 ? item_text.slice(0, dash_idx).trim() : item_text
+  const item_desc = dash_idx >= 0 ? item_text.slice(dash_idx + 3).trim() : item_text
+
+  process.stderr.write(`\n[bny next]\n`)
+  process.stderr.write(`  item: ${item_text}\n`)
+  process.stderr.write(`  max-iter: ${max_iter}\n\n`)
+
+  if (dry_run) {
+    process.stderr.write(`would run:\n`)
+    process.stderr.write(`  1. ./dev/pre_flight\n`)
+    process.stderr.write(`  2. bny specify "${item_name}"\n`)
+    process.stderr.write(`  3. (human reviews spec)\n`)
+    process.stderr.write(`  4. bny plan\n`)
+    process.stderr.write(`  5. bny tasks\n`)
+    process.stderr.write(`  6. bny review\n`)
+    process.stderr.write(`  7. bny --ralph --max-iter ${max_iter} implement\n`)
+    process.stderr.write(`  8. bny ruminate\n`)
+    process.stderr.write(`  9. ./dev/post_flight\n`)
+    process.stderr.write(` 10. update roadmap + decisions\n`)
+    process.stderr.write(` 11. report\n`)
+    return 0
+  }
+
+  // -- helpers --
+
+  function run_ext(cmd: string[], label: string): boolean {
+    process.stderr.write(`\n--- ${label} ---\n`)
+    const proc = Bun.spawnSync(cmd, {
+      stdout: "inherit",
+      stderr: "inherit",
+      stdin: "inherit",
+      cwd: root,
+    })
+    if (proc.exitCode !== 0) {
+      process.stderr.write(`\nerror: ${label} failed (exit ${proc.exitCode})\n`)
+      return false
+    }
+    return true
+  }
+
+  async function run_fn(fn: () => Promise<number>, label: string): Promise<boolean> {
+    process.stderr.write(`\n--- ${label} ---\n`)
+    const code = await fn()
+    if (code !== 0) {
+      process.stderr.write(`\nerror: ${label} failed (exit ${code})\n`)
+      return false
+    }
+    return true
+  }
+
+  function confirm(prompt: string): boolean {
+    process.stderr.write(prompt)
+    const buf = Buffer.alloc(64)
+    const fd = require("node:fs").openSync("/dev/tty", "r")
+    const n = require("node:fs").readSync(fd, buf, 0, 64)
+    require("node:fs").closeSync(fd)
+    const answer = buf.slice(0, n).toString().trim().toLowerCase()
+    return answer === "" || answer === "y" || answer === "yes"
+  }
+
+  // -- 1. pre_flight (external project script) --
+
+  if (!run_ext(["./dev/pre_flight"], "pre_flight")) {
+    return 1
+  }
+
+  // -- 2. specify --
+
+  if (!await run_fn(() => specify_main([item_name]), "specify")) {
+    return 1
+  }
+
+  // find the spec file that was just created
+  const { current_feature, feature_paths } = await import("./lib/feature.ts")
+  const feature = current_feature()
+  if (!feature) {
+    process.stderr.write("error: could not determine feature branch after specify\n")
+    return 1
+  }
+
+  const paths = feature_paths(root, feature)
+
+  // -- 3. human reviews spec --
+
+  if (!auto_mode) {
+    process.stderr.write(`\n--- human checkpoint ---\n`)
+    process.stderr.write(`spec: ${paths.spec}\n`)
+    process.stderr.write(`\nreview the spec, edit if needed.\n`)
+
+    if (!confirm("continue? [Y/n] ")) {
+      process.stderr.write("aborted by human\n")
+      return 0
+    }
+  } else {
+    process.stderr.write(`\n--- auto: skipping spec review ---\n`)
+  }
+
+  // -- 4. plan --
+
+  if (!await run_fn(() => plan_main([]), "plan")) {
+    return 1
+  }
+
+  // -- 5. tasks --
+
+  if (!await run_fn(() => tasks_main([]), "tasks")) {
+    return 1
+  }
+
+  // -- 6. review (gemini) --
+
+  if (!await run_fn(() => review_main([]), "review")) {
+    // review failure is non-fatal — gemini might not be available
+    process.stderr.write("warning: review failed, continuing without antagonist review\n")
+  }
+
+  // -- 7. implement (claude, with ralph) --
+
+  process.stderr.write(`\n--- implement (ralph, max-iter ${max_iter}) ---\n`)
+  const impl_result = await ralph({
+    fn:         () => implement_main([]),
+    max_iter,
+    max_budget: 0,
+    timeout_ms: 0,
+    session_id: null,
+  })
+
+  if (impl_result.status !== "complete") {
+    process.stderr.write(`\nerror: implement ${impl_result.status} after ${impl_result.iterations} iterations\n`)
+    if (!auto_mode) {
+      process.stderr.write(`\nimplementation did not complete cleanly.\n`)
+      if (!confirm("continue anyway? [y/N] ")) {
+        process.stderr.write("stopped at implement\n")
+        return 1
+      }
+    } else {
+      process.stderr.write(`\nauto: implementation did not complete cleanly, continuing\n`)
+    }
+  }
+
+  // -- 8. ruminate (reflect + feed brane) --
+
+  const ruminate_args = auto_mode ? ["--yes"] : []
+  if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
+    process.stderr.write("warning: ruminate failed, continuing...\n")
+  }
+
+  // -- 9. post_flight (external project script) --
+
+  if (!run_ext(["./dev/post_flight"], "post_flight")) {
+    process.stderr.write("warning: post_flight failed\n")
+  }
+
+  // -- 10. update roadmap + decisions --
+
+  process.stderr.write(`\n--- updating roadmap + decisions ---\n`)
+
+  // check off the item in roadmap
+  const updated_roadmap = roadmap.replace(
+    `- [ ] ${item_text}`,
+    `- [x] ${item_text}`
+  )
+  writeFileSync(roadmap_path, updated_roadmap)
+  process.stderr.write(`roadmap: checked off '${item_name}'\n`)
+
+  // append to decisions
+  const decisions_path = resolve(root, ".bny/decisions.md")
+  if (existsSync(decisions_path)) {
+    const today = new Date().toISOString().slice(0, 10)
+    const decisions = readFileSync(decisions_path, "utf-8")
+    const row = `| ${today} | ${item_name} | Built via bny next (strange loop iteration) |\n`
+    writeFileSync(decisions_path, decisions.trimEnd() + "\n" + row)
+    process.stderr.write(`decisions: appended '${item_name}'\n`)
+  }
+
+  // -- 11. report --
+
+  process.stderr.write(`\n[bny next] complete: ${item_text}\n`)
+  return 0
+}
+
+if (import.meta.main) process.exit(await main(process.argv.slice(2)))

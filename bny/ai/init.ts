@@ -10,7 +10,7 @@
 //
 
 import { existsSync, mkdirSync, symlinkSync, readlinkSync, unlinkSync } from "node:fs"
-import { resolve, dirname, relative } from "node:path"
+import { resolve, dirname } from "node:path"
 import { success, error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 
@@ -22,7 +22,7 @@ interface AgentEntry {
   target:  string   // symlink target relative to file's parent dir
 }
 
-function agent_registry(root: string): AgentEntry[] {
+function agent_registry(): AgentEntry[] {
   const protocol = "bny/AGENTS.md"
 
   // for files at root level, target is just the protocol path
@@ -46,85 +46,88 @@ function agent_registry(root: string): AgentEntry[] {
   return entries
 }
 
-// -- args --
+export async function main(argv: string[]): Promise<number> {
+  // -- args --
 
-const argv = process.argv.slice(2)
-
-if (argv.includes("--help") || argv.includes("-h")) {
-  process.stdout.write(`usage: bny ai init [agent...]
+  if (argv.includes("--help") || argv.includes("-h")) {
+    process.stdout.write(`usage: bny ai init [agent...]
 
 agents: claude, gemini, agents, copilot, cursor, windsurf, kilocode, auggie, roo, qwen, codebuddy, qoder, shai
 
 no args = all known agents
 `)
-  process.exit(0)
-}
-
-// -- main --
-
-const root = find_root()
-const registry = agent_registry(root)
-const requested = argv.length > 0 ? argv : registry.map(e => e.name)
-
-const created:  string[] = []
-const skipped:  string[] = []
-const updated:  string[] = []
-const unknown:  string[] = []
-
-for (const name of requested) {
-  const entry = registry.find(e => e.name === name)
-  if (!entry) {
-    unknown.push(name)
-    continue
+    return 0
   }
 
-  const abs_path = resolve(root, entry.file)
-  const parent = dirname(abs_path)
+  // -- main --
 
-  // ensure parent dir exists
-  if (!existsSync(parent)) {
-    mkdirSync(parent, { recursive: true })
-  }
+  const root = find_root()
+  const registry = agent_registry()
+  const requested = argv.length > 0 ? argv : registry.map(e => e.name)
 
-  // check if symlink already correct
-  try {
-    const current = readlinkSync(abs_path)
-    if (current === entry.target) {
-      skipped.push(entry.name)
+  const created:  string[] = []
+  const skipped:  string[] = []
+  const updated:  string[] = []
+  const unknown:  string[] = []
+
+  for (const name of requested) {
+    const entry = registry.find(e => e.name === name)
+    if (!entry) {
+      unknown.push(name)
       continue
     }
-    // stale symlink — remove and recreate
-    unlinkSync(abs_path)
-    symlinkSync(entry.target, abs_path)
-    updated.push(entry.name)
-  } catch {
-    // not a symlink or doesn't exist
-    if (existsSync(abs_path)) {
-      // real file exists — remove and replace with symlink
-      unlinkSync(abs_path)
+
+    const abs_path = resolve(root, entry.file)
+    const parent = dirname(abs_path)
+
+    // ensure parent dir exists
+    if (!existsSync(parent)) {
+      mkdirSync(parent, { recursive: true })
     }
-    symlinkSync(entry.target, abs_path)
-    created.push(entry.name)
+
+    // check if symlink already correct
+    try {
+      const current = readlinkSync(abs_path)
+      if (current === entry.target) {
+        skipped.push(entry.name)
+        continue
+      }
+      // stale symlink — remove and recreate
+      unlinkSync(abs_path)
+      symlinkSync(entry.target, abs_path)
+      updated.push(entry.name)
+    } catch {
+      // not a symlink or doesn't exist
+      if (existsSync(abs_path)) {
+        // real file exists — remove and replace with symlink
+        unlinkSync(abs_path)
+      }
+      symlinkSync(entry.target, abs_path)
+      created.push(entry.name)
+    }
+  }
+
+  // -- output --
+
+  if (unknown.length > 0) {
+    process.stderr.write(`bny ai init: unknown agents: ${unknown.join(", ")}\n`)
+  }
+
+  const meta = {
+    path: "/bny/ai/init",
+    timestamp: new Date().toISOString(),
+    duration_ms: 0,
+  }
+
+  if (unknown.length > 0 && created.length === 0 && updated.length === 0 && skipped.length === 0) {
+    const result = error({ agents: [{ code: "unknown", message: `unknown agents: ${unknown.join(", ")}` }] })
+    process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+    return 1
+  } else {
+    const result = success({ created, updated, skipped, unknown }, meta)
+    process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+    return 0
   }
 }
 
-// -- output --
-
-if (unknown.length > 0) {
-  process.stderr.write(`bny ai init: unknown agents: ${unknown.join(", ")}\n`)
-}
-
-const meta = {
-  path: "/bny/ai/init",
-  timestamp: new Date().toISOString(),
-  duration_ms: 0,
-}
-
-if (unknown.length > 0 && created.length === 0 && updated.length === 0 && skipped.length === 0) {
-  const result = error({ agents: [{ code: "unknown", message: `unknown agents: ${unknown.join(", ")}` }] })
-  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
-  process.exitCode = 1
-} else {
-  const result = success({ created, updated, skipped, unknown }, meta)
-  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
-}
+if (import.meta.main) process.exit(await main(process.argv.slice(2)))

@@ -1,8 +1,0 @@
-#!/usr/bin/env bun
-// bny dev post-flight — delegates to ./dev/post_flight
-import { resolve, dirname } from "node:path"
-const root = resolve(dirname(new URL(import.meta.url).pathname), "../..")
-const proc = Bun.spawn([resolve(root, "dev/post_flight"), ...process.argv.slice(2)], {
-  stdout: "inherit", stderr: "inherit", stdin: "inherit",
-})
-process.exitCode = await proc.exited

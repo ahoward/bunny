@@ -1,0 +1,59 @@
+#!/usr/bin/env bun
+//
+// bny plan — create implementation plan from template
+//
+// usage:
+//   bny plan              # uses current feature branch
+//   bny plan 001-auth     # explicit feature
+//
+
+import { copyFileSync, existsSync } from "node:fs"
+import { resolve } from "node:path"
+import { success, error } from "../src/lib/result.ts"
+import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
+
+export async function main(argv: string[]): Promise<number> {
+  const root = find_root()
+  const name = argv[0] || current_feature()
+
+  if (!name) {
+    const result = error({ feature: [{ code: "not_found", message: "no feature specified and not on a feature branch" }] })
+    process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+    return 1
+  }
+
+  const paths = feature_paths(root, name)
+
+  // guard: spec.md must exist
+  if (!existsSync(paths.spec)) {
+    const result = error({ spec: [{ code: "missing", message: `${paths.spec} does not exist — run bny specify first` }] })
+    process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+    return 1
+  }
+
+  // guard: plan.md already exists
+  if (existsSync(paths.plan)) {
+    const result = error({ plan: [{ code: "exists", message: `${paths.plan} already exists` }] })
+    process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+    return 1
+  }
+
+  // copy template
+  const template = resolve(root, "bny/templates/plan-template.md")
+  if (existsSync(template)) {
+    copyFileSync(template, paths.plan)
+  } else {
+    Bun.write(paths.plan, "")
+  }
+
+  const meta = {
+    path: "/bny/plan",
+    timestamp: new Date().toISOString(),
+    duration_ms: 0,
+  }
+  const result = success({ feature: name, plan_file: paths.plan }, meta)
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n")
+  return 0
+}
+
+if (import.meta.main) process.exit(await main(process.argv.slice(2)))

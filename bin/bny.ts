@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 //
-// bny - the bunny dark factory CLI
+// bny - the bunny dark factory CLI (unified entry point)
+//
+// compiled: bun build --compile bin/bny.ts --outfile bny
+//
+// all subcommands are statically imported for single-binary compilation.
+// in-process dispatch: no subprocess spawn for bny subcommands.
 //
 // "why are you wearing that stupid man suit?"
-//
-// git-style subcommand dispatcher:
-//   bny <cmd> [args...]        → ./bny/<cmd> [args...]
-//   bny <cmd> <sub> [args...]  → ./bny/<cmd>/<sub> [args...]
-//   bny --ralph <opts> <cmd>   → ralph-loop wrapper around <cmd>
 //
 
 import { existsSync } from "node:fs"
@@ -15,10 +15,71 @@ import { resolve, dirname } from "node:path"
 import * as assassin from "../bny/lib/assassin.ts"
 import { ralph } from "../bny/lib/ralph.ts"
 
+// -- static imports --
+
+import { main as specify_main } from "../bny/specify.ts"
+import { main as plan_main } from "../bny/plan.ts"
+import { main as tasks_main } from "../bny/tasks.ts"
+import { main as implement_main } from "../bny/implement.ts"
+import { main as review_main } from "../bny/review.ts"
+import { main as ruminate_main } from "../bny/ruminate.ts"
+import { main as status_main } from "../bny/status.ts"
+import { main as ps_main } from "../bny/ps.ts"
+import { main as map_main } from "../bny/map.ts"
+import { main as next_main } from "../bny/next.ts"
+import { main as spin_main } from "../bny/spin.ts"
+import { main as todo_main } from "../bny/todo.ts"
+import { main as close_issue_main } from "../bny/close-issue.ts"
+import { main as ipm_main } from "../bny/ipm.ts"
+import { main as ai_init_main } from "../bny/ai/init.ts"
+import { main as brane_eat_main } from "../bny/brane/eat.ts"
+import { main as brane_ask_main } from "../bny/brane/ask.ts"
+import { main as brane_digest_main } from "../bny/brane/digest.ts"
+import { main as brane_pov_main } from "../bny/brane/pov.ts"
+import { main as brane_storm_main } from "../bny/brane/storm.ts"
+import { main as brane_enhance_main } from "../bny/brane/enhance.ts"
+import { main as dev_pre_flight_main } from "../bny/dev/pre-flight.ts"
+import { main as dev_post_flight_main } from "../bny/dev/post-flight.ts"
+import { main as dev_test_main } from "../bny/dev/test.ts"
+import { main as dev_health_main } from "../bny/dev/health.ts"
+import { main as dev_setup_main } from "../bny/dev/setup.ts"
+
+// -- command registry --
+
+type CommandFn = (argv: string[]) => Promise<number>
+
+const COMMANDS: Record<string, CommandFn> = {
+  "specify":        specify_main,
+  "plan":           plan_main,
+  "tasks":          tasks_main,
+  "implement":      implement_main,
+  "review":         review_main,
+  "ruminate":       ruminate_main,
+  "status":         status_main,
+  "ps":             ps_main,
+  "map":            map_main,
+  "next":           next_main,
+  "spin":           spin_main,
+  "todo":           todo_main,
+  "close-issue":    close_issue_main,
+  "ipm":            ipm_main,
+  "ai/init":        ai_init_main,
+  "brane/eat":      brane_eat_main,
+  "brane/ask":      brane_ask_main,
+  "brane/digest":   brane_digest_main,
+  "brane/pov":      brane_pov_main,
+  "brane/storm":    brane_storm_main,
+  "brane/enhance":  brane_enhance_main,
+  "dev/pre-flight": dev_pre_flight_main,
+  "dev/post-flight":dev_post_flight_main,
+  "dev/test":       dev_test_main,
+  "dev/health":     dev_health_main,
+  "dev/setup":      dev_setup_main,
+}
+
 // -- find project root --
 
 function find_root(): string {
-  // walk up from cwd — .bny/ is the primary project marker (works when bny/ is a symlink)
   let dir = process.cwd()
   while (dir !== "/") {
     if (existsSync(resolve(dir, ".bny"))) return dir
@@ -31,7 +92,6 @@ function find_root(): string {
 }
 
 const ROOT = find_root()
-const BNY_DIR = resolve(ROOT, "bny")
 
 // -- parse args --
 
@@ -96,10 +156,10 @@ function parse_args(argv: string[]): ParsedArgs {
       result.command = arg
       i++
 
-      // check for nested subcommand: bny ai init → ./bny/ai/init
+      // check for nested subcommand: bny ai init, bny brane eat, bny dev test
       if (i < argv.length && !argv[i].startsWith("-")) {
-        const nested = resolve(BNY_DIR, result.command, argv[i])
-        if (existsSync(nested) || existsSync(nested + ".ts")) {
+        const key = `${result.command}/${argv[i]}`
+        if (COMMANDS[key]) {
           result.subcommand = argv[i]
           i++
         }
@@ -114,19 +174,14 @@ function parse_args(argv: string[]): ParsedArgs {
   return result
 }
 
-// -- resolve subcommand path --
+// -- resolve command --
 
 function resolve_command(cmd: string, subcmd: string | null): string | null {
   if (subcmd) {
-    const nested = resolve(BNY_DIR, cmd, subcmd)
-    if (existsSync(nested)) return nested
-    if (existsSync(nested + ".ts")) return nested + ".ts"
+    const key = `${cmd}/${subcmd}`
+    if (COMMANDS[key]) return key
   }
-
-  const direct = resolve(BNY_DIR, cmd)
-  if (existsSync(direct)) return direct
-  if (existsSync(direct + ".ts")) return direct + ".ts"
-
+  if (COMMANDS[cmd]) return cmd
   return null
 }
 
@@ -157,6 +212,16 @@ commands:
 
   brane storm       divergent brainstorming against the worldview
   brane enhance     convergent refinement of the worldview
+  brane eat         ingest knowledge into the brane
+  brane ask         query the brane
+  brane digest      comprehensive brane integration
+  brane pov         manage worldview perspectives
+
+  next              run full pipeline for next roadmap item
+  spin              launch autonomous factory run (tmux)
+  todo              manage github issues
+  close-issue       close a github issue
+  ipm               interactive planning mode
 
   status            show current state
   ps                show running bny processes
@@ -176,6 +241,8 @@ async function main(): Promise<void> {
   // install assassin — pidfile at .bny/bny.pid, signal handlers
   assassin.install(resolve(ROOT, ".bny"))
 
+  // bun keeps same argv layout in both dev and compiled mode:
+  // argv = ["bun", script_or_bunfs_path, ...args]
   const args = parse_args(process.argv.slice(2))
 
   if (!args.command) {
@@ -184,23 +251,22 @@ async function main(): Promise<void> {
     return
   }
 
-  const cmd_path = resolve_command(args.command, args.subcommand)
+  const cmd_key = resolve_command(args.command, args.subcommand)
 
-  if (!cmd_path) {
+  if (!cmd_key) {
     const full_cmd = args.subcommand ? `${args.command} ${args.subcommand}` : args.command
     process.stderr.write(`bny: unknown command '${full_cmd}'\n`)
-    process.stderr.write(`bny: looked for ${resolve(BNY_DIR, args.command)}\n`)
     usage()
     process.exitCode = 1
     return
   }
 
-  const full_command = [cmd_path, ...args.rest]
+  const command_fn = COMMANDS[cmd_key]
 
   // ralph mode: wrap in retry loop
   if (args.ralph) {
     const result = await ralph({
-      command:    full_command,
+      fn:         () => command_fn(args.rest),
       max_iter:   args.max_iter,
       max_budget: args.max_budget,
       timeout_ms: args.timeout_ms,
@@ -217,21 +283,8 @@ async function main(): Promise<void> {
     return
   }
 
-  // normal mode: exec the subcommand
-  const proc = Bun.spawn(full_command, {
-    stdout: "inherit",
-    stderr: "inherit",
-    stdin:  "inherit",
-    detached: true,
-  })
-
-  assassin.track(proc.pid, proc.pid)
-
-  const exit_code = await proc.exited
-
-  assassin.untrack(proc.pid)
-
-  process.exitCode = exit_code
+  // normal mode: call the command function in-process
+  process.exitCode = await command_fn(args.rest)
 }
 
 main()

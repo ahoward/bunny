@@ -1,0 +1,179 @@
+#!/usr/bin/env bun
+//
+// bny brane ask — query or review against the brane
+//
+// if the input is a file/URL, reviews it against the worldview.
+// if the input is a plain string, answers from the worldview.
+// the brane is NOT modified — this is read-only.
+//
+// usage:
+//   bny brane ask "what is this project?"       # question
+//   bny brane ask docs/competitor.md             # review a file
+//   bny brane ask https://example.com/api-docs   # review a URL
+//   bny brane ask --dry-run "question"           # print prompt
+//
+
+import { error } from "../../src/lib/result.ts"
+import { find_root } from "../lib/feature.ts"
+import {
+  ensure_brane, load_source, load_worldview, load_active_povs,
+  call_claude, list_sources,
+} from "../lib/brane.ts"
+
+export async function main(argv: string[]): Promise<number> {
+  // -- parse args --
+
+  let dry_run = false
+  const input_parts: string[] = []
+
+  for (const arg of argv) {
+    if (arg === "--dry-run") {
+      dry_run = true
+    } else if (arg === "--help" || arg === "-h") {
+      process.stdout.write(`usage: bny brane ask [--dry-run] <question or source>
+
+if the input is a file path or URL, reviews it against the worldview.
+if the input is a plain string, answers from the worldview.
+the brane is not modified.
+`)
+      return 0
+    } else {
+      input_parts.push(arg)
+    }
+  }
+
+  const input = input_parts.join(" ").trim()
+
+  if (!input) {
+    const meta = { path: "/bny/brane/ask", timestamp: new Date().toISOString(), duration_ms: 0 }
+    process.stdout.write(JSON.stringify(error({ input: [{ code: "required", message: "question or source is required" }] }, meta), null, 2) + "\n")
+    return 1
+  }
+
+  // -- setup --
+
+  const root = find_root()
+  ensure_brane(root)
+
+  // -- detect input type --
+
+  let input_content: string
+  let input_label: string
+
+  const loaded = load_source(input, root)
+  if (loaded) {
+    // it's a file, directory, or URL
+    input_content = loaded.content
+    input_label = `Source: ${loaded.label}`
+  } else {
+    // treat as a question
+    input_content = input
+    input_label = "Question"
+  }
+
+  // -- load context --
+
+  const povs = load_active_povs(root)
+  const worldview = load_worldview(root)
+
+  if (worldview.length === 0) {
+    process.stderr.write("warning: worldview is empty — eat some information first\n")
+  }
+
+  // -- build prompt --
+
+  const pov_block = povs.length > 0
+    ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+    : "(no active points of view)"
+
+  const worldview_block = worldview.length > 0
+    ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
+    : "(empty worldview)"
+
+  // -- source provenance --
+
+  const sources = list_sources(root)
+  const provenance_block = sources.length > 0
+    ? sources.map(s => `- ${s.label} (${s.eaten_at})`).join("\n")
+    : "(no sources ingested yet)"
+
+  // -- available files --
+
+  const file_list = worldview.map(w => w.heading).join(", ")
+
+  const ask_prompt = `# Points of View
+
+${pov_block}
+
+---
+
+# Worldview
+
+${worldview_block}
+
+---
+
+# Source Provenance
+
+The worldview was built from these sources:
+
+${provenance_block}
+
+---
+
+# ${input_label}
+
+${input_content}
+
+---
+
+# Instructions
+
+Answer based on your worldview. Synthesize across all points of view.
+If the input is a document, evaluate it — note alignment, conflicts, gaps,
+and recommendations based on what you already know.
+If the input is a question, answer it from what you know.
+Be direct. No fluff.
+
+IMPORTANT: End every response with a "Sources:" section that lists:
+1. Which worldview files informed your answer (use the exact file paths: ${file_list})
+2. Which original sources (from the provenance list) contributed to those worldview files, if you can trace the connection
+
+Format:
+Sources:
+- worldview-file-path.md (from: original source label)
+- another-file.md
+`
+
+  // -- dry run --
+
+  if (dry_run) {
+    process.stdout.write(ask_prompt + "\n")
+    return 0
+  }
+
+  // -- check claude --
+
+  const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
+  if (claude_check.exitCode !== 0) {
+    const meta = { path: "/bny/brane/ask", timestamp: new Date().toISOString(), duration_ms: 0 }
+    process.stdout.write(JSON.stringify(error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] }, meta), null, 2) + "\n")
+    return 1
+  }
+
+  // -- call claude --
+
+  process.stderr.write(`asking brane...\n`)
+
+  const raw = call_claude(ask_prompt, root)
+  if (!raw) {
+    return 1
+  }
+
+  // -- output (plain text, not JSON) --
+
+  process.stdout.write(raw + "\n")
+  return 0
+}
+
+if (import.meta.main) process.exit(await main(process.argv.slice(2)))

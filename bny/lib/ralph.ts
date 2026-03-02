@@ -15,7 +15,8 @@
 import * as assassin from "./assassin.ts"
 
 export interface RalphOptions {
-  command:      string[]
+  command?:     string[]                    // subprocess mode
+  fn?:          () => Promise<number>       // in-process mode (compiled binary)
   max_iter:     number       // 0 = unlimited
   max_budget:   number       // 0.0 = unlimited (USD)
   timeout_ms:   number       // 0 = unlimited (per iteration)
@@ -69,31 +70,40 @@ export async function ralph(opts: RalphOptions): Promise<RalphResult> {
 
     // run the command
     const start = performance.now()
+    let exit_code: number
 
-    const spawn_opts: Record<string, unknown> = {
-      stdout: "inherit",
-      stderr: "inherit",
-      stdin:  "inherit",
-      detached: true,
+    if (opts.fn) {
+      // in-process mode: call function directly
+      try {
+        exit_code = await opts.fn()
+      } catch (e) {
+        process.stderr.write(`ralph: fn threw: ${e}\n`)
+        exit_code = 1
+      }
+    } else if (opts.command) {
+      // subprocess mode
+      const spawn_opts: Record<string, unknown> = {
+        stdout: "inherit",
+        stderr: "inherit",
+        stdin:  "inherit",
+        detached: true,
+      }
+
+      if (opts.timeout_ms > 0) {
+        spawn_opts.timeout = opts.timeout_ms
+      }
+
+      const proc = Bun.spawn(opts.command, spawn_opts as any)
+      assassin.track(proc.pid, proc.pid)
+      exit_code = await proc.exited
+      assassin.untrack(proc.pid)
+    } else {
+      throw new Error("ralph: either command or fn is required")
     }
 
-    if (opts.timeout_ms > 0) {
-      spawn_opts.timeout = opts.timeout_ms
-    }
-
-    const proc = Bun.spawn(opts.command, spawn_opts as any)
-
-    // track for assassin cleanup
-    assassin.track(proc.pid, proc.pid)
-
-    // wait for completion
-    const exit_code = await proc.exited
     last_exit = exit_code
 
     const duration_ms = Math.round(performance.now() - start)
-
-    // untrack
-    assassin.untrack(proc.pid)
 
     // log
     log_iteration({
