@@ -15,6 +15,7 @@ import { resolve } from "node:path"
 import { createInterface } from "node:readline"
 import { find_root } from "./lib/feature.ts"
 import { read_section } from "./lib/prompt.ts"
+import { parse_json } from "./lib/brane.ts"
 import type { PromptSection } from "./lib/prompt.ts"
 
 export async function main(argv: string[]): Promise<number> {
@@ -147,17 +148,11 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   function parse_response(raw: string): IpmResponse | null {
-    // strip markdown fences if claude wraps anyway
-    let cleaned = raw.trim()
-    if (cleaned.startsWith("```")) {
-      cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
-    }
-    try {
-      return JSON.parse(cleaned) as IpmResponse
-    } catch {
+    const result = parse_json<IpmResponse>(raw)
+    if (!result) {
       process.stderr.write("warning: failed to parse claude response as JSON, retrying...\n")
-      return null
     }
+    return result
   }
 
   function ask(question: string): Promise<string> {

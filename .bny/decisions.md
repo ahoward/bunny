@@ -41,3 +41,4 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-02 | Bunny spinner — TTY-aware progress indicator with bunny emoji frames | Zero deps, writes to stderr, degrades to plain text when piped or CI; wraps all call_claude() sites |
 | 2026-03-02 | TL;DR convention — worldview files must start with H1 then one-sentence synopsis | Baked into all brane prompts (eat/enhance/storm/digest/ruminate); enables instant `bny brane tldr` without LLM |
 | 2026-03-02 | bny brane tldr — instant worldview outline by reading file tree + extracting TL;DR lines | Zero LLM, graceful degradation for pre-convention files; --json for agents |
+| 2026-03-02 | Permissive JSON parser — strip prose/fences/comments/trailing commas from LLM responses | Single parse_json() in brane.ts handles all cases; strict-first with permissive fallback; replaced ipm.ts inline copy |

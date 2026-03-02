@@ -169,10 +169,44 @@ export function call_claude(prompt: string, root: string): string | null {
 
 export function parse_json<T>(raw: string): T | null {
   let cleaned = raw.trim()
-  // strip markdown fences
+
+  // strip markdown fences (```json ... ``` or ``` ... ```)
   if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "")
+    cleaned = cleaned.replace(/^```(?:json|jsonc)?\s*\n?/, "").replace(/\n?\s*```\s*$/, "")
   }
+
+  // strip leading prose before first { or [
+  const first_brace = cleaned.indexOf("{")
+  const first_bracket = cleaned.indexOf("[")
+  let start = -1
+  if (first_brace >= 0 && first_bracket >= 0) start = Math.min(first_brace, first_bracket)
+  else if (first_brace >= 0) start = first_brace
+  else if (first_bracket >= 0) start = first_bracket
+  if (start > 0) cleaned = cleaned.slice(start)
+
+  // strip trailing prose after last } or ]
+  const last_brace = cleaned.lastIndexOf("}")
+  const last_bracket = cleaned.lastIndexOf("]")
+  const end = Math.max(last_brace, last_bracket)
+  if (end >= 0 && end < cleaned.length - 1) cleaned = cleaned.slice(0, end + 1)
+
+  // try strict parse first
+  try {
+    return JSON.parse(cleaned) as T
+  } catch {
+    // continue to permissive parsing
+  }
+
+  // strip single-line comments (// ...)
+  cleaned = cleaned.replace(/^\s*\/\/.*$/gm, "")
+
+  // strip multi-line comments (/* ... */)
+  cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, "")
+
+  // strip trailing commas before } or ]
+  cleaned = cleaned.replace(/,\s*([}\]])/g, "$1")
+
+  // try again
   try {
     return JSON.parse(cleaned) as T
   } catch {
