@@ -38,6 +38,7 @@ import { main as brane_digest_main } from "../bny/brane/digest.ts"
 import { main as brane_pov_main } from "../bny/brane/pov.ts"
 import { main as brane_storm_main } from "../bny/brane/storm.ts"
 import { main as brane_enhance_main } from "../bny/brane/enhance.ts"
+import { main as brane_tldr_main } from "../bny/brane/tldr.ts"
 import { main as dev_pre_flight_main } from "../bny/dev/pre-flight.ts"
 import { main as dev_post_flight_main } from "../bny/dev/post-flight.ts"
 import { main as dev_test_main } from "../bny/dev/test.ts"
@@ -71,12 +72,135 @@ const COMMANDS: Record<string, CommandFn> = {
   "brane/pov":      brane_pov_main,
   "brane/storm":    brane_storm_main,
   "brane/enhance":  brane_enhance_main,
+  "brane/tldr":     brane_tldr_main,
   "dev/pre-flight": dev_pre_flight_main,
   "dev/post-flight":dev_post_flight_main,
   "dev/test":       dev_test_main,
   "dev/health":     dev_health_main,
   "dev/setup":      dev_setup_main,
   "init":           init_main,
+}
+
+// -- command metadata --
+
+interface CommandInfo {
+  desc:  string
+  group: string
+}
+
+const COMMAND_META: Record<string, CommandInfo> = {
+  "dev/pre-flight":  { desc: "run pre-flight checks",              group: "development" },
+  "dev/post-flight": { desc: "run post-flight checks",             group: "development" },
+  "dev/test":        { desc: "run tests",                          group: "development" },
+  "dev/health":      { desc: "check system health",                group: "development" },
+  "dev/setup":       { desc: "install deps, configure hooks",      group: "development" },
+  "specify":         { desc: "create feature branch + spec",       group: "workflow" },
+  "plan":            { desc: "create implementation plan",         group: "workflow" },
+  "tasks":           { desc: "generate task list",                 group: "workflow" },
+  "implement":       { desc: "drive AI implementation loop",       group: "workflow" },
+  "review":          { desc: "antagonist review (gemini)",         group: "workflow" },
+  "ruminate":        { desc: "reflect on build, feed brane",       group: "workflow" },
+  "brane/eat":       { desc: "ingest file/dir/URL into brane",    group: "knowledge" },
+  "brane/ask":       { desc: "query the brane (read-only)",       group: "knowledge" },
+  "brane/storm":     { desc: "divergent brainstorming",            group: "knowledge" },
+  "brane/enhance":   { desc: "convergent worldview refinement",    group: "knowledge" },
+  "brane/tldr":      { desc: "worldview outline with TL;DR synopses", group: "knowledge" },
+  "brane/digest":    { desc: "rebuild worldview from all sources", group: "knowledge" },
+  "brane/pov":       { desc: "manage worldview perspectives",      group: "knowledge" },
+  "next":            { desc: "full pipeline for next roadmap item", group: "orchestration" },
+  "spin":            { desc: "autonomous factory run (tmux)",      group: "orchestration" },
+  "todo":            { desc: "manage project todos",               group: "chores" },
+  "close-issue":     { desc: "close github issue",                 group: "chores" },
+  "ipm":             { desc: "iteration planning meeting",         group: "chores" },
+  "status":          { desc: "show current feature state",         group: "plumbing" },
+  "ps":              { desc: "show running bny processes",         group: "plumbing" },
+  "map":             { desc: "structural codebase map (tree-sitter)", group: "plumbing" },
+  "ai/init":         { desc: "bootstrap AI tool integration",      group: "plumbing" },
+  "init":            { desc: "scaffold a new project for bny",     group: "plumbing" },
+}
+
+const GROUP_ORDER = ["development", "workflow", "knowledge", "orchestration", "chores", "plumbing"]
+
+const NAMESPACES = new Set(
+  Object.keys(COMMANDS)
+    .map(k => k.split("/")[0])
+    .filter(prefix => Object.keys(COMMANDS).some(key => key.startsWith(prefix + "/") && key !== prefix))
+)
+
+// -- help --
+
+function display_name(key: string): string {
+  return key.replace("/", " ")
+}
+
+function show_help(topic: string | null, json: boolean): void {
+  if (json) {
+    show_help_json(topic)
+    return
+  }
+
+  if (topic) {
+    // namespace help
+    const entries = Object.entries(COMMAND_META).filter(([k]) => k.startsWith(topic + "/"))
+    if (entries.length === 0) {
+      process.stderr.write(`bny: no commands in '${topic}'\n`)
+      process.exitCode = 1
+      return
+    }
+    process.stdout.write(`bny ${topic} commands:\n\n`)
+    for (const [key, meta] of entries) {
+      const name = display_name(key).padEnd(20)
+      process.stdout.write(`  ${name}${meta.desc}\n`)
+    }
+    process.stdout.write(`\nrun 'bny ${topic} <cmd> --help' for details\n`)
+    return
+  }
+
+  // full help
+  process.stdout.write(`bny — the bunny dark factory CLI
+
+usage: bny <command> [args...]
+       bny --ralph [--max-iter N] <command>
+`)
+
+  for (const group of GROUP_ORDER) {
+    const entries = Object.entries(COMMAND_META).filter(([, m]) => m.group === group)
+    if (entries.length === 0) continue
+    process.stdout.write(`\n${group}:\n`)
+    for (const [key, meta] of entries) {
+      const name = display_name(key).padEnd(20)
+      process.stdout.write(`  ${name}${meta.desc}\n`)
+    }
+  }
+
+  process.stdout.write(`
+options:
+  --ralph             wrap command in ralph retry loop
+  --max-iter N        max iterations (default: unlimited)
+  --max-budget USD    max budget (default: unlimited)
+  --timeout S         per-iteration timeout (default: unlimited)
+
+run 'bny help <topic>' or 'bny <command> --help'
+`)
+}
+
+function show_help_json(topic: string | null): void {
+  const entries = Object.entries(COMMAND_META)
+    .filter(([k]) => topic ? k.startsWith(topic + "/") : true)
+    .map(([key, meta]) => ({
+      name:      display_name(key),
+      key,
+      desc:      meta.desc,
+      group:     meta.group,
+      namespace: key.includes("/") ? key.split("/")[0] : null,
+    }))
+
+  const out = {
+    commands:   entries,
+    namespaces: [...NAMESPACES].sort(),
+  }
+
+  process.stdout.write(JSON.stringify(out, null, 2) + "\n")
 }
 
 // -- find project root --
@@ -194,57 +318,6 @@ function resolve_command(cmd: string, subcmd: string | null): string | null {
   return null
 }
 
-// -- usage --
-
-function usage(): void {
-  process.stderr.write(`bny - the bunny dark factory CLI
-
-usage:
-  bny <command> [args...]
-  bny --ralph [--max-iter N] [--max-budget USD] [--timeout S] <command> [args...]
-
-commands:
-  dev/pre-flight    run pre-flight checks
-  dev/post-flight   run post-flight checks
-  dev/test          run tests
-  dev/health        check system health
-  dev/setup         install deps, configure hooks
-
-  specify           create feature branch + spec
-  plan              create implementation plan
-  tasks             generate task list
-  implement         drive AI implementation loop
-  review            antagonist review
-  ruminate          reflect on build, feed brane
-
-  map               structural codebase map (tree-sitter)
-
-  brane storm       divergent brainstorming against the worldview
-  brane enhance     convergent refinement of the worldview
-  brane eat         ingest knowledge into the brane
-  brane ask         query the brane
-  brane digest      comprehensive brane integration
-  brane pov         manage worldview perspectives
-
-  next              run full pipeline for next roadmap item
-  spin              launch autonomous factory run (tmux)
-  todo              manage github issues
-  close-issue       close a github issue
-  ipm               interactive planning mode
-
-  status            show current state
-  ps                show running bny processes
-  ai init           bootstrap AI tool integration
-  init              scaffold a new project for bny
-
-options:
-  --ralph           wrap command in ralph retry loop
-  --max-iter N      max iterations for ralph loop (default: unlimited)
-  --max-budget USD  max budget for ralph loop (default: unlimited)
-  --timeout S       per-iteration timeout in seconds (default: unlimited)
-`)
-}
-
 // -- main --
 
 async function main(): Promise<void> {
@@ -252,10 +325,32 @@ async function main(): Promise<void> {
   // argv = ["bun", script_or_bunfs_path, ...args]
   const args = parse_args(process.argv.slice(2))
 
+  const json_flag = args.rest.includes("--json")
+
+  // bny / bny --help / bny -h → show help
   if (!args.command) {
-    usage()
-    process.exitCode = 1
+    const explicit = args.rest.includes("--help") || args.rest.includes("-h")
+    show_help(null, json_flag)
+    process.exitCode = explicit ? 0 : 1
     return
+  }
+
+  // bny help [topic] [--json]
+  if (args.command === "help") {
+    const topic = args.subcommand || args.rest.find(a => !a.startsWith("-")) || null
+    show_help(topic, json_flag)
+    return
+  }
+
+  // bny brane help / bny brane (bare namespace) → namespace help
+  if (NAMESPACES.has(args.command) && !args.subcommand && !COMMANDS[args.command]) {
+    const first_rest = args.rest.find(a => !a.startsWith("-"))
+    // bny brane help → rest=["help"]
+    // bny brane      → rest=[]
+    if (!first_rest || first_rest === "help") {
+      show_help(args.command, json_flag)
+      return
+    }
   }
 
   // init runs before .bny/ exists — skip root check + assassin
@@ -273,7 +368,7 @@ async function main(): Promise<void> {
   if (!cmd_key) {
     const full_cmd = args.subcommand ? `${args.command} ${args.subcommand}` : args.command
     process.stderr.write(`bny: unknown command '${full_cmd}'\n`)
-    usage()
+    show_help(null, false)
     process.exitCode = 1
     return
   }

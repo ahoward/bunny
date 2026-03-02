@@ -20,6 +20,7 @@ import {
   confirm_intake,
 } from "../lib/brane.ts"
 import type { EatResponse } from "../lib/brane.ts"
+import { create_spinner } from "../lib/spinner.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -113,7 +114,7 @@ flags:
       continue
     }
 
-    process.stderr.write(`digesting: ${entry.label} (${entry.size} bytes)...\n`)
+    const spin = create_spinner(`digesting: ${entry.label} (${entry.size} bytes)`)
 
     // load current state (evolves each iteration)
     const povs = load_active_povs(root)
@@ -161,6 +162,9 @@ For each concept worth keeping:
 - Use clear markdown with headers, not walls of text
 - Organize into subdirectories by natural topic boundaries
 - Files should render well on GitHub
+- Every file MUST start with an H1 heading, then a one-sentence TL;DR on the next line (no blank line between heading and TL;DR). Example:
+  # Topic Name
+  One sentence summarizing this file's core idea.
 
 Respond with ONLY valid JSON (no markdown fences):
 {
@@ -177,6 +181,7 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
 
     const raw = call_claude(eat_prompt, root)
     if (!raw) {
+      spin.stop()
       process.stderr.write(`error: claude failed on '${entry.label}', skipping\n`)
       failed++
       continue
@@ -184,15 +189,19 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
 
     let response = parse_json<EatResponse>(raw)
     if (!response) {
-      // retry once
+      spin.stop()
       process.stderr.write("warning: failed to parse response, retrying...\n")
+      const spin2 = create_spinner(`retrying: ${entry.label}`)
       const retry = call_claude(eat_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
+      spin2.stop()
       if (retry) response = parse_json<EatResponse>(retry)
       if (!response) {
         process.stderr.write(`error: could not parse response for '${entry.label}', skipping\n`)
         failed++
         continue
       }
+    } else {
+      spin.stop(`🐰 digested: ${entry.label}`)
     }
 
     if (response.operations.length > 0) {
@@ -208,10 +217,9 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
 
   // -- regenerate index --
 
-  process.stderr.write("regenerating index.md...\n")
-
   const final_worldview = load_worldview(root)
   if (final_worldview.length > 0) {
+    const idx_spin = create_spinner("regenerating index")
     const index_prompt = `# Worldview Files
 
 ${final_worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")}
@@ -235,7 +243,9 @@ Respond with ONLY the markdown content (no JSON, no fences).
       const { writeFileSync } = await import("node:fs")
       const { resolve } = await import("node:path")
       writeFileSync(resolve(worldview_dir(root), "index.md"), index_content.trim() + "\n")
-      process.stderr.write("regenerated index.md\n")
+      idx_spin.stop("🐰 regenerated index")
+    } else {
+      idx_spin.stop()
     }
   }
 

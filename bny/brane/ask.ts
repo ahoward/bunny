@@ -19,6 +19,7 @@ import {
   ensure_brane, load_source, load_worldview, load_active_povs,
   call_claude, list_sources,
 } from "../lib/brane.ts"
+import { create_spinner } from "../lib/spinner.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -163,12 +164,14 @@ Sources:
 
   // -- call claude --
 
-  process.stderr.write(`asking brane...\n`)
+  const spin = create_spinner("asking brane")
 
   const raw = call_claude(ask_prompt, root)
   if (!raw) {
+    spin.stop()
     return 1
   }
+  spin.stop("🐰 asked brane")
 
   // -- output (plain text, not JSON) --
 

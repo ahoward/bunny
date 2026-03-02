@@ -37,3 +37,7 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-01 | bny brane storm + enhance — divergent/convergent brane tools | Storm expands outward (brainstorm), enhance sharpens inward (refine); both use intake gate + regenerate_index; extracted shared regenerate_index() helper to brane.ts |
 | 2026-03-01 | Compile bny to single binary via bun build --compile | All 26 subcommands refactored to export main(argv), renamed to .ts, unified entry point with command registry for in-process dispatch; 58MB arm64 binary |
 | 2026-03-01 | bny init — scaffold projects with a single command | Creates .bny/, dev/, .githooks/ with lean defaults; idempotent (skips existing); --minimal for just state |
+| 2026-03-02 | bny help — agent-friendly help system with grouped commands and JSON output | COMMAND_META registry parallel to COMMANDS; `bny help`, `bny brane`, `bny help --json` all work; stdout for help, stderr for errors |
+| 2026-03-02 | Bunny spinner — TTY-aware progress indicator with bunny emoji frames | Zero deps, writes to stderr, degrades to plain text when piped or CI; wraps all call_claude() sites |
+| 2026-03-02 | TL;DR convention — worldview files must start with H1 then one-sentence synopsis | Baked into all brane prompts (eat/enhance/storm/digest/ruminate); enables instant `bny brane tldr` without LLM |
+| 2026-03-02 | bny brane tldr — instant worldview outline by reading file tree + extracting TL;DR lines | Zero LLM, graceful degradation for pre-convention files; --json for agents |

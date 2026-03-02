@@ -25,6 +25,7 @@ import {
   regenerate_index, print_storm_suggestions,
 } from "../lib/brane.ts"
 import type { StormResponse, StormSuggestion } from "../lib/brane.ts"
+import { create_spinner } from "../lib/spinner.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -155,6 +156,10 @@ Think divergently:
 - What opposing viewpoints are missing?
 - What would a skeptic, an optimist, or a domain expert each add?
 
+Every file MUST start with an H1 heading, then a one-sentence TL;DR on the next line (no blank line between). Example:
+  # Topic Name
+  One sentence summarizing this file's core idea.
+
 Respond with ONLY valid JSON (no markdown fences):
 {
   "operations": [
@@ -181,23 +186,29 @@ Paths are relative to worldview/. Use lowercase-kebab-case for file and director
 
     // -- call claude --
 
-    process.stderr.write(`storming: ${seed_label}...\n`)
+    const spin = create_spinner(`storming: ${seed_label}`)
 
     const raw = call_claude(storm_prompt, root)
     if (!raw) {
+      spin.stop()
       return 1
     }
 
     let response = parse_json<StormResponse>(raw)
     if (!response) {
+      spin.stop()
       process.stderr.write("warning: failed to parse response, retrying...\n")
+      const spin2 = create_spinner(`retrying: ${seed_label}`)
       const retry = call_claude(storm_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
+      spin2.stop()
       if (!retry) { return 1 }
       response = parse_json<StormResponse>(retry)
       if (!response) {
         process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
         return 1
       }
+    } else {
+      spin.stop(`🐰 stormed: ${seed_label}`)
     }
 
     // normalize missing suggestions

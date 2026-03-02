@@ -26,6 +26,7 @@ import {
   regenerate_index,
 } from "../lib/brane.ts"
 import type { EatResponse } from "../lib/brane.ts"
+import { create_spinner } from "../lib/spinner.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -151,6 +152,7 @@ Review the current worldview and:
 - Deepen: where are claims made without reasoning or evidence?
 - Restructure: should any files be split, merged, or reorganized?
 - Clarify: replace vague language with specific statements
+- TL;DR: ensure every file starts with H1 heading then a one-sentence TL;DR on the next line (no blank line between). Add if missing.
 ${focus_block}
 Respond with ONLY valid JSON (no markdown fences):
 {
@@ -174,23 +176,30 @@ If nothing needs refining, return empty operations with reasoning explaining why
 
     // -- call claude --
 
-    process.stderr.write(`enhancing${focus_label ? `: ${focus_label}` : ""}...\n`)
+    const enhance_label = `enhancing${focus_label ? `: ${focus_label}` : ""}`
+    const spin = create_spinner(enhance_label)
 
     const raw = call_claude(enhance_prompt, root)
     if (!raw) {
+      spin.stop()
       return 1
     }
 
     let response = parse_json<EatResponse>(raw)
     if (!response) {
+      spin.stop()
       process.stderr.write("warning: failed to parse response, retrying...\n")
+      const spin2 = create_spinner(`retrying: ${enhance_label}`)
       const retry = call_claude(enhance_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
+      spin2.stop()
       if (!retry) { return 1 }
       response = parse_json<EatResponse>(retry)
       if (!response) {
         process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
         return 1
       }
+    } else {
+      spin.stop(`🐰 ${enhance_label}`)
     }
 
     // -- stop early --

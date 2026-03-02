@@ -23,6 +23,7 @@ import {
   preview_operations, print_intake_diff, confirm_intake,
 } from "./lib/brane.ts"
 import type { EatResponse } from "./lib/brane.ts"
+import { create_spinner } from "./lib/spinner.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -191,6 +192,9 @@ For each insight worth keeping:
 - When updating, include the FULL new content for the file (not just the diff)
 - Keep files focused on a single topic
 - Use clear markdown with headers
+- Every file MUST start with an H1 heading, then a one-sentence TL;DR on the next line (no blank line between). Example:
+  # Topic Name
+  One sentence summarizing this file's core idea.
 
 Respond with ONLY valid JSON (no markdown fences):
 {
@@ -224,18 +228,21 @@ If nothing durable emerged, return empty operations with reasoning explaining wh
 
   // -- call claude --
 
-  process.stderr.write(`ruminating on: ${feature}...\n`)
+  const spin = create_spinner(`ruminating on: ${feature}`)
 
   const raw = call_claude(ruminate_prompt, root)
   if (!raw) {
+    spin.stop()
     return 1
   }
 
   let response = parse_json<EatResponse>(raw)
   if (!response) {
-    // retry once
+    spin.stop()
     process.stderr.write("warning: failed to parse response, retrying...\n")
+    const spin2 = create_spinner(`retrying: ${feature}`)
     const retry = call_claude(ruminate_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
+    spin2.stop()
     if (!retry) { return 1 }
     response = parse_json<EatResponse>(retry)
     if (!response) {
@@ -244,6 +251,8 @@ If nothing durable emerged, return empty operations with reasoning explaining wh
       }, meta()), null, 2) + "\n")
       return 1
     }
+  } else {
+    spin.stop(`🐰 ruminated on: ${feature}`)
   }
 
   // -- intake gate --
@@ -267,6 +276,7 @@ If nothing durable emerged, return empty operations with reasoning explaining wh
     // -- regenerate index --
 
     const updated_worldview = load_worldview(root)
+    const idx_spin = create_spinner("regenerating index")
     const index_prompt = `# Worldview Files
 
 ${updated_worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")}
@@ -288,7 +298,9 @@ Respond with ONLY the markdown content (no JSON, no fences).
         index_content = index_content.replace(/^```(?:markdown)?\n?/, "").replace(/\n?```$/, "")
       }
       writeFileSync(resolve(worldview_dir(root), "index.md"), index_content.trim() + "\n")
-      process.stderr.write("regenerated index.md\n")
+      idx_spin.stop("🐰 regenerated index")
+    } else {
+      idx_spin.stop()
     }
   } else {
     process.stderr.write("nothing to absorb — no durable insights extracted\n")

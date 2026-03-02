@@ -8,6 +8,7 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, statSync, rmSync } from "node:fs"
 import { resolve, relative, dirname } from "node:path"
 import type { PromptSection } from "./prompt.ts"
+import { create_spinner } from "./spinner.ts"
 
 // -- types --
 
@@ -386,6 +387,8 @@ export async function regenerate_index(root: string): Promise<void> {
   const updated_worldview = load_worldview(root)
   if (updated_worldview.length === 0) return
 
+  const spin = create_spinner("regenerating index")
+
   const index_prompt = `# Worldview Files
 
 ${updated_worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")}
@@ -407,7 +410,9 @@ Respond with ONLY the markdown content (no JSON, no fences).
       index_content = index_content.replace(/^```(?:markdown)?\n?/, "").replace(/\n?```$/, "")
     }
     writeFileSync(resolve(worldview_dir(root), "index.md"), index_content.trim() + "\n")
-    process.stderr.write("regenerated index.md\n")
+    spin.stop("🐰 regenerated index")
+  } else {
+    spin.stop()
   }
 }
 
