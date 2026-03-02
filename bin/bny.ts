@@ -329,6 +329,7 @@ function parse_args(argv: string[]): ParsedArgs {
       } else {
         process.stderr.write(`bny: unknown effort level '${argv[i + 1]}' (use: little, some, full, max)\n`)
         process.exitCode = 1
+        return result
       }
       i += 2
       continue

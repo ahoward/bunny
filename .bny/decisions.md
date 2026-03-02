@@ -47,3 +47,4 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-02 | 4-perspective review (3 Claude + 1 Gemini) — captured P0-P3 roadmap from findings | Path traversal, fd leaks, shell quoting, missing slash commands, stale docs, strategic gaps (cost tracking, secret detection, model pinning) |
 | 2026-03-02 | P0 hardening: path traversal, fd leaks, parseInt validation — built via bny specify/plan/tasks | validate_op_path() blocks ../ escapes; try/finally on /dev/tty fd; NaN rejection with error messages |
 | 2026-03-02 | P0+P1 batch: spin.ts shell quoting, 10 slash commands, AGENTS.md + README refresh | shell_quote() for tmux commands; 28/28 commands now have slash wrappers; directory structure matches reality |
+| 2026-03-02 | P2 batch: CLI test suite, cost tracking, brane size limits | 31 CLI tests + 15 brane tests for regression safety; call_claude() logs usage to .bny/usage.jsonl; bny status shows brane file count/size with 500KB warning threshold |

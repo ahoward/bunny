@@ -146,12 +146,59 @@ export function list_all_povs(root: string): string[] {
     .sort()
 }
 
+// -- usage logging --
+
+export interface UsageEntry {
+  timestamp:      string
+  prompt_chars:   number
+  response_chars: number
+  duration_ms:    number
+  ok:             boolean
+}
+
+function usage_path(root: string): string {
+  return resolve(root, ".bny/usage.jsonl")
+}
+
+function log_usage(root: string, entry: UsageEntry): void {
+  try {
+    const { appendFileSync } = require("node:fs") as typeof import("node:fs")
+    appendFileSync(usage_path(root), JSON.stringify(entry) + "\n")
+  } catch { /* non-fatal */ }
+}
+
+export function load_usage(root: string): UsageEntry[] {
+  const path = usage_path(root)
+  if (!existsSync(path)) return []
+  try {
+    return readFileSync(path, "utf-8")
+      .trim()
+      .split("\n")
+      .filter(line => line.length > 0)
+      .map(line => JSON.parse(line) as UsageEntry)
+  } catch {
+    return []
+  }
+}
+
+export function usage_summary(root: string): { calls: number, prompt_chars: number, response_chars: number, total_ms: number, errors: number } {
+  const entries = load_usage(root)
+  return {
+    calls:          entries.length,
+    prompt_chars:   entries.reduce((s, e) => s + e.prompt_chars, 0),
+    response_chars: entries.reduce((s, e) => s + e.response_chars, 0),
+    total_ms:       entries.reduce((s, e) => s + e.duration_ms, 0),
+    errors:         entries.filter(e => !e.ok).length,
+  }
+}
+
 // -- llm --
 
 export function call_claude(prompt: string, root: string): string | null {
   // strip CLAUDECODE env var so nested claude sessions work
   const env = { ...process.env }
   delete env.CLAUDECODE
+  const start = Date.now()
   const proc = Bun.spawnSync(["claude", "-p", "-"], {
     stdout: "pipe",
     stderr: "pipe",
@@ -159,12 +206,16 @@ export function call_claude(prompt: string, root: string): string | null {
     cwd: root,
     env,
   })
+  const duration_ms = Date.now() - start
   if (proc.exitCode !== 0) {
     const err = new TextDecoder().decode(proc.stderr).trim()
     process.stderr.write(`error: claude failed: ${err}\n`)
+    log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
     return null
   }
-  return new TextDecoder().decode(proc.stdout).trim()
+  const response = new TextDecoder().decode(proc.stdout).trim()
+  log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: response.length, duration_ms, ok: true })
+  return response
 }
 
 export function parse_json<T>(raw: string): T | null {

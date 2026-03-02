@@ -7,8 +7,8 @@
 - [x] Create missing slash command files: brane-tldr, todo, close-issue, ai-init, init, dev-pre-flight, dev-post-flight, dev-test, dev-health, dev-setup
 - [x] Update AGENTS.md directory structure — missing 10+ commands, 3 lib modules (brane, map, spinner)
 - [x] Fix README: add `little` effort preset, soften "every command has a slash command" claim
-- [ ] Add basic CLI tests — dispatch, arg parsing, help output, command registry consistency
-- [ ] Cost tracking — log token usage per command, surface in bny status
-- [ ] Brane size limits — warn when worldview exceeds a configurable threshold
+- [x] Add basic CLI tests — dispatch, arg parsing, help output, command registry consistency
+- [x] Cost tracking — log token usage per command, surface in bny status
+- [x] Brane size limits — warn when worldview exceeds a configurable threshold
 - [ ] Secret detection — scan content before sending to LLM APIs (strip .env patterns, API keys)
 - [ ] Model version pinning — --model flag or BNY_MODEL env var for claude/gemini calls
