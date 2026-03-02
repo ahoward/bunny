@@ -34,7 +34,8 @@ export async function main(argv: string[]): Promise<number> {
     } else if (arg === "--log" || arg === "-l") {
       show_log = true
     } else if (arg === "--max-iter" && argv[i + 1]) {
-      max_iter = parseInt(argv[i + 1], 10)
+      const val = parseInt(argv[i + 1], 10)
+      if (!isNaN(val) && val > 0) max_iter = val
       i++
     } else if (arg === "--help" || arg === "-h") {
       process.stdout.write(`usage: bny spin [--attach] [--dry-run] [--log] [--max-iter N]
@@ -153,7 +154,10 @@ workflow:
     ? [process.execPath, "next", "--auto", "--max-iter", String(max_iter)]
     : ["bun", resolve(root, "bny/next.ts"), "--auto", "--max-iter", String(max_iter)]
 
-  const shell_cmd = `${next_cmd.join(" ")} 2>&1 | tee ${log_file}`
+  function shell_quote(s: string): string {
+    return `'${s.replace(/'/g, "'\\''")}'`
+  }
+  const shell_cmd = `${next_cmd.map(shell_quote).join(" ")} 2>&1 | tee ${shell_quote(log_file)}`
 
   // -- dry run --
 

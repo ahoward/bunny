@@ -46,3 +46,4 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-02 | Review-driven cleanup — spinner unref, TL;DR wording standardization, DRY index regen | Timer.unref() prevents leaks; canonical TL;DR text in all 5 prompts; eat/digest/ruminate now use shared regenerate_index() |
 | 2026-03-02 | 4-perspective review (3 Claude + 1 Gemini) — captured P0-P3 roadmap from findings | Path traversal, fd leaks, shell quoting, missing slash commands, stale docs, strategic gaps (cost tracking, secret detection, model pinning) |
 | 2026-03-02 | P0 hardening: path traversal, fd leaks, parseInt validation — built via bny specify/plan/tasks | validate_op_path() blocks ../ escapes; try/finally on /dev/tty fd; NaN rejection with error messages |
+| 2026-03-02 | P0+P1 batch: spin.ts shell quoting, 10 slash commands, AGENTS.md + README refresh | shell_quote() for tmux commands; 28/28 commands now have slash wrappers; directory structure matches reality |

@@ -77,16 +77,26 @@ bin/              # executables (bny entry point)
   decisions.md    # append-only decision log
   constitution.md # project principles
 bny/              # dark factory CLI — tool code (symlinkable)
-  lib/            # shared modules (assassin, ralph, feature, prompt)
+  lib/            # shared modules (assassin, ralph, feature, prompt, brane, map, spinner)
   ai/             # ai subcommands (init)
+  brane/          # knowledge commands (eat, ask, storm, enhance, digest, pov, tldr)
   dev/            # wrappers for ./dev/* scripts
   templates/      # spec, plan, tasks templates
-  specify         # create feature branch + spec
-  plan            # create implementation plan
-  tasks           # generate task list
-  implement       # claude autonomous implementation
-  review          # gemini antagonist review
-  status          # show feature state
+  specify.ts      # create feature branch + spec
+  plan.ts         # create implementation plan
+  tasks.ts        # generate task list
+  implement.ts    # claude autonomous implementation
+  review.ts       # gemini antagonist review
+  ruminate.ts     # reflect on build, feed brane
+  status.ts       # show feature state
+  next.ts         # full pipeline for next roadmap item
+  spin.ts         # autonomous factory run (tmux)
+  map.ts          # structural codebase map (tree-sitter)
+  todo.ts         # project chore tracking
+  close-issue.ts  # close github issue
+  ipm.ts          # iteration planning meeting
+  ps.ts           # show running bny processes
+  init.ts         # scaffold a new project
 dna/              # project knowledge — context only, no operational deps
   technical/      # development loop, conventions
 dev/              # dev tooling (shebang, chmod +x, per-project customizable)

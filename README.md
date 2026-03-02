@@ -246,8 +246,9 @@ bny todo promote <n>         # escalate to gh issue
 ### ralph (retry loop)
 
 ```bash
-bny --effort some implement            # 5 iters, $2 budget, 5min timeout
-bny --effort full implement            # 10 iters, $5 budget, 10min timeout
+bny --effort little implement          # 2 iters, $0.50, 2min timeout
+bny --effort some implement            # 5 iters, $2, 5min timeout
+bny --effort full implement            # 10 iters, $5, 10min timeout
 bny --effort max implement             # unlimited
 bny --ralph --max-iter 10 implement    # explicit limits (implies --ralph)
 ```
@@ -318,7 +319,7 @@ install.sh        curl|bash installer (downloads binary + runs init)
 
 ## cheatsheet
 
-every `bny` command has a claude code slash command. type `/bny.` and tab-complete.
+most `bny` commands have a claude code slash command. type `/bny.` and tab-complete.
 
 | slash command | cli equivalent | what it does |
 |---------------|---------------|--------------|
@@ -341,6 +342,10 @@ every `bny` command has a claude code slash command. type `/bny.` and tab-comple
 | `/bny.brane-digest` | `bny brane digest` | rebuild worldview from sources |
 | `/bny.brane-pov` | `bny brane pov` | show/manage perspective lenses |
 | `/bny.brane-tldr` | `bny brane tldr` | instant worldview outline |
+| `/bny.todo` | `bny todo` | manage project todos |
+| `/bny.close-issue` | `bny close-issue` | close github issue |
+| `/bny.init` | `bny init` | scaffold a new project |
+| `/bny.ai-init` | `bny ai init` | bootstrap AI tool integration |
 
 three-layer dispatch: **slash command** → claude runs **bny cli** → bny handles everything.
 

@@ -15,9 +15,9 @@ roadmap → bny specify (create spec.md)
 ## Next
 
 - [x] P0: harden brane file ops — path traversal guard, fd leak fix, parseInt validation
-- [ ] P0: harden spin.ts — shell quoting for paths with spaces
-- [ ] P1: slash command completeness — create 12 missing .claude/commands/bny.*.md wrappers
-- [ ] P1: docs refresh — update AGENTS.md structure, fix README effort preset docs
+- [x] P0: harden spin.ts — shell quoting for paths with spaces
+- [x] P1: slash command completeness — create 10 missing .claude/commands/bny.*.md wrappers
+- [x] P1: docs refresh — update AGENTS.md structure, fix README effort preset docs
 - [ ] P2: CLI test suite — dispatch, arg parsing, help output, command registry consistency
 - [ ] P2: cost tracking — log token usage per command, surface in bny status
 - [ ] P2: brane size limits — warn when worldview exceeds threshold
