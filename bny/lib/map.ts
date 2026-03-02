@@ -904,8 +904,7 @@ function walk_dir(dir: string, root: string, files: string[]): void {
   }
 }
 
-export async function map_codebase(root: string, dirs: string[]): Promise<CodebaseMap> {
-  _current_scan_dirs = dirs
+export function collect_file_paths(root: string, dirs: string[]): string[] {
   const file_paths: string[] = []
   for (const dir of dirs) {
     const abs = resolve(root, dir)
@@ -913,8 +912,13 @@ export async function map_codebase(root: string, dirs: string[]): Promise<Codeba
       walk_dir(abs, root, file_paths)
     }
   }
-
   file_paths.sort()
+  return file_paths
+}
+
+export async function map_codebase(root: string, dirs: string[]): Promise<CodebaseMap> {
+  _current_scan_dirs = dirs
+  const file_paths = collect_file_paths(root, dirs)
 
   const files: FileMap[] = []
   const by_language: Record<string, number> = {}

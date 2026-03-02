@@ -114,7 +114,7 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "ipm":             { desc: "iteration planning meeting",         group: "chores" },
   "status":          { desc: "show current feature state",         group: "plumbing" },
   "ps":              { desc: "show running bny processes",         group: "plumbing" },
-  "map":             { desc: "structural codebase map (tree-sitter)", group: "plumbing" },
+  "map":             { desc: "structural codebase map + index (tree-sitter)", group: "plumbing" },
   "ai/init":         { desc: "bootstrap AI tool integration",      group: "plumbing" },
   "init":            { desc: "scaffold a new project for bny",     group: "plumbing" },
 }

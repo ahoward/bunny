@@ -12,3 +12,22 @@
 - [x] Brane size limits — warn when worldview exceeds a configurable threshold
 - [x] Secret detection — scan content before sending to LLM APIs (strip .env patterns, API keys)
 - [x] Model version pinning — --model flag or BNY_MODEL env var for claude/gemini calls
+- [ ] Shell injection via --model flag — BNY_MODEL interpolated unsanitized into bash -c in implement.ts:100 and review.ts:128. Validate model name to [a-z0-9\-\.]+ and/or use array-based spawn.
+- [ ] Secret snippet leaks short secrets — matched secrets ≤20 chars printed in full to stderr. Always redact.
+- [ ] SSRF in load_source() — curl fetches any URL including 169.254.169.254 AWS metadata. Blocklist private IPs, add --max-filesize, limit redirects.
+- [ ] Validate --model input in bin/bny.ts — reject shell metacharacters, allow only alphanumeric/hyphens/dots.
+- [ ] parse_json corrupts valid data — strips /* in glob patterns like "src/**/*.ts" and [ in prose before actual JSON. Needs smarter JSON boundary detection.
+- [ ] Document secret detection in README — security section, BNY_SECRETS_SCAN, BNY_SECRETS_BLOCK, pattern list.
+- [ ] Document model pinning in README — --model flag, BNY_MODEL env var, examples, supported models.
+- [ ] Document cost tracking + brane size limits in README — bny status output, usage.jsonl format, 500KB threshold.
+- [ ] README "most" → "all" for slash commands — all 28/28 now have wrappers.
+- [ ] Extract duplicate call_claude retry logic — eat/enhance/storm/digest/ruminate all have identical parse→retry pattern. Create call_claude_with_retry<T>().
+- [ ] call_claude() has no timeout — Bun.spawnSync blocks indefinitely if claude CLI hangs. Add timeout.
+- [ ] Unique temp files in implement.ts — .bny/implement-prompt.tmp is hardcoded, concurrent runs collide. Use UUID or mkdtemp.
+- [ ] AWS secret regex ReDoS — lookahead (?=.*(?:aws|secret|key)) causes backtracking on large inputs. Simplify pattern.
+- [ ] confirm_intake() defaults to yes on error — should default to no for safety.
+- [ ] File size limit in read_dir_recursive — no statSync size check, large files (logs, minified bundles) cause OOM. Add threshold.
+- [ ] require() anti-pattern in log_usage() — uses require("node:fs") inside function instead of static import.
+- [ ] Audit trail when secret scan disabled — no logging when BNY_SECRETS_SCAN=off, silent bypass.
+- [ ] preview_operations Set-based diff ignores duplicate lines — blank lines and repeated content produce wrong counts.
+- [ ] Verify binary size in README — currently says 58MB, may be stale after new features.
