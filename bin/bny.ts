@@ -284,19 +284,37 @@ function parse_args(argv: string[]): ParsedArgs {
     }
 
     if (arg === "--max-iter" && i + 1 < argv.length) {
-      result.max_iter = parseInt(argv[i + 1], 10)
+      const val = parseInt(argv[i + 1], 10)
+      if (isNaN(val) || val < 0) {
+        process.stderr.write(`bny: invalid --max-iter value '${argv[i + 1]}'\n`)
+        process.exitCode = 1
+        return result
+      }
+      result.max_iter = val
       i += 2
       continue
     }
 
     if (arg === "--max-budget" && i + 1 < argv.length) {
-      result.max_budget = parseFloat(argv[i + 1])
+      const val = parseFloat(argv[i + 1])
+      if (isNaN(val) || val < 0) {
+        process.stderr.write(`bny: invalid --max-budget value '${argv[i + 1]}'\n`)
+        process.exitCode = 1
+        return result
+      }
+      result.max_budget = val
       i += 2
       continue
     }
 
     if (arg === "--timeout" && i + 1 < argv.length) {
-      result.timeout_ms = parseInt(argv[i + 1], 10) * 1000
+      const val = parseInt(argv[i + 1], 10)
+      if (isNaN(val) || val < 0) {
+        process.stderr.write(`bny: invalid --timeout value '${argv[i + 1]}'\n`)
+        process.exitCode = 1
+        return result
+      }
+      result.timeout_ms = val * 1000
       i += 2
       continue
     }

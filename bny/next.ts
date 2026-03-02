@@ -12,7 +12,7 @@
 //   bny next --max-iter 10      # ralph iterations for implement
 //
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync, openSync, readSync, closeSync } from "node:fs"
 import { resolve } from "node:path"
 import { find_root } from "./lib/feature.ts"
 import { ralph } from "./lib/ralph.ts"
@@ -37,7 +37,8 @@ export async function main(argv: string[]): Promise<number> {
     } else if (arg === "--auto") {
       auto_mode = true
     } else if (arg === "--max-iter" && argv[i + 1]) {
-      max_iter = parseInt(argv[i + 1], 10)
+      const val = parseInt(argv[i + 1], 10)
+      if (!isNaN(val) && val > 0) max_iter = val
       i++
     } else if (arg === "--help" || arg === "-h") {
       process.stdout.write(`usage: bny next [--dry-run] [--auto] [--max-iter N]
@@ -148,11 +149,17 @@ flags:
   function confirm(prompt: string): boolean {
     process.stderr.write(prompt)
     const buf = Buffer.alloc(64)
-    const fd = require("node:fs").openSync("/dev/tty", "r")
-    const n = require("node:fs").readSync(fd, buf, 0, 64)
-    require("node:fs").closeSync(fd)
-    const answer = buf.slice(0, n).toString().trim().toLowerCase()
-    return answer === "" || answer === "y" || answer === "yes"
+    let fd: number | null = null
+    try {
+      fd = openSync("/dev/tty", "r")
+      const n = readSync(fd, buf, 0, 64)
+      const answer = buf.slice(0, n).toString().trim().toLowerCase()
+      return answer === "" || answer === "y" || answer === "yes"
+    } catch {
+      return true // default to yes on fd error
+    } finally {
+      if (fd !== null) closeSync(fd)
+    }
   }
 
   // -- 1. pre_flight (external project script) --

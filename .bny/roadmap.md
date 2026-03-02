@@ -14,7 +14,7 @@ roadmap → bny specify (create spec.md)
 
 ## Next
 
-- [ ] P0: harden brane file ops — path traversal guard, fd leak fix, parseInt validation
+- [x] P0: harden brane file ops — path traversal guard, fd leak fix, parseInt validation
 - [ ] P0: harden spin.ts — shell quoting for paths with spaces
 - [ ] P1: slash command completeness — create 12 missing .claude/commands/bny.*.md wrappers
 - [ ] P1: docs refresh — update AGENTS.md structure, fix README effort preset docs

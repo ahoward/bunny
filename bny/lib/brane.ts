@@ -5,7 +5,7 @@
 //           json parsing, file operations, initialization
 //
 
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, statSync, rmSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, statSync, rmSync, openSync, readSync, closeSync } from "node:fs"
 import { resolve, relative, dirname } from "node:path"
 import type { PromptSection } from "./prompt.ts"
 import { create_spinner } from "./spinner.ts"
@@ -216,10 +216,21 @@ export function parse_json<T>(raw: string): T | null {
 
 // -- file operations --
 
+function validate_op_path(wv_dir: string, path: string): string | null {
+  const target = resolve(wv_dir, path)
+  const rel = relative(wv_dir, target)
+  if (rel.startsWith("..") || rel === "") {
+    process.stderr.write(`warning: path traversal blocked: ${path}\n`)
+    return null
+  }
+  return target
+}
+
 export function apply_operations(root: string, ops: FileOp[]): void {
   const wv_dir = worldview_dir(root)
   for (const op of ops) {
-    const target = resolve(wv_dir, op.path)
+    const target = validate_op_path(wv_dir, op.path)
+    if (!target) continue
     mkdirSync(dirname(target), { recursive: true })
     writeFileSync(target, op.content.trim() + "\n")
   }
@@ -241,7 +252,8 @@ export function preview_operations(root: string, ops: FileOp[]): OpDiff[] {
   const diffs: OpDiff[] = []
 
   for (const op of ops) {
-    const target = resolve(wv_dir, op.path)
+    const target = validate_op_path(wv_dir, op.path)
+    if (!target) continue
     const new_content = op.content.trim() + "\n"
     const new_lines = new_content.split("\n").length
 
@@ -294,12 +306,17 @@ export function confirm_intake(): boolean {
   process.stderr.write("\napply? [Y/n] ")
 
   const buf = Buffer.alloc(64)
-  const fd = require("node:fs").openSync("/dev/tty", "r")
-  const n = require("node:fs").readSync(fd, buf, 0, 64)
-  require("node:fs").closeSync(fd)
-
-  const answer = buf.slice(0, n).toString().trim().toLowerCase()
-  return answer === "" || answer === "y" || answer === "yes"
+  let fd: number | null = null
+  try {
+    fd = openSync("/dev/tty", "r")
+    const n = readSync(fd, buf, 0, 64)
+    const answer = buf.slice(0, n).toString().trim().toLowerCase()
+    return answer === "" || answer === "y" || answer === "yes"
+  } catch {
+    return true // default to yes on fd error
+  } finally {
+    if (fd !== null) closeSync(fd)
+  }
 }
 
 // -- initialization --

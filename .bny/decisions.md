@@ -45,3 +45,4 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-02 | --effort presets + implicit ralph — `bny --effort some implement` replaces `bny --ralph --max-iter 5` | Four levels: little/some/full/max; --max-iter alone implies --ralph; backwards compatible |
 | 2026-03-02 | Review-driven cleanup — spinner unref, TL;DR wording standardization, DRY index regen | Timer.unref() prevents leaks; canonical TL;DR text in all 5 prompts; eat/digest/ruminate now use shared regenerate_index() |
 | 2026-03-02 | 4-perspective review (3 Claude + 1 Gemini) — captured P0-P3 roadmap from findings | Path traversal, fd leaks, shell quoting, missing slash commands, stale docs, strategic gaps (cost tracking, secret detection, model pinning) |
+| 2026-03-02 | P0 hardening: path traversal, fd leaks, parseInt validation — built via bny specify/plan/tasks | validate_op_path() blocks ../ escapes; try/finally on /dev/tty fd; NaN rejection with error messages |
