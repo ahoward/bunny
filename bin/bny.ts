@@ -161,7 +161,7 @@ function show_help(topic: string | null, json: boolean): void {
 
 usage: bny <command> [args...]
        bny --effort <level> <command>
-       bny --max-iter N <command>
+       bny --model <model> <command>
 `)
 
   for (const group of GROUP_ORDER) {
@@ -176,6 +176,7 @@ usage: bny <command> [args...]
 
   process.stdout.write(`
 options:
+  --model MODEL       model to use for LLM calls (or set BNY_MODEL env var)
   --effort LEVEL      retry with canned limits (little, some, full, max)
   --ralph             wrap command in ralph retry loop
   --max-iter N        max iterations (implies --ralph)
@@ -256,6 +257,7 @@ interface ParsedArgs {
   max_iter:    number
   max_budget:  number
   timeout_ms:  number
+  model:       string | null
   command:     string | null
   subcommand:  string | null
   rest:        string[]
@@ -267,6 +269,7 @@ function parse_args(argv: string[]): ParsedArgs {
     max_iter:   0,
     max_budget: 0,
     timeout_ms: 0,
+    model:      null,
     command:    null,
     subcommand: null,
     rest:       [],
@@ -331,6 +334,12 @@ function parse_args(argv: string[]): ParsedArgs {
         process.exitCode = 1
         return result
       }
+      i += 2
+      continue
+    }
+
+    if (arg === "--model" && i + 1 < argv.length) {
+      result.model = argv[i + 1]
       i += 2
       continue
     }
@@ -419,6 +428,11 @@ async function main(): Promise<void> {
   if (args.command === "init") {
     process.exitCode = await init_main(args.rest)
     return
+  }
+
+  // model version pinning: --model flag sets env for all subcommands
+  if (args.model) {
+    process.env.BNY_MODEL = args.model
   }
 
   // install assassin — pidfile at .bny/bny.pid, signal handlers

@@ -120,8 +120,12 @@ export async function main(argv: string[]): Promise<number> {
   const prompt_tmp = resolve(root, ".bny/review-prompt.tmp")
   await Bun.write(prompt_tmp, prompt)
 
+  // model version pinning (gemini CLI may support --model)
+  const model = process.env.BNY_MODEL || null
+  const model_flag = model ? ` --model ${model}` : ""
+
   const proc = Bun.spawn(
-    ["bash", "-c", `gemini -p - < "${prompt_tmp}"`],
+    ["bash", "-c", `gemini -p -${model_flag} < "${prompt_tmp}"`],
     {
       stdout: "inherit",
       stderr: "inherit",

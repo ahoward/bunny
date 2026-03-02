@@ -21,11 +21,10 @@ roadmap → bny specify (create spec.md)
 - [x] P2: CLI test suite — dispatch, arg parsing, help output, command registry consistency
 - [x] P2: cost tracking — log token usage per command, surface in bny status
 - [x] P2: brane size limits — warn when worldview exceeds threshold
-- [ ] P3: secret detection — scan content before LLM API calls
-- [ ] P3: model version pinning — --model flag or BNY_MODEL env var
-
 ## Completed
 
+- [x] P3: secret detection — scan content before LLM API calls
+- [x] P3: model version pinning — --model flag or BNY_MODEL env var
 - [x] review cleanup — spinner unref, TL;DR consistency, DRY index regen
 - [x] bny help — agent-friendly help system with grouped commands, namespace help, --json
 - [x] bunny spinner — TTY-aware progress indicators across all brane commands

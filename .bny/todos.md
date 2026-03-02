@@ -10,5 +10,5 @@
 - [x] Add basic CLI tests — dispatch, arg parsing, help output, command registry consistency
 - [x] Cost tracking — log token usage per command, surface in bny status
 - [x] Brane size limits — warn when worldview exceeds a configurable threshold
-- [ ] Secret detection — scan content before sending to LLM APIs (strip .env patterns, API keys)
-- [ ] Model version pinning — --model flag or BNY_MODEL env var for claude/gemini calls
+- [x] Secret detection — scan content before sending to LLM APIs (strip .env patterns, API keys)
+- [x] Model version pinning — --model flag or BNY_MODEL env var for claude/gemini calls

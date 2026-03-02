@@ -9,6 +9,7 @@ import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, statSy
 import { resolve, relative, dirname } from "node:path"
 import type { PromptSection } from "./prompt.ts"
 import { create_spinner } from "./spinner.ts"
+import { check_secrets } from "./secrets.ts"
 
 // -- types --
 
@@ -195,11 +196,19 @@ export function usage_summary(root: string): { calls: number, prompt_chars: numb
 // -- llm --
 
 export function call_claude(prompt: string, root: string): string | null {
+  // secret detection
+  if (!check_secrets(prompt, "prompt")) return null
+
   // strip CLAUDECODE env var so nested claude sessions work
   const env = { ...process.env }
   delete env.CLAUDECODE
+
+  // model version pinning: --model flag or BNY_MODEL env var
+  const model = env.BNY_MODEL || null
+  const cmd = model ? ["claude", "-p", "--model", model, "-"] : ["claude", "-p", "-"]
+
   const start = Date.now()
-  const proc = Bun.spawnSync(["claude", "-p", "-"], {
+  const proc = Bun.spawnSync(cmd, {
     stdout: "pipe",
     stderr: "pipe",
     stdin: Buffer.from(prompt),
@@ -545,6 +554,7 @@ export function load_source(source: string, root: string): { content: string, la
     if (proc.exitCode !== 0) return null
     const content = new TextDecoder().decode(proc.stdout).trim()
     if (content.length === 0) return null
+    check_secrets(content, `source: ${source}`)
     return { content, label: source }
   }
 
@@ -556,11 +566,13 @@ export function load_source(source: string, root: string): { content: string, la
   if (statSync(path).isDirectory()) {
     const content = read_dir_recursive(path, path)
     if (content.length === 0) return null
+    check_secrets(content, `source: ${relative(root, path)}/`)
     return { content, label: relative(root, path) + "/" }
   }
 
   // file
   const content = readFileSync(path, "utf-8").trim()
   if (content.length === 0) return null
+  check_secrets(content, `source: ${relative(root, path)}`)
   return { content, label: relative(root, path) }
 }

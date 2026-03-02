@@ -103,6 +103,21 @@ describe("arg parsing", () => {
     // should reach the command (status --help) without arg parse error
     expect(r.stderr).not.toContain("unknown effort level")
   })
+
+  test("--model flag is accepted", () => {
+    const r = bny("--model", "claude-sonnet-4-20250514", "status", "--help")
+    // should reach the command (status --help) without arg parse error
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+  })
+})
+
+describe("help text", () => {
+  test("help shows --model option", () => {
+    const r = bny("help")
+    expect(r.stdout).toContain("--model")
+    expect(r.stdout).toContain("BNY_MODEL")
+  })
 })
 
 describe("command registry consistency", () => {

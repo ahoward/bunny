@@ -95,8 +95,12 @@ export async function main(argv: string[]): Promise<number> {
   const spawn_env = { ...process.env }
   delete spawn_env.CLAUDECODE
 
+  // model version pinning
+  const model = spawn_env.BNY_MODEL || null
+  const model_flag = model ? ` --model ${model}` : ""
+
   const proc = Bun.spawn(
-    ["bash", "-c", `claude -p - --continue --dangerously-skip-permissions < "${prompt_tmp}"`],
+    ["bash", "-c", `claude -p -${model_flag} --continue --dangerously-skip-permissions < "${prompt_tmp}"`],
     {
       stdout: "inherit",
       stderr: "inherit",
