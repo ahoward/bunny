@@ -35,3 +35,5 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-01 | samples/ directory — 3 projects built entirely headless by bny | Proof the factory works: mood (API), tldr (CLI), shelf (API+sqlite); each from a one-paragraph seed, 3 spins |
 | 2026-03-01 | Sample projects symlink bny/ from parent, own .bny/ state | Real-world usage pattern: shared tooling, per-project state; demonstrates bny portability |
 | 2026-03-01 | bny brane storm + enhance — divergent/convergent brane tools | Storm expands outward (brainstorm), enhance sharpens inward (refine); both use intake gate + regenerate_index; extracted shared regenerate_index() helper to brane.ts |
+| 2026-03-01 | Compile bny to single binary via bun build --compile | All 26 subcommands refactored to export main(argv), renamed to .ts, unified entry point with command registry for in-process dispatch; 58MB arm64 binary |
+| 2026-03-01 | bny init — scaffold projects with a single command | Creates .bny/, dev/, .githooks/ with lean defaults; idempotent (skips existing); --minimal for just state |

@@ -43,6 +43,7 @@ import { main as dev_post_flight_main } from "../bny/dev/post-flight.ts"
 import { main as dev_test_main } from "../bny/dev/test.ts"
 import { main as dev_health_main } from "../bny/dev/health.ts"
 import { main as dev_setup_main } from "../bny/dev/setup.ts"
+import { main as init_main } from "../bny/init.ts"
 
 // -- command registry --
 
@@ -75,23 +76,31 @@ const COMMANDS: Record<string, CommandFn> = {
   "dev/test":       dev_test_main,
   "dev/health":     dev_health_main,
   "dev/setup":      dev_setup_main,
+  "init":           init_main,
 }
 
 // -- find project root --
 
-function find_root(): string {
+function find_root(quiet = false): string {
   let dir = process.cwd()
   while (dir !== "/") {
     if (existsSync(resolve(dir, ".bny"))) return dir
     if (existsSync(resolve(dir, "bny"))) return dir
     dir = dirname(dir)
   }
-  process.stderr.write("bny: cannot find project root (no .bny/ or bny/ directory found)\n")
-  process.exitCode = 1
+  if (!quiet) {
+    process.stderr.write("bny: cannot find project root (no .bny/ or bny/ directory found)\n")
+    process.exitCode = 1
+  }
   return process.cwd()
 }
 
-const ROOT = find_root()
+// defer root finding — init may run before .bny/ exists
+let _root: string | null = null
+function get_root(quiet = false): string {
+  if (!_root) _root = find_root(quiet)
+  return _root
+}
 
 // -- parse args --
 
@@ -226,6 +235,7 @@ commands:
   status            show current state
   ps                show running bny processes
   ai init           bootstrap AI tool integration
+  init              scaffold a new project for bny
 
 options:
   --ralph           wrap command in ralph retry loop
@@ -238,9 +248,6 @@ options:
 // -- main --
 
 async function main(): Promise<void> {
-  // install assassin — pidfile at .bny/bny.pid, signal handlers
-  assassin.install(resolve(ROOT, ".bny"))
-
   // bun keeps same argv layout in both dev and compiled mode:
   // argv = ["bun", script_or_bunfs_path, ...args]
   const args = parse_args(process.argv.slice(2))
@@ -250,6 +257,16 @@ async function main(): Promise<void> {
     process.exitCode = 1
     return
   }
+
+  // init runs before .bny/ exists — skip root check + assassin
+  if (args.command === "init") {
+    process.exitCode = await init_main(args.rest)
+    return
+  }
+
+  // install assassin — pidfile at .bny/bny.pid, signal handlers
+  const root = get_root()
+  assassin.install(resolve(root, ".bny"))
 
   const cmd_key = resolve_command(args.command, args.subcommand)
 

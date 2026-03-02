@@ -112,13 +112,75 @@ bny ipm                                      # interactive planning session
 ## quick start
 
 ```bash
-git clone <repo>
-cd bunny
+# install into any git repo
+cd my-project
+curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
+export PATH="./bin:$PATH"
+bny status           # see current state
+
+# or from source
+git clone https://github.com/ahoward/bunny.git && cd bunny
 ./dev/setup          # install deps, configure git hooks
 export PATH="./bin:$PATH"
 ./dev/test           # verify everything works
-bny status           # see current state
 ```
+
+## installing bny into a project
+
+### binary install (recommended)
+
+bny compiles to a single 58MB binary. no runtime dependencies beyond git.
+
+```bash
+# new project
+mkdir my-project && cd my-project && git init
+curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
+
+# existing project
+cd my-project
+curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
+```
+
+this downloads the `bny` binary to `./bin/bny` and runs `bny init` to scaffold `.bny/`, `dev/`, and `.githooks/`.
+
+```bash
+export PATH="./bin:$PATH"
+bny status                               # verify install
+```
+
+**upgrading:** re-run the installer. it replaces the binary and skips existing files.
+
+### build from source
+
+```bash
+git clone https://github.com/ahoward/bunny.git
+cd bunny
+bun build --compile bin/bny.ts --outfile bny    # 58MB arm64 binary
+cp bny /path/to/your-project/bin/bny
+cd /path/to/your-project
+./bin/bny init
+```
+
+### symlink install (development)
+
+for hacking on bny itself, symlink the tooling:
+
+```bash
+git clone https://github.com/ahoward/bunny.git ~/tools/bunny
+cd my-project
+mkdir -p bin
+ln -s ~/tools/bunny/bny bny
+ln -s ~/tools/bunny/bin/bny bin/bny
+cp -r ~/tools/bunny/dev dev && chmod +x dev/*
+bin/bny init --minimal                    # just .bny/ state
+```
+
+### prerequisites
+
+- [claude](https://claude.ai/cli) CLI (for brane, implement, specify, plan)
+- [gemini](https://ai.google.dev/gemini-api/docs/cli) CLI (for review — optional)
+- git
+- [bun](https://bun.sh) (only needed for symlink install or building from source)
 
 ## commands
 
@@ -144,6 +206,7 @@ bny ruminate         # reflect on build, feed brane
 bny map              # structural codebase map (tree-sitter)
 bny status           # show feature state
 bny ipm              # interactive planning session
+bny init             # scaffold .bny/, dev/, .githooks/ for a new project
 bny ai init          # bootstrap ai tool awareness (symlinks)
 bny dev test         # wraps ./dev/test
 bny dev pre-flight   # wraps ./dev/pre_flight
@@ -185,7 +248,8 @@ bny --ralph --max-iter 5 review        # retry review too
 ## directory layout
 
 ```
-bin/bny           entry point — git-style dispatcher
+bin/bny           compiled binary (or symlink) — single entry point
+bin/bny.ts        unified entry point source (compiles to bin/bny)
 .bny/             project state (git-tracked, per-project)
   roadmap.md      what to work on next
   guardrails.json agent constraints (blast radius, protected files)
@@ -197,24 +261,25 @@ bin/bny           entry point — git-style dispatcher
     povs/         perspective lenses (all.md is default)
     sources/      stashed raw inputs (for digest)
     state.json    active povs
-bny/              dark factory CLI — tool code (symlinkable)
+bny/              dark factory CLI source (.ts files, symlinkable)
   lib/            assassin, ralph, feature, prompt, brane, map
   ai/             ai subcommands (init)
   brane/          eat, ask, pov, digest, storm, enhance
   dev/            wrappers for ./dev/* scripts
   templates/      spec, plan, tasks templates
-  specify         create feature workspace
-  plan            create implementation plan
-  tasks           generate task list
-  implement       claude autonomous implementation
-  review          gemini antagonist review
-  ruminate        reflect on build, feed brane
-  map             structural codebase map (tree-sitter)
-  status          show feature state
-  next            pick roadmap item, run full pipeline
-  spin            autonomous — detached tmux factory run
-  todo            project chore tracking
-  ipm             interactive planning session
+  init.ts         scaffold a project for bny
+  specify.ts      create feature workspace
+  plan.ts         create implementation plan
+  tasks.ts        generate task list
+  implement.ts    claude autonomous implementation
+  review.ts       gemini antagonist review
+  ruminate.ts     reflect on build, feed brane
+  map.ts          structural codebase map (tree-sitter)
+  status.ts       show feature state
+  next.ts         pick roadmap item, run full pipeline
+  spin.ts         autonomous — detached tmux factory run
+  todo.ts         project chore tracking
+  ipm.ts          interactive planning session
 dev/              per-project customizable plumbing (shebangs, chmod +x)
 src/              application source
   handlers/       app.call handlers (one file per endpoint)
@@ -227,6 +292,7 @@ samples/          projects built entirely by bny (proof it works)
   shelf/          personal bookmarks with tags + search
 dna/              project knowledge — context only, no operational deps
 .githooks/        pre-commit (post_flight), pre-push (test)
+install.sh        curl|bash installer (downloads binary + runs init)
 ```
 
 ## coding conventions
