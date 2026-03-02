@@ -156,7 +156,7 @@ Think divergently:
 - What opposing viewpoints are missing?
 - What would a skeptic, an optimist, or a domain expert each add?
 
-Every file MUST start with an H1 heading, then a one-sentence TL;DR on the next line (no blank line between). Example:
+Every file MUST start with an H1 heading, then a one-sentence TL;DR on the next line (no blank line between heading and TL;DR). Example:
   # Topic Name
   One sentence summarizing this file's core idea.
 

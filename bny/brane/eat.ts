@@ -16,8 +16,9 @@ import { success, error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
   ensure_brane, load_source, load_worldview, load_active_povs,
-  call_claude, parse_json, apply_operations, worldview_dir,
+  call_claude, parse_json, apply_operations,
   stash_source, preview_operations, print_intake_diff, confirm_intake,
+  regenerate_index,
 } from "../lib/brane.ts"
 import type { EatResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
@@ -203,37 +204,7 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
     apply_operations(root, response.operations)
     process.stderr.write(`applied ${response.operations.length} operation(s)\n`)
 
-    // -- regenerate index --
-    const updated_worldview = load_worldview(root)
-    const idx_spin = create_spinner("regenerating index")
-    const index_prompt = `# Worldview Files
-
-${updated_worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")}
-
----
-
-# Instructions
-
-Generate a concise index.md that summarizes what this knowledge base contains.
-Use markdown headers and bullet points. Link to files using relative paths.
-Keep it scannable — someone should understand the full scope in 30 seconds.
-Respond with ONLY the markdown content (no JSON, no fences).
-`
-
-    const index_raw = call_claude(index_prompt, root)
-    if (index_raw) {
-      // strip any accidental fences
-      let index_content = index_raw.trim()
-      if (index_content.startsWith("```")) {
-        index_content = index_content.replace(/^```(?:markdown)?\n?/, "").replace(/\n?```$/, "")
-      }
-      const { writeFileSync } = await import("node:fs")
-      const { resolve } = await import("node:path")
-      writeFileSync(resolve(worldview_dir(root), "index.md"), index_content.trim() + "\n")
-      idx_spin.stop("🐰 regenerated index")
-    } else {
-      idx_spin.stop()
-    }
+    await regenerate_index(root)
   } else {
     process.stderr.write("nothing absorbed\n")
   }

@@ -44,6 +44,7 @@ export function create_spinner(text: string): Spinner {
 
   render()
   const timer = setInterval(render, INTERVAL_MS)
+  timer.unref() // don't keep process alive if stop() is never called
 
   function stop(final?: string): void {
     clearInterval(timer)

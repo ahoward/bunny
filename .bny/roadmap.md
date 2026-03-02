@@ -18,6 +18,10 @@ roadmap → bny specify (create spec.md)
 
 ## Completed
 
+- [x] bny help — agent-friendly help system with grouped commands, namespace help, --json
+- [x] bunny spinner — TTY-aware progress indicators across all brane commands
+- [x] bny brane tldr — instant worldview outline with TL;DR synopses
+- [x] TL;DR convention — all brane prompts enforce H1 + one-sentence synopsis
 - [x] slash commands — .claude/commands/bny.*.md wrappers
 
 - [x] dark factory infrastructure — app.call, Result envelope, handlers, invariant tests, logging

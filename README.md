@@ -81,6 +81,7 @@ bny brane storm "what about real-time collab?" # brainstorm — divergent expans
 bny brane storm seed.md --rounds 2           # multi-round storm from a file
 bny brane enhance                            # refine — convergent sharpening
 bny brane enhance "security model"           # focus refinement on a topic
+bny brane tldr                               # instant worldview outline (zero LLM)
 bny brane digest                             # rebuild worldview through current lenses
 bny brane pov                                # list active povs
 
@@ -89,6 +90,9 @@ bny todo add "upgrade bun to 1.4"           # add a todo
 bny todo                                     # list todos
 bny todo done 1                              # mark done
 bny todo promote 2                           # escalate to gh issue
+
+# --- project chores ---
+bny close-issue 42                           # close github issue with comment
 
 # --- iteration planning ---
 bny ipm                                      # interactive planning session
@@ -220,6 +224,7 @@ bny brane ask <question>     # query worldview (read-only)
 bny brane ask <file>         # review a doc against worldview
 bny brane storm [seed]       # divergent brainstorming (expand outward)
 bny brane enhance [focus]    # convergent refinement (sharpen inward)
+bny brane tldr               # instant worldview outline (zero LLM)
 bny brane pov                # list points of view
 bny brane pov add <n> <desc> # add a perspective lens
 bny brane pov on|off <name>  # toggle a pov
@@ -241,9 +246,13 @@ bny todo promote <n>         # escalate to gh issue
 ### ralph (retry loop)
 
 ```bash
-bny --ralph --max-iter 10 implement    # retry until green or max iterations
-bny --ralph --max-iter 5 review        # retry review too
+bny --effort some implement            # 5 iters, $2 budget, 5min timeout
+bny --effort full implement            # 10 iters, $5 budget, 10min timeout
+bny --effort max implement             # unlimited
+bny --ralph --max-iter 10 implement    # explicit limits (implies --ralph)
 ```
+
+effort presets: `little` (2 iters), `some` (5), `full` (10), `max` (unlimited).
 
 ## directory layout
 
@@ -264,7 +273,7 @@ bin/bny.ts        unified entry point source (compiles to bin/bny)
 bny/              dark factory CLI source (.ts files, symlinkable)
   lib/            assassin, ralph, feature, prompt, brane, map
   ai/             ai subcommands (init)
-  brane/          eat, ask, pov, digest, storm, enhance
+  brane/          eat, ask, pov, digest, storm, enhance, tldr
   dev/            wrappers for ./dev/* scripts
   templates/      spec, plan, tasks templates
   init.ts         scaffold a project for bny
@@ -331,6 +340,7 @@ every `bny` command has a claude code slash command. type `/bny.` and tab-comple
 | `/bny.brane-enhance` | `bny brane enhance` | convergent refinement |
 | `/bny.brane-digest` | `bny brane digest` | rebuild worldview from sources |
 | `/bny.brane-pov` | `bny brane pov` | show/manage perspective lenses |
+| `/bny.brane-tldr` | `bny brane tldr` | instant worldview outline |
 
 three-layer dispatch: **slash command** → claude runs **bny cli** → bny handles everything.
 

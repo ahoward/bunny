@@ -152,7 +152,9 @@ Review the current worldview and:
 - Deepen: where are claims made without reasoning or evidence?
 - Restructure: should any files be split, merged, or reorganized?
 - Clarify: replace vague language with specific statements
-- TL;DR: ensure every file starts with H1 heading then a one-sentence TL;DR on the next line (no blank line between). Add if missing.
+- Every file MUST start with an H1 heading, then a one-sentence TL;DR on the next line (no blank line between heading and TL;DR). Example:
+  # Topic Name
+  One sentence summarizing this file's core idea.
 ${focus_block}
 Respond with ONLY valid JSON (no markdown fences):
 {
