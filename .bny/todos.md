@@ -1,2 +1,14 @@
 - [x] Consider --timeout and --budget flags for all bny commands. Ralph already has --max-iter/--max-budget/--timeout but these should be promoted as first-class bny flags. Also consider canned meta-limits like 'a little, a lot, hard, forever' for common use cases.
 - [x] Add a permissive JSON parser throughout bny. LLM responses frequently include markdown fences, trailing commas, comments, or other non-strict JSON. Replace all JSON.parse calls in brane.ts and ruminate with a forgiving parser that handles these cases.
+- [ ] Path traversal guard in apply_operations() and preview_operations() — validate resolved paths stay inside worldview_dir. LLM-generated paths could escape via ../
+- [ ] Fix fd leak in confirm_intake() — wrap /dev/tty openSync/readSync/closeSync in try/finally
+- [ ] Shell quoting in spin.ts — process.execPath and log_file need proper quoting for paths with spaces
+- [ ] Validate parseInt results in bin/bny.ts — --max-iter abc silently produces NaN
+- [ ] Create missing slash command files: brane-tldr, todo, close-issue, ai-init, init, brane-storm, brane-enhance, dev-pre-flight, dev-post-flight, dev-test, dev-health, dev-setup
+- [ ] Update AGENTS.md directory structure — missing 10+ commands, 3 lib modules (brane, map, spinner)
+- [ ] Fix README: add `little` effort preset, soften "every command has a slash command" claim
+- [ ] Add basic CLI tests — dispatch, arg parsing, help output, command registry consistency
+- [ ] Cost tracking — log token usage per command, surface in bny status
+- [ ] Brane size limits — warn when worldview exceeds a configurable threshold
+- [ ] Secret detection — scan content before sending to LLM APIs (strip .env patterns, API keys)
+- [ ] Model version pinning — --model flag or BNY_MODEL env var for claude/gemini calls

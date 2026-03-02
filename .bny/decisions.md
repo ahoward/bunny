@@ -44,3 +44,4 @@ Each entry includes date, decision, and brief rationale.
 | 2026-03-02 | Permissive JSON parser — strip prose/fences/comments/trailing commas from LLM responses | Single parse_json() in brane.ts handles all cases; strict-first with permissive fallback; replaced ipm.ts inline copy |
 | 2026-03-02 | --effort presets + implicit ralph — `bny --effort some implement` replaces `bny --ralph --max-iter 5` | Four levels: little/some/full/max; --max-iter alone implies --ralph; backwards compatible |
 | 2026-03-02 | Review-driven cleanup — spinner unref, TL;DR wording standardization, DRY index regen | Timer.unref() prevents leaks; canonical TL;DR text in all 5 prompts; eat/digest/ruminate now use shared regenerate_index() |
+| 2026-03-02 | 4-perspective review (3 Claude + 1 Gemini) — captured P0-P3 roadmap from findings | Path traversal, fd leaks, shell quoting, missing slash commands, stale docs, strategic gaps (cost tracking, secret detection, model pinning) |
