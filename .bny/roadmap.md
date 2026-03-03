@@ -10,13 +10,13 @@ seed → feed brane → think (loop/storm/enhance)
 
 ## Next
 
-- [ ] M1: `bny build` — collapse factory into single command with subcommands (specify/plan/tasks/review/implement/ruminate); `bny build` runs all, `bny build specify "desc"` runs one step
-- [ ] M2: `bny spike` — same interface as build, guardrails off (no review, no test-first, no locked specs); output is disposable but brane still learns
-- [ ] M3: decouple specify from git branches — specify creates spec without `git checkout -b`; branches are manual at the proposal/research level
-- [ ] M4: auto-ruminate on build — `bny build` always ruminates on completion; spike ruminates too (knowledge is never disposable)
+- [x] M1: `bny build` — collapse factory into single command with subcommands
+- [x] M2: `bny spike` — same interface as build, guardrails off
+- [x] M3: decouple specify from git branches — specify creates spec without `git checkout -b`; .bny/current-feature state file tracks active feature
+- [x] M4: auto-ruminate on build — build and spike both ruminate on completion
 - [ ] M5: loop→propose pipeline — `bny brane loop` can optionally emit proposals when it discovers actionable gaps
-- [ ] M6: slash commands for new commands — .claude/commands wrappers for build, spike
-- [ ] M7: update CLAUDE.md — workflow section reflects build/spike, not specify/plan/tasks individually
+- [x] M6: slash commands for new commands — .claude/commands wrappers for build, spike
+- [x] M7: update CLAUDE.md — workflow section reflects build/spike
 
 ### hardening (carried forward)
 

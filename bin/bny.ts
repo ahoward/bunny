@@ -102,7 +102,7 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "dev/test":        { desc: "run tests",                          group: "development" },
   "dev/health":      { desc: "check system health",                group: "development" },
   "dev/setup":       { desc: "install deps, configure hooks",      group: "development" },
-  "specify":         { desc: "create feature branch + spec",       group: "workflow" },
+  "specify":         { desc: "create feature spec",                 group: "workflow" },
   "plan":            { desc: "create implementation plan",         group: "workflow" },
   "tasks":           { desc: "generate task list",                 group: "workflow" },
   "implement":       { desc: "drive AI implementation loop",       group: "workflow" },

@@ -2,19 +2,20 @@
 //
 // bny specify — create a feature workspace
 //
-// creates: git branch + specs/<branch>/spec.md from template
+// creates: specs/<name>/spec.md from template
+// writes .bny/current-feature for downstream commands
 //
 // usage:
 //   bny specify "Add user authentication"
 //   bny specify "user auth" --number 5
 //
 
-import { mkdirSync, copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, existsSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "../src/lib/result.ts"
 import {
   find_root, next_feature_number, generate_branch_name,
-  clean_name, feature_paths,
+  feature_paths, set_current_feature,
 } from "./lib/feature.ts"
 
 export async function main(argv: string[]): Promise<number> {
@@ -49,21 +50,10 @@ export async function main(argv: string[]): Promise<number> {
   const feature_num = number_override ?? next_feature_number(root)
   const suffix = generate_branch_name(description)
   const padded = String(feature_num).padStart(3, "0")
-  const branch_name = `${padded}-${suffix}`
-
-  // create git branch
-  const git = Bun.spawnSync(["git", "checkout", "-b", branch_name], {
-    stdout: "pipe", stderr: "pipe", cwd: root,
-  })
-  if (git.exitCode !== 0) {
-    const msg = new TextDecoder().decode(git.stderr).trim()
-    const result = error({ git: [{ code: "branch_failed", message: msg || "git checkout -b failed" }] })
-    process.stdout.write(JSON.stringify(result, null, 2) + "\n")
-    return 1
-  }
+  const feature_name = `${padded}-${suffix}`
 
   // create spec dir + copy template
-  const paths = feature_paths(root, branch_name)
+  const paths = feature_paths(root, feature_name)
   mkdirSync(paths.dir, { recursive: true })
 
   const template = resolve(root, "bny/templates/spec-template.md")
@@ -71,7 +61,7 @@ export async function main(argv: string[]): Promise<number> {
     const today = new Date().toISOString().slice(0, 10)
     let content = readFileSync(template, "utf-8")
     content = content.replace("[FEATURE NAME]", description)
-    content = content.replace("[###-feature-name]", branch_name)
+    content = content.replace("[###-feature-name]", feature_name)
     content = content.replace("[DATE]", today)
     content = content.replace('"$ARGUMENTS"', `"${description}"`)
     writeFileSync(paths.spec, content)
@@ -80,36 +70,8 @@ export async function main(argv: string[]): Promise<number> {
     Bun.write(paths.spec, "")
   }
 
-  // open gh issue
-  let issue_number: string | null = null
-
-  // ensure bny label exists
-  Bun.spawnSync(["gh", "label", "create", "bny", "--color", "6f42c1", "--force"], {
-    stdout: "pipe", stderr: "pipe", cwd: root,
-  })
-
-  const issue_title = `[${padded}] ${description}`
-  const issue_body = [
-    `**Branch:** \`${branch_name}\``,
-    `**Spec:** \`specs/${branch_name}/spec.md\``,
-    `**Created:** ${new Date().toISOString()}`,
-  ].join("\n")
-
-  const gh = Bun.spawnSync([
-    "gh", "issue", "create",
-    "--title", issue_title,
-    "--body", issue_body,
-    "--label", "bny",
-  ], { stdout: "pipe", stderr: "pipe", cwd: root })
-
-  if (gh.exitCode === 0) {
-    const url = new TextDecoder().decode(gh.stdout).trim()
-    const match = url.match(/\/(\d+)$/)
-    if (match) {
-      issue_number = match[1]
-      writeFileSync(paths.issue, issue_number + "\n")
-    }
-  }
+  // set current feature for downstream commands
+  set_current_feature(root, feature_name)
 
   // output
   const meta = {
@@ -118,10 +80,9 @@ export async function main(argv: string[]): Promise<number> {
     duration_ms: 0,
   }
   const result = success({
-    branch_name,
+    feature_name,
     feature_num: padded,
     spec_file: paths.spec,
-    issue_number,
   }, meta)
   process.stdout.write(JSON.stringify(result, null, 2) + "\n")
   return 0
