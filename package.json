@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "bun build src/index.ts --compile --outfile bin/bunny",
-    "test": "bun test"
+    "test": "bun test ./tests/"
   },
   "devDependencies": {
     "@types/bun": "latest",

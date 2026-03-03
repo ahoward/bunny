@@ -44,6 +44,7 @@ import { main as dev_post_flight_main } from "../bny/dev/post-flight.ts"
 import { main as dev_test_main } from "../bny/dev/test.ts"
 import { main as dev_health_main } from "../bny/dev/health.ts"
 import { main as dev_setup_main } from "../bny/dev/setup.ts"
+import { main as proposal_main } from "../bny/proposal.ts"
 import { main as init_main } from "../bny/init.ts"
 
 // -- command registry --
@@ -65,6 +66,7 @@ const COMMANDS: Record<string, CommandFn> = {
   "todo":           todo_main,
   "close-issue":    close_issue_main,
   "ipm":            ipm_main,
+  "proposal":       proposal_main,
   "ai/init":        ai_init_main,
   "brane/eat":      brane_eat_main,
   "brane/ask":      brane_ask_main,
@@ -112,6 +114,7 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "todo":            { desc: "manage project todos",               group: "chores" },
   "close-issue":     { desc: "close github issue",                 group: "chores" },
   "ipm":             { desc: "iteration planning meeting",         group: "chores" },
+  "proposal":        { desc: "generate proposals from brane, accept into roadmap", group: "workflow" },
   "status":          { desc: "show current feature state",         group: "plumbing" },
   "ps":              { desc: "show running bny processes",         group: "plumbing" },
   "map":             { desc: "structural codebase map + index (tree-sitter)", group: "plumbing" },
