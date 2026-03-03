@@ -28,6 +28,7 @@ import {
 } from "../lib/brane.ts"
 import type { EatResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
+import { main as proposal_main } from "../proposal.ts"
 
 // -- types --
 
@@ -512,8 +513,8 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
 // -- help --
 
 function show_help(): void {
-  process.stdout.write(`usage: bny brane loop [--dry-run] [--yes] [--json] [--rounds N] <goal>
-       bny brane loop --resume <slug> [--rounds N] [--yes]
+  process.stdout.write(`usage: bny brane loop [--dry-run] [--yes] [--json] [--rounds N] [--propose [N]] <goal>
+       bny brane loop --resume <slug> [--rounds N] [--yes] [--propose]
        bny brane loop list [--json]
 
 autonomous goal-directed thought loop. iteratively reflects on the
@@ -526,11 +527,12 @@ commands:
   bny brane loop list             show all loops
 
 flags:
-  --rounds N     number of rounds (default: 1)
-  --resume SLUG  resume an existing loop
-  --yes, -y      auto-incorporate into worldview (skip confirmation)
-  --dry-run      print reflect prompt, don't execute
-  --json         JSON output
+  --rounds N      number of rounds (default: 1)
+  --resume SLUG   resume an existing loop
+  --yes, -y       auto-incorporate into worldview (skip confirmation)
+  --propose [N]   generate N proposals after loop completes (default: 1)
+  --dry-run       print reflect prompt, don't execute
+  --json          JSON output
 `)
 }
 
@@ -549,6 +551,7 @@ export async function main(argv: string[]): Promise<number> {
   let json_mode = false
   let rounds = 1
   let resume_slug: string | null = null
+  let propose_count = 0 // 0 = disabled, >0 = generate N proposals after loop
   const input_parts: string[] = []
 
   for (let i = 0; i < argv.length; i++) {
@@ -559,6 +562,15 @@ export async function main(argv: string[]): Promise<number> {
       auto_yes = true
     } else if (arg === "--json") {
       json_mode = true
+    } else if (arg === "--propose") {
+      // --propose or --propose N
+      const next = argv[i + 1]
+      if (next && /^\d+$/.test(next)) {
+        propose_count = parseInt(next, 10)
+        i++
+      } else {
+        propose_count = 1
+      }
     } else if (arg === "--rounds" && i + 1 < argv.length) {
       const val = parseInt(argv[i + 1], 10)
       if (isNaN(val) || val < 1) rounds = 1
@@ -740,6 +752,17 @@ ${state.search_history.length > 0 ? state.search_history.map(u => `- ${u}`).join
   // finalize
   if (state.status === "active") {
     save_loop_state(root, state)
+  }
+
+  // -- propose (optional) --
+
+  if (propose_count > 0) {
+    process.stderr.write(`\n--- generating ${propose_count} proposal(s) from loop ---\n`)
+    const propose_args = ["--count", String(propose_count), state.goal]
+    const propose_exit = await proposal_main(propose_args)
+    if (propose_exit !== 0) {
+      process.stderr.write("warning: proposal generation failed\n")
+    }
   }
 
   // -- output --

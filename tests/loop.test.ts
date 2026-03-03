@@ -24,6 +24,7 @@ describe("bny brane loop", () => {
     expect(r.stdout).toContain("loop")
     expect(r.stdout).toContain("--resume")
     expect(r.stdout).toContain("--rounds")
+    expect(r.stdout).toContain("--propose")
   })
 
   test("list --help exits 0", () => {
