@@ -227,6 +227,38 @@ export function call_claude(prompt: string, root: string): string | null {
   return response
 }
 
+export function call_claude_with_tools(prompt: string, root: string, allowed_tools: string[], max_turns: number = 3): string | null {
+  if (!check_secrets(prompt, "prompt")) return null
+
+  const env = { ...process.env }
+  delete env.CLAUDECODE
+
+  const model = env.BNY_MODEL || null
+  const cmd: string[] = ["claude", "-p"]
+  if (model) cmd.push("--model", model)
+  for (const tool of allowed_tools) cmd.push("--allowedTools", tool)
+  cmd.push("--max-turns", String(max_turns), "-")
+
+  const start = Date.now()
+  const proc = Bun.spawnSync(cmd, {
+    stdout: "pipe",
+    stderr: "pipe",
+    stdin: Buffer.from(prompt),
+    cwd: root,
+    env,
+  })
+  const duration_ms = Date.now() - start
+  if (proc.exitCode !== 0) {
+    const err = new TextDecoder().decode(proc.stderr).trim()
+    process.stderr.write(`error: claude failed: ${err}\n`)
+    log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
+    return null
+  }
+  const response = new TextDecoder().decode(proc.stdout).trim()
+  log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: response.length, duration_ms, ok: true })
+  return response
+}
+
 export function parse_json<T>(raw: string): T | null {
   let cleaned = raw.trim()
 

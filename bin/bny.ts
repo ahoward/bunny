@@ -39,6 +39,7 @@ import { main as brane_pov_main } from "../bny/brane/pov.ts"
 import { main as brane_storm_main } from "../bny/brane/storm.ts"
 import { main as brane_enhance_main } from "../bny/brane/enhance.ts"
 import { main as brane_tldr_main } from "../bny/brane/tldr.ts"
+import { main as brane_loop_main } from "../bny/brane/loop.ts"
 import { main as dev_pre_flight_main } from "../bny/dev/pre-flight.ts"
 import { main as dev_post_flight_main } from "../bny/dev/post-flight.ts"
 import { main as dev_test_main } from "../bny/dev/test.ts"
@@ -75,6 +76,7 @@ const COMMANDS: Record<string, CommandFn> = {
   "brane/storm":    brane_storm_main,
   "brane/enhance":  brane_enhance_main,
   "brane/tldr":     brane_tldr_main,
+  "brane/loop":     brane_loop_main,
   "dev/pre-flight": dev_pre_flight_main,
   "dev/post-flight":dev_post_flight_main,
   "dev/test":       dev_test_main,
@@ -109,6 +111,7 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "brane/tldr":      { desc: "worldview outline with TL;DR synopses", group: "knowledge" },
   "brane/digest":    { desc: "rebuild worldview from all sources", group: "knowledge" },
   "brane/pov":       { desc: "manage worldview perspectives",      group: "knowledge" },
+  "brane/loop":      { desc: "autonomous goal-directed thought loop", group: "knowledge" },
   "next":            { desc: "full pipeline for next roadmap item", group: "orchestration" },
   "spin":            { desc: "autonomous factory run (tmux)",      group: "orchestration" },
   "todo":            { desc: "manage project todos",               group: "chores" },
