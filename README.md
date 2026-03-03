@@ -6,33 +6,70 @@
   <em>"why are you wearing that stupid man suit?"</em>
 </p>
 
-## the idea
+## mobius development
 
 most ai coding tools treat each task as isolated. write code, move on.
 knowledge evaporates between sessions.
 
-bny is different. it's a strange loop — a factory that learns from its own output.
+bny is different. it implements **mobius development** — one continuous surface where knowledge becomes code becomes knowledge. there is no seam between thinking and building.
 
-1. **seed** — you write a roadmap item. a sentence describing what you want.
-2. **build** — the factory runs autonomously: spec, plan, review, implement.
-3. **reflect** — after building, it ruminates: extracts patterns, decisions, gaps.
-4. **grow** — insights feed back into the worldview, making the next iteration smarter.
+```
+seed → feed → think → propose → build → ruminate
+  ↑                                         |
+  └─────────────────────────────────────────┘
+```
 
-each pass compounds knowledge. the factory doesn't just build — it learns to build better.
+start with a sentence. the brane learns about it. thought loops search the web, fetch sources, sharpen the worldview. proposals emerge from accumulated knowledge. the dark factory builds them — specify, plan, review, implement — and rumination feeds lessons back into the brane.
+
+every cycle compounds. disposable code still teaches the brane something. the two outcomes of every build are:
+
+1. **usable software** specific to your context
+2. **refined worldview** — even throwaway spikes sharpen understanding
+
+rigor used to be expensive. iterative waterfall died because humans couldn't afford the ceremony. llms removed that cost constraint. bny brings the rigor back — spec, plan, adversarial review, test-first implementation, post-build reflection — because now it's free.
 
 the human's role: seed ideas, review output, course-correct.
 not scheduling. not gluing steps together.
 
-## the loop
+## the happy path
 
-```
-seed idea → specify → plan → tasks → review → implement
-                                                   ↓
-                                               ruminate
-                                                   ↓
-                                             brane learns
-                                                   ↓
-                                         next iteration (smarter)
+```bash
+# --- 0. setup ---
+git clone <repo> && cd my-project && ./dev/setup
+export PATH="./bin:$PATH"
+
+# --- 1. seed — tell the brane what you care about ---
+bny brane eat README.md                           # ingest existing knowledge
+bny brane eat https://example.com/api-docs        # ingest a URL
+bny brane eat docs/                               # ingest a directory
+bny brane pov add security "attack vectors, auth gaps, input validation"
+bny brane pov add perf "latency, memory, algorithmic complexity"
+
+# --- 2. think — let the brane explore autonomously ---
+bny brane storm "what about real-time collaboration?"
+bny brane loop "distributed consensus patterns"   # web search, fetch, eat, repeat
+bny brane loop --rounds 5 --yes "auth strategies" # 5 rounds, auto-incorporate
+bny brane enhance "security model"                # sharpen what you've learned
+
+# --- 3. propose — bridge knowledge to execution ---
+bny proposal "auth system"                        # brane generates a proposal
+bny proposal --count 3 "backend architecture"     # generate 3 proposals
+bny proposal accept auth-system                   # accepted → roadmap item
+
+# --- 4. build — the dark factory ---
+bny build                                         # full pipeline: specify → plan → review → implement → ruminate
+bny build specify "add user auth"                 # just the specify step
+bny build implement                               # just the implement step
+bny --effort full build                           # 10 retries, $5 budget
+bny spin                                          # run detached in tmux
+
+# --- 5. spike — build without guardrails ---
+bny spike "prototype oauth flow"                  # no review, no locked tests, exploratory
+bny spike implement                               # just implement, fast and loose
+
+# --- 6. ruminate — close the loop ---
+bny ruminate                                      # reflect on build, feed brane
+bny brane tldr                                    # see what the brane knows now
 ```
 
 four actors:
@@ -42,66 +79,115 @@ four actors:
 3. **brane** remembers — accumulates knowledge across iterations
 4. **human** seeds ideas, reviews output, intervenes when stuck
 
-tests are locked after gemini review. no changing them without human approval.
+## commands
 
-## tl;dr
+### build (dark factory)
+
+the build pipeline. runs all steps by default, or one step at a time.
+each step is a subcommand — brutal consistency.
 
 ```bash
-# --- setup ---
-git clone <repo> && cd bunny && ./dev/setup
-export PATH="./bin:$PATH"
+bny build                                         # full pipeline
+bny build "add user auth"                         # full pipeline with description
+bny build specify "add user auth"                 # create spec
+bny build plan                                    # create implementation plan
+bny build tasks                                   # generate task list
+bny build review                                  # gemini antagonist review
+bny build implement                               # claude builds it
+bny build ruminate                                # reflect, feed brane
+bny build --dry-run                               # show what would run
+```
 
-# --- build a feature (the dark factory) ---
-bny next                                     # pick roadmap item, run full pipeline
-bny next --dry-run                           # show what would run
-bny spin                                     # autonomous — run detached in tmux
-bny spin --attach                            # launch and watch live
-bny spin --log                               # tail the latest spin log
+### spike (exploratory)
 
-# --- or step by step ---
-bny specify "add user authentication"       # branch + spec
-bny plan                                     # implementation plan
-bny tasks                                    # task breakdown
-bny review                                   # gemini pokes holes
-bny --ralph --max-iter 10 implement          # claude builds, retries until green
-bny ruminate                                 # reflect on build, feed brane
-bny map                                      # structural codebase map (tree-sitter)
-bny map src/ lib/                            # map specific directories
-bny map --json                               # machine-readable output
+same interface as build, guardrails off. no gemini review.
+no test-first. no locked specs. output is explicitly disposable — but the
+brane still learns from it.
 
-# --- knowledge base (brane) ---
-bny brane eat README.md                      # ingest a file
-bny brane eat docs/                          # ingest a directory
-bny brane eat https://example.com/api.html   # ingest a URL
-bny brane ask "what are the security risks?" # query the worldview
-bny brane ask competitor-spec.md             # review a doc against worldview
-bny brane pov add security "attack vectors, auth gaps, input validation"
-bny brane pov add perf "latency, memory, algorithmic complexity"
-bny brane storm "what about real-time collab?" # brainstorm — divergent expansion
-bny brane storm seed.md --rounds 2           # multi-round storm from a file
-bny brane enhance                            # refine — convergent sharpening
-bny brane enhance "security model"           # focus refinement on a topic
-bny brane tldr                               # instant worldview outline (zero LLM)
-bny brane digest                             # rebuild worldview through current lenses
-bny brane pov                                # list active povs
+```bash
+bny spike "prototype websocket layer"             # full pipeline, no review
+bny spike implement                               # just implement, fast
+```
 
-# --- project chores ---
-bny todo add "upgrade bun to 1.4"           # add a todo
-bny todo                                     # list todos
-bny todo done 1                              # mark done
-bny todo promote 2                           # escalate to gh issue
+### brane (knowledge)
 
-# --- project chores ---
-bny close-issue 42                           # close github issue with comment
+persistent knowledge graph. worldview files are self-organizing markdown.
+sources are stashed on every eat. `digest` re-eats them all through current
+lenses — add a pov, digest, get a new worldview.
 
-# --- iteration planning ---
-bny ipm                                      # interactive planning session
+```bash
+bny brane eat <source>                            # ingest file, directory, or URL
+bny brane ask "what are the security risks?"      # query worldview (read-only)
+bny brane ask competitor-spec.md                  # review a doc against worldview
+bny brane storm "real-time collab?"               # divergent brainstorming
+bny brane enhance "security model"                # convergent refinement
+bny brane loop "distributed systems"              # autonomous thought loop
+bny brane loop --rounds 5 --yes "auth patterns"   # multi-round, auto-incorporate
+bny brane loop --resume distributed-systems       # resume existing loop
+bny brane loop list                               # show all loops
+bny brane tldr                                    # instant worldview outline (zero LLM)
+bny brane digest                                  # rebuild worldview through current lenses
+bny brane pov                                     # list active perspectives
+bny brane pov add security "attack vectors, auth" # add a perspective lens
+bny brane pov on|off <name>                       # toggle a pov
+```
 
-# --- plumbing ---
-./dev/test                                   # run tests
-./dev/health                                 # system health (json)
-./dev/pre_flight                             # validate before work
-./dev/post_flight                            # validate before commit
+### proposal (bridge)
+
+bridge between knowledge (brane) and execution (roadmap).
+
+```bash
+bny proposal "auth system"                        # generate proposal
+bny proposal --count 3 "backend"                  # generate multiple
+bny proposal accept auth-system                   # accept → roadmap item
+bny proposal --dry-run "topic"                    # print prompt only
+```
+
+### orchestration
+
+```bash
+bny next                                          # pick roadmap item, run full pipeline
+bny spin                                          # autonomous — run detached in tmux
+bny spin --attach                                 # launch and watch live
+bny spin --log                                    # tail the latest spin log
+bny map                                           # structural codebase map (tree-sitter)
+bny map src/ lib/                                 # map specific directories
+bny map --json                                    # machine-readable output
+```
+
+### project
+
+```bash
+bny todo                                          # list project todos
+bny todo add "upgrade bun to 1.4"                 # add a todo
+bny todo done 1                                   # mark done
+bny todo promote 2                                # escalate to gh issue
+bny close-issue 42                                # close github issue
+bny ipm                                           # iteration planning meeting
+bny status                                        # show feature state
+bny ps                                            # show running bny processes
+```
+
+### dev (plumbing)
+
+```bash
+./dev/setup                                       # install deps, configure git hooks
+./dev/test                                        # run tests
+./dev/health                                      # system health check (json)
+./dev/pre_flight                                  # validate before starting work
+./dev/post_flight                                 # validate before committing
+```
+
+### ralph (retry loop)
+
+any command can be wrapped with ralph for retry loops.
+
+```bash
+bny --effort little build                         # 2 iters, $0.50, 2min timeout
+bny --effort some build                           # 5 iters, $2, 5min timeout
+bny --effort full build                           # 10 iters, $5, 10min timeout
+bny --effort max build                            # unlimited
+bny --ralph --max-iter 10 build implement         # explicit limits
 ```
 
 ## stack
@@ -133,7 +219,7 @@ export PATH="./bin:$PATH"
 
 ### binary install (recommended)
 
-bny compiles to a single 58MB binary. no runtime dependencies beyond git.
+bny compiles to a single binary. no runtime dependencies beyond git.
 
 ```bash
 # new project
@@ -159,7 +245,7 @@ bny status                               # verify install
 ```bash
 git clone https://github.com/ahoward/bunny.git
 cd bunny
-bun build --compile bin/bny.ts --outfile bny    # 58MB arm64 binary
+bun build --compile bin/bny.ts --outfile bny
 cp bny /path/to/your-project/bin/bny
 cd /path/to/your-project
 ./bin/bny init
@@ -181,79 +267,10 @@ bin/bny init --minimal                    # just .bny/ state
 
 ### prerequisites
 
-- [claude](https://claude.ai/cli) CLI (for brane, implement, specify, plan)
+- [claude](https://claude.ai/cli) CLI (for brane, build, spike)
 - [gemini](https://ai.google.dev/gemini-api/docs/cli) CLI (for review — optional)
 - git
 - [bun](https://bun.sh) (only needed for symlink install or building from source)
-
-## commands
-
-### dev (plumbing)
-
-```bash
-./dev/setup          # bun install + git hooks
-./dev/test           # run tests
-./dev/health         # system health check (json)
-./dev/pre_flight     # validate before starting work
-./dev/post_flight    # validate before committing
-```
-
-### bny (orchestration)
-
-```bash
-bny specify "..."    # create feature branch + spec
-bny plan             # create implementation plan
-bny tasks            # generate task list
-bny review           # gemini antagonist review
-bny implement        # claude autonomous implementation
-bny ruminate         # reflect on build, feed brane
-bny map              # structural codebase map (tree-sitter)
-bny status           # show feature state
-bny ipm              # interactive planning session
-bny init             # scaffold .bny/, dev/, .githooks/ for a new project
-bny ai init          # bootstrap ai tool awareness (symlinks)
-bny dev test         # wraps ./dev/test
-bny dev pre-flight   # wraps ./dev/pre_flight
-```
-
-### brane (knowledge graph)
-
-```bash
-bny brane eat <source>       # ingest file, directory, or URL
-bny brane ask <question>     # query worldview (read-only)
-bny brane ask <file>         # review a doc against worldview
-bny brane storm [seed]       # divergent brainstorming (expand outward)
-bny brane enhance [focus]    # convergent refinement (sharpen inward)
-bny brane tldr               # instant worldview outline (zero LLM)
-bny brane pov                # list points of view
-bny brane pov add <n> <desc> # add a perspective lens
-bny brane pov on|off <name>  # toggle a pov
-bny brane digest             # rebuild worldview from all stashed sources
-```
-
-sources are stashed on every eat. `digest` re-eats them all through your current lenses — add a pov, digest, get a new worldview. sources are git-tracked. for large branes, add a `.gitattributes` with git-lfs.
-
-### todo (project chores)
-
-```bash
-bny todo                     # list
-bny todo add "..."           # add
-bny todo done <n>            # mark done
-bny todo rm <n>              # remove
-bny todo promote <n>         # escalate to gh issue
-```
-
-### ralph (retry loop)
-
-```bash
-bny --effort little implement          # 2 iters, $0.50, 2min timeout
-bny --effort some implement            # 5 iters, $2, 5min timeout
-bny --effort full implement            # 10 iters, $5, 10min timeout
-bny --effort max implement             # unlimited
-bny --ralph --max-iter 10 implement    # explicit limits (implies --ralph)
-```
-
-effort presets: `little` (2 iters), `some` (5), `full` (10), `max` (unlimited).
 
 ## directory layout
 
@@ -266,30 +283,27 @@ bin/bny.ts        unified entry point source (compiles to bin/bny)
   decisions.md    append-only decision log
   constitution.md project principles
   todos.md        project chores
+  proposals/      generated proposals (bridge: knowledge → execution)
+  loops/          persistent thought loop state
   brane/          knowledge graph
     worldview/    self-organizing markdown knowledge base
     povs/         perspective lenses (all.md is default)
     sources/      stashed raw inputs (for digest)
     state.json    active povs
 bny/              dark factory CLI source (.ts files, symlinkable)
-  lib/            assassin, ralph, feature, prompt, brane, map
+  lib/            assassin, ralph, feature, prompt, brane, map, spinner
   ai/             ai subcommands (init)
-  brane/          eat, ask, pov, digest, storm, enhance, tldr
+  brane/          eat, ask, pov, digest, storm, enhance, tldr, loop
   dev/            wrappers for ./dev/* scripts
-  templates/      spec, plan, tasks templates
-  init.ts         scaffold a project for bny
-  specify.ts      create feature workspace
-  plan.ts         create implementation plan
-  tasks.ts        generate task list
-  implement.ts    claude autonomous implementation
-  review.ts       gemini antagonist review
-  ruminate.ts     reflect on build, feed brane
+  build.ts        the dark factory (full pipeline or per-step)
+  spike.ts        exploratory builds (guardrails off)
+  proposal.ts     brane → roadmap bridge
   map.ts          structural codebase map (tree-sitter)
-  status.ts       show feature state
+  ruminate.ts     post-build reflection
   next.ts         pick roadmap item, run full pipeline
-  spin.ts         autonomous — detached tmux factory run
+  spin.ts         autonomous factory run (tmux)
   todo.ts         project chore tracking
-  ipm.ts          interactive planning session
+  init.ts         scaffold a project for bny
 dev/              per-project customizable plumbing (shebangs, chmod +x)
 src/              application source
   handlers/       app.call handlers (one file per endpoint)
@@ -297,9 +311,6 @@ src/              application source
 tests/            tests + fixtures
 specs/            feature specs (one dir per feature)
 samples/          projects built entirely by bny (proof it works)
-  mood/           team mood tracker API
-  tldr/           CLI file/URL summarizer
-  shelf/          personal bookmarks with tags + search
 dna/              project knowledge — context only, no operational deps
 .githooks/        pre-commit (post_flight), pre-push (test)
 install.sh        curl|bash installer (downloads binary + runs init)
@@ -315,43 +326,18 @@ install.sh        curl|bash installer (downloads binary + runs init)
 | errors | guard early, return errors at function top |
 | simplicity | three similar lines > one premature abstraction |
 | i/o | stdin/stdout/stderr, exit codes, json lines |
+| cli | brutal consistency — `bny <noun> <verb>`, subcommands run all by default |
 | terminology | `params` for input, `result` for output |
 
 ## cheatsheet
 
 most `bny` commands have a claude code slash command. type `/bny.` and tab-complete.
 
-| slash command | cli equivalent | what it does |
-|---------------|---------------|--------------|
-| `/bny.specify` | `bny specify "..."` | create feature branch + spec |
-| `/bny.plan` | `bny plan` | create implementation plan |
-| `/bny.tasks` | `bny tasks` | generate task list |
-| `/bny.implement` | `bny implement` | claude autonomous implementation |
-| `/bny.review` | `bny review` | gemini antagonist review |
-| `/bny.ruminate` | `bny ruminate` | reflect on build, feed brane |
-| `/bny.map` | `bny map` | structural codebase map (tree-sitter) |
-| `/bny.status` | `bny status` | show feature state |
-| `/bny.next` | `bny next` | full pipeline from roadmap item |
-| `/bny.spin` | `bny spin` | autonomous factory in detached tmux |
-| `/bny.ipm` | `bny ipm` | iteration planning meeting |
-| `/bny.ps` | `bny ps` | show running bny processes |
-| `/bny.brane-eat` | `bny brane eat` | feed file/dir/url into brane |
-| `/bny.brane-ask` | `bny brane ask` | query the worldview |
-| `/bny.brane-storm` | `bny brane storm` | divergent brainstorming |
-| `/bny.brane-enhance` | `bny brane enhance` | convergent refinement |
-| `/bny.brane-digest` | `bny brane digest` | rebuild worldview from sources |
-| `/bny.brane-pov` | `bny brane pov` | show/manage perspective lenses |
-| `/bny.brane-tldr` | `bny brane tldr` | instant worldview outline |
-| `/bny.todo` | `bny todo` | manage project todos |
-| `/bny.close-issue` | `bny close-issue` | close github issue |
-| `/bny.init` | `bny init` | scaffold a new project |
-| `/bny.ai-init` | `bny ai init` | bootstrap AI tool integration |
-
 three-layer dispatch: **slash command** → claude runs **bny cli** → bny handles everything.
 
 ## proof
 
-three projects built entirely by bny — from a one-paragraph seed to working code. no human wrote any application code.
+projects built entirely by bny — from a one-paragraph seed to working code. no human wrote any application code.
 
 | sample | seed | what it builds |
 |--------|------|---------------|
@@ -359,13 +345,12 @@ three projects built entirely by bny — from a one-paragraph seed to working co
 | [tldr](samples/tldr/) | "CLI file/URL summarizer" | CLI tool — pipe-friendly, cached summaries |
 | [shelf](samples/shelf/) | "personal bookmarks with tags" | JSON API — tags, search, markdown export |
 
-each sample is a standalone bny project. `cd samples/mood && bun bin/bny next --auto` to watch the factory build.
+each sample is a standalone bny project. `cd samples/mood && bny build` to watch the factory build.
 
 see [samples/](samples/) for details.
 
 ## more
 
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — full development process
 - [bny/AGENTS.md](bny/AGENTS.md) — the protocol ai agents must follow
 - [.bny/guardrails.json](.bny/guardrails.json) — machine-readable constraints
 - [.bny/roadmap.md](.bny/roadmap.md) — what's next

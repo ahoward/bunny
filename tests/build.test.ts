@@ -1,0 +1,122 @@
+import { describe, test, expect } from "bun:test"
+
+// -- test cli via subprocess --
+
+function bny(...args: string[]): { stdout: string, stderr: string, exit: number } {
+  const proc = Bun.spawnSync(["bun", "bin/bny.ts", ...args], {
+    stdout: "pipe",
+    stderr: "pipe",
+    cwd: import.meta.dir + "/..",
+    env: { ...process.env, BNY_NO_SPINNER: "1" },
+  })
+  return {
+    stdout: new TextDecoder().decode(proc.stdout).trim(),
+    stderr: new TextDecoder().decode(proc.stderr).trim(),
+    exit: proc.exitCode ?? 1,
+  }
+}
+
+describe("bny build", () => {
+  test("--help exits 0 and shows usage", () => {
+    const r = bny("build", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+    expect(r.stdout).toContain("build")
+    expect(r.stdout).toContain("specify")
+    expect(r.stdout).toContain("implement")
+    expect(r.stdout).toContain("--dry-run")
+  })
+
+  test("no description and no feature exits 1", () => {
+    const r = bny("build")
+    expect(r.exit).toBe(1)
+    expect(r.stderr).toContain("no current feature")
+  })
+
+  test("--dry-run prints pipeline steps", () => {
+    const r = bny("build", "--dry-run", "test feature for dry run")
+    expect(r.exit).toBe(0)
+    expect(r.stderr).toContain("would run")
+    expect(r.stderr).toContain("specify")
+    expect(r.stderr).toContain("plan")
+    expect(r.stderr).toContain("tasks")
+    expect(r.stderr).toContain("review")
+    expect(r.stderr).toContain("implement")
+    expect(r.stderr).toContain("ruminate")
+  })
+
+  test("step --dry-run prints step name", () => {
+    const r = bny("build", "implement", "--dry-run")
+    expect(r.exit).toBe(0)
+    expect(r.stderr).toContain("implement")
+  })
+
+  test("specify step requires description", () => {
+    const r = bny("build", "specify")
+    expect(r.exit).toBe(1)
+    expect(r.stderr).toContain("requires a description")
+  })
+
+  test("build appears in bny help", () => {
+    const r = bny("help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("build")
+  })
+
+  test("build appears in bny help --json", () => {
+    const r = bny("help", "--json")
+    expect(r.exit).toBe(0)
+    const parsed = JSON.parse(r.stdout)
+    const keys = parsed.commands.map((c: any) => c.key)
+    expect(keys).toContain("build")
+  })
+})
+
+describe("bny spike", () => {
+  test("--help exits 0 and shows usage", () => {
+    const r = bny("spike", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+    expect(r.stdout).toContain("spike")
+    expect(r.stdout).toContain("guardrails")
+    expect(r.stdout).toContain("implement")
+  })
+
+  test("no description and no feature exits 1", () => {
+    const r = bny("spike")
+    expect(r.exit).toBe(1)
+    expect(r.stderr).toContain("no current feature")
+  })
+
+  test("--dry-run prints pipeline steps without review", () => {
+    const r = bny("spike", "--dry-run", "test spike dry run")
+    expect(r.exit).toBe(0)
+    expect(r.stderr).toContain("would run")
+    expect(r.stderr).toContain("specify")
+    expect(r.stderr).toContain("plan")
+    expect(r.stderr).toContain("tasks")
+    expect(r.stderr).toContain("skip review")
+    expect(r.stderr).toContain("implement")
+    expect(r.stderr).toContain("ruminate")
+  })
+
+  test("specify step requires description", () => {
+    const r = bny("spike", "specify")
+    expect(r.exit).toBe(1)
+    expect(r.stderr).toContain("requires a description")
+  })
+
+  test("spike appears in bny help", () => {
+    const r = bny("help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("spike")
+  })
+
+  test("spike appears in bny help --json", () => {
+    const r = bny("help", "--json")
+    expect(r.exit).toBe(0)
+    const parsed = JSON.parse(r.stdout)
+    const keys = parsed.commands.map((c: any) => c.key)
+    expect(keys).toContain("spike")
+  })
+})

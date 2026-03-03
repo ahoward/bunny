@@ -3,36 +3,31 @@
 ## Workflow
 
 ```
-roadmap → bny specify (create spec.md)
-        → bny plan (create plan.md)
-        → bny tasks (create tasks.md)
-        → bny review (Gemini antagonist)
-        → bny implement (execute tasks)
-        → If stuck → Human checkpoint
-        → Complete → Update roadmap
+seed → feed brane → think (loop/storm/enhance)
+     → propose → build (specify → plan → review → implement → ruminate)
+     → brane learns → next cycle
 ```
 
 ## Next
 
+- [ ] M1: `bny build` — collapse factory into single command with subcommands (specify/plan/tasks/review/implement/ruminate); `bny build` runs all, `bny build specify "desc"` runs one step
+- [ ] M2: `bny spike` — same interface as build, guardrails off (no review, no test-first, no locked specs); output is disposable but brane still learns
+- [ ] M3: decouple specify from git branches — specify creates spec without `git checkout -b`; branches are manual at the proposal/research level
+- [ ] M4: auto-ruminate on build — `bny build` always ruminates on completion; spike ruminates too (knowledge is never disposable)
+- [ ] M5: loop→propose pipeline — `bny brane loop` can optionally emit proposals when it discovers actionable gaps
+- [ ] M6: slash commands for new commands — .claude/commands wrappers for build, spike
+- [ ] M7: update CLAUDE.md — workflow section reflects build/spike, not specify/plan/tasks individually
+
+### hardening (carried forward)
+
 - [ ] P0: fix shell injection in --model flag — validate model name, use array spawn in implement.ts + review.ts
-- [ ] P0: document secret detection — README security section, env vars, pattern list
-- [ ] P0: document model pinning — README model selection section with examples
-- [ ] P1: secret snippet leaks short secrets — always redact matched text ≤20 chars
 - [ ] P1: SSRF guard in load_source() — blocklist private/local IPs, add --max-filesize to curl
 - [ ] P1: validate --model input — reject shell metacharacters (alphanumeric/hyphens/dots only)
 - [ ] P1: parse_json corrupts globs — /* in patterns and [ in prose stripped; needs smarter extraction
-- [ ] P1: document cost tracking + brane size limits in README
-- [ ] P1: README "most" → "all" slash commands (28/28)
 - [ ] P2: extract duplicate call_claude retry logic into call_claude_with_retry<T>()
 - [ ] P2: call_claude() timeout — Bun.spawnSync blocks indefinitely if claude hangs
 - [ ] P2: unique temp files in implement.ts — concurrent runs collide on .bny/implement-prompt.tmp
-- [ ] P2: fix AWS secret regex ReDoS — remove lookahead or simplify pattern
 - [ ] P2: confirm_intake() default to no on error — currently auto-confirms on fd error
-- [ ] P2: file size limit in read_dir_recursive — large files cause OOM
-- [ ] P3: require() anti-pattern in log_usage() — use static import for appendFileSync
-- [ ] P3: audit trail when secret scan disabled — log when BNY_SECRETS_SCAN=off is used
-- [ ] P3: preview_operations Set-based diff ignores duplicate lines — use proper diff
-- [ ] P3: verify binary size in README (currently says 58MB)
 
 ## Completed
 
