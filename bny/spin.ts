@@ -75,12 +75,12 @@ workflow:
       process.stderr.write("no spin logs yet\n")
       return 0
     }
-    const proc = Bun.spawnSync(["tail", "-f", latest], {
+    const proc = Bun.spawn(["tail", "-f", latest], {
       stdout: "inherit",
       stderr: "inherit",
       stdin: "inherit",
     })
-    return proc.exitCode ?? 0
+    return await proc.exited
   }
 
   // -- check tmux --

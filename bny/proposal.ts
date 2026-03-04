@@ -554,26 +554,23 @@ Respond with ONLY valid JSON (no markdown fences):
     `- [ ] ${item.priority}: ${item.name} — ${item.description} (${slug})`
   ).join("\n")
 
-  const next_section = `## Next
+  const items_block = `\nSource: [${slug}](proposals/${slug}.md)\n${new_items}`
 
-Source: [${slug}](proposals/${slug}.md)
-
-${new_items}`
-
-  // replace ## Next section, preserve ## Workflow and ## Completed
-  const workflow_match = roadmap.match(/## Workflow[\s\S]*?(?=\n## )/m)
-  const workflow_section = workflow_match ? workflow_match[0].trimEnd() + "\n\n" : ""
-
-  const completed_match = roadmap.match(/## Completed[\s\S]*$/m)
-  const completed_section = completed_match ? completed_match[0] : "## Completed\n"
-
-  const new_roadmap = `# Roadmap
-
-${workflow_section}${next_section}
-
-${completed_section}`
-
-  writeFileSync(roadmap_path, new_roadmap)
+  // append to ## Next section instead of replacing it
+  const next_idx = roadmap.indexOf("## Next")
+  if (next_idx >= 0) {
+    // find the end of the ## Next section (next ## heading or EOF)
+    const after_next = roadmap.indexOf("\n## ", next_idx + 7)
+    const insert_at = after_next >= 0 ? after_next : roadmap.length
+    const before = roadmap.slice(0, insert_at).trimEnd()
+    const after = after_next >= 0 ? roadmap.slice(after_next) : ""
+    const new_roadmap = before + "\n\n" + items_block + "\n" + after
+    writeFileSync(roadmap_path, new_roadmap)
+  } else {
+    // no ## Next section — create one
+    const new_roadmap = roadmap.trimEnd() + "\n\n## Next\n" + items_block + "\n"
+    writeFileSync(roadmap_path, new_roadmap)
+  }
 
   // -- output --
 

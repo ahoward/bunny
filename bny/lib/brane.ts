@@ -5,7 +5,7 @@
 //           json parsing, file operations, initialization
 //
 
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, statSync, rmSync, openSync, readSync, closeSync } from "node:fs"
+import { existsSync, readFileSync, writeFileSync, appendFileSync, readdirSync, mkdirSync, statSync, rmSync, openSync, readSync, closeSync } from "node:fs"
 import { resolve, relative, dirname } from "node:path"
 import type { PromptSection } from "./prompt.ts"
 import { create_spinner } from "./spinner.ts"
@@ -91,6 +91,7 @@ export function load_state(root: string): BraneState {
     }
     return raw as BraneState
   } catch {
+    process.stderr.write("warning: corrupted state.json, resetting to defaults\n")
     return { active_lenses: ["all"] }
   }
 }
@@ -169,7 +170,6 @@ function usage_path(root: string): string {
 
 function log_usage(root: string, entry: UsageEntry): void {
   try {
-    const { appendFileSync } = require("node:fs") as typeof import("node:fs")
     appendFileSync(usage_path(root), JSON.stringify(entry) + "\n")
   } catch { /* non-fatal */ }
 }
@@ -213,14 +213,18 @@ export function call_claude(prompt: string, root: string): string | null {
 
   // model version pinning: --model flag or BNY_MODEL env var
   const model = env.BNY_MODEL || null
-  const timeout_secs = parseInt(env.BNY_CLAUDE_TIMEOUT || "", 10) || CLAUDE_TIMEOUT_SECS
+  const timeout_env = env.BNY_CLAUDE_TIMEOUT
+  const timeout_parsed = timeout_env !== undefined ? parseInt(timeout_env, 10) : NaN
+  const timeout_secs = !isNaN(timeout_parsed) ? timeout_parsed : CLAUDE_TIMEOUT_SECS
 
   const claude_args: string[] = ["-p"]
   if (model) claude_args.push("--model", model)
   claude_args.push("-")
 
-  // use `timeout` to prevent indefinite blocking
-  const cmd = ["timeout", String(timeout_secs), "claude", ...claude_args]
+  // use `timeout` to prevent indefinite blocking (0 = no timeout)
+  const cmd = timeout_secs > 0
+    ? ["timeout", String(timeout_secs), "claude", ...claude_args]
+    : ["claude", ...claude_args]
 
   const start = Date.now()
   const proc = Bun.spawnSync(cmd, {
@@ -256,10 +260,16 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
   delete env.CLAUDECODE
 
   const model = env.BNY_MODEL || null
-  const cmd: string[] = ["claude", "-p"]
-  if (model) cmd.push("--model", model)
-  for (const tool of allowed_tools) cmd.push("--allowedTools", tool)
-  cmd.push("--max-turns", String(max_turns), "-")
+  // tool use gets more time: 2x the normal timeout
+  const base_timeout = env.BNY_CLAUDE_TIMEOUT !== undefined ? parseInt(env.BNY_CLAUDE_TIMEOUT, 10) : CLAUDE_TIMEOUT_SECS
+  const timeout_secs = (isNaN(base_timeout) ? CLAUDE_TIMEOUT_SECS : base_timeout) * 2
+
+  const claude_args: string[] = ["-p"]
+  if (model) claude_args.push("--model", model)
+  for (const tool of allowed_tools) claude_args.push("--allowedTools", tool)
+  claude_args.push("--max-turns", String(max_turns), "-")
+
+  const cmd = ["timeout", String(timeout_secs), "claude", ...claude_args]
 
   const start = Date.now()
   const proc = Bun.spawnSync(cmd, {
@@ -270,6 +280,13 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
     env,
   })
   const duration_ms = Date.now() - start
+
+  if (proc.exitCode === 124) {
+    process.stderr.write(`error: claude (with tools) timed out after ${timeout_secs}s\n`)
+    log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
+    return null
+  }
+
   if (proc.exitCode !== 0) {
     const err = new TextDecoder().decode(proc.stderr).trim()
     process.stderr.write(`error: claude failed: ${err}\n`)
@@ -337,9 +354,12 @@ function extract_json_block(text: string): string | null {
     const ch = text[i]
 
     if (escape_next) { escape_next = false; continue }
-    if (ch === "\\") { escape_next = true; continue }
-    if (ch === '"') { in_string = !in_string; continue }
-    if (in_string) continue
+    if (in_string) {
+      if (ch === "\\") { escape_next = true; continue }
+      if (ch === '"') { in_string = false; continue }
+      continue
+    }
+    if (ch === '"') { in_string = true; continue }
 
     if (ch === open_char) depth++
     else if (ch === close_char) {
@@ -566,22 +586,30 @@ export function clear_worldview(root: string): void {
 
 // -- source loading --
 
-function read_dir_recursive(dir: string, base: string): string {
+const MAX_DIR_DEPTH = 10
+const MAX_DIR_CONTENT_BYTES = 5 * 1024 * 1024 // 5MB total content cap
+
+function read_dir_recursive(dir: string, base: string, depth: number = 0, total_bytes: { n: number } = { n: 0 }): string {
+  if (depth > MAX_DIR_DEPTH) return ""
   const parts: string[] = []
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (total_bytes.n >= MAX_DIR_CONTENT_BYTES) break
     const full = resolve(dir, entry.name)
     if (entry.isDirectory()) {
-      // skip hidden dirs and node_modules
+      // skip hidden dirs, node_modules, and symlinks
       if (entry.name.startsWith(".") || entry.name === "node_modules") continue
-      parts.push(read_dir_recursive(full, base))
+      if (entry.isSymbolicLink()) continue
+      parts.push(read_dir_recursive(full, base, depth + 1, total_bytes))
     } else {
-      // skip binary-looking files
+      // skip binary-looking files and symlinks
       if (/\.(png|jpg|gif|svg|ico|woff|ttf|eot|lock|db)$/i.test(entry.name)) continue
+      if (entry.isSymbolicLink()) continue
       try {
         const content = readFileSync(full, "utf-8").trim()
         if (content.length > 0) {
           const rel = relative(base, full)
           parts.push(`--- ${rel} ---\n${content}`)
+          total_bytes.n += content.length
         }
       } catch { /* skip unreadable files */ }
     }
@@ -648,8 +676,11 @@ const SSRF_BLOCKED_HOSTS = [
   /^192\.168\.\d+\.\d+$/,
   /^0\.0\.0\.0$/,
   /^\[::1?\]$/,
-  /^169\.254\.\d+\.\d+$/,        // link-local
+  /^\[::ffff:[\d.]+\]$/i,         // IPv6-mapped IPv4
+  /^169\.254\.\d+\.\d+$/,         // link-local
   /^metadata\.google\.internal$/i, // cloud metadata
+  /^\d+$/,                         // decimal IPs (e.g. 2130706433)
+  /^0x[0-9a-f]+$/i,               // hex IPs (e.g. 0x7f000001)
 ]
 
 const MAX_SOURCE_BYTES = 10 * 1024 * 1024 // 10MB
@@ -671,7 +702,7 @@ export function load_source(source: string, root: string): { content: string, la
       return null
     }
 
-    const proc = Bun.spawnSync(["curl", "-sL", "--max-time", "30", "--max-filesize", String(MAX_SOURCE_BYTES), source], {
+    const proc = Bun.spawnSync(["curl", "-sL", "--max-time", "30", "--max-filesize", String(MAX_SOURCE_BYTES), "--proto", "=http,https", "--proto-redir", "=https", "--max-redirs", "5", source], {
       stdout: "pipe",
       stderr: "pipe",
       cwd: root,
@@ -679,7 +710,7 @@ export function load_source(source: string, root: string): { content: string, la
     if (proc.exitCode !== 0) return null
     const content = new TextDecoder().decode(proc.stdout).trim()
     if (content.length === 0) return null
-    check_secrets(content, `source: ${source}`)
+    if (!check_secrets(content, `source: ${source}`)) return null
     return { content, label: source }
   }
 
@@ -691,13 +722,13 @@ export function load_source(source: string, root: string): { content: string, la
   if (statSync(path).isDirectory()) {
     const content = read_dir_recursive(path, path)
     if (content.length === 0) return null
-    check_secrets(content, `source: ${relative(root, path)}/`)
+    if (!check_secrets(content, `source: ${relative(root, path)}/`)) return null
     return { content, label: relative(root, path) + "/" }
   }
 
   // file
   const content = readFileSync(path, "utf-8").trim()
   if (content.length === 0) return null
-  check_secrets(content, `source: ${relative(root, path)}`)
+  if (!check_secrets(content, `source: ${relative(root, path)}`)) return null
   return { content, label: relative(root, path) }
 }

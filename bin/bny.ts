@@ -416,6 +416,9 @@ async function main(): Promise<void> {
   // argv = ["bun", script_or_bunfs_path, ...args]
   const args = parse_args(process.argv.slice(2))
 
+  // abort if parse_args set an error
+  if (process.exitCode && process.exitCode !== 0) return
+
   const json_flag = args.rest.includes("--json")
 
   // bny / bny --help / bny -h → show help

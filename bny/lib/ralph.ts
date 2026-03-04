@@ -18,7 +18,7 @@ export interface RalphOptions {
   command?:     string[]                    // subprocess mode
   fn?:          () => Promise<number>       // in-process mode (compiled binary)
   max_iter:     number       // 0 = unlimited
-  max_budget:   number       // 0.0 = unlimited (USD)
+  max_budget:   number       // reserved for future use (currently unused)
   timeout_ms:   number       // 0 = unlimited (per iteration)
   session_id:   string | null // for logging continuity
 }
@@ -48,6 +48,9 @@ function log_iteration(entry: {
   }) + "\n")
 }
 
+const BACKOFF_BASE_MS = 2000  // 2s initial delay
+const BACKOFF_MAX_MS  = 30000 // 30s max delay
+
 export async function ralph(opts: RalphOptions): Promise<RalphResult> {
   const session_id = opts.session_id ?? crypto.randomUUID()
 
@@ -63,9 +66,11 @@ export async function ralph(opts: RalphOptions): Promise<RalphResult> {
       return { status: "max_iter", iterations: iteration - 1, budget_usd, last_exit, session_id }
     }
 
-    // check max budget
-    if (opts.max_budget > 0 && budget_usd >= opts.max_budget) {
-      return { status: "max_budget", iterations: iteration - 1, budget_usd, last_exit, session_id }
+    // backoff between retries (not before first attempt)
+    if (iteration > 1) {
+      const delay = Math.min(BACKOFF_BASE_MS * Math.pow(1.5, iteration - 2), BACKOFF_MAX_MS)
+      process.stderr.write(`ralph: retry in ${Math.round(delay / 1000)}s...\n`)
+      await new Promise(r => setTimeout(r, delay))
     }
 
     // run the command

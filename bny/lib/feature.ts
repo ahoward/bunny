@@ -6,7 +6,7 @@
 //
 
 import { existsSync, readdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs"
-import { resolve, dirname, basename } from "node:path"
+import { resolve, relative, dirname, basename } from "node:path"
 
 // -- types --
 
@@ -38,6 +38,7 @@ export function find_root(): string {
     if (existsSync(resolve(dir, "bny"))) return dir
     dir = dirname(dir)
   }
+  process.stderr.write("warning: no .bny/ or bny/ directory found, using cwd as project root\n")
   return process.cwd()
 }
 
@@ -80,7 +81,13 @@ export function clear_current_feature(root: string): void {
 // -- paths --
 
 export function feature_paths(root: string, name: string): FeaturePaths {
-  const dir = resolve(root, "specs", name)
+  const specs_root = resolve(root, "specs")
+  const dir = resolve(specs_root, name)
+  // path traversal guard: ensure resolved dir stays within specs/
+  const rel = relative(specs_root, dir)
+  if (rel.startsWith("..") || rel === "") {
+    throw new Error(`feature name would escape specs/: ${name}`)
+  }
   return {
     dir,
     spec:  resolve(dir, "spec.md"),

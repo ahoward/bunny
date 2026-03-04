@@ -750,6 +750,13 @@ Start with \`function extract(root) {\` and end with \`}\`.
     return null
   }
 
+  // safety: reject generated code that tries to escape sandbox
+  const dangerous = /\b(require|import|eval|process|global|Bun|Deno|fetch|XMLHttpRequest|child_process)\b/
+  if (dangerous.test(code)) {
+    process.stderr.write(`[map] generated extractor contains dangerous keywords, rejecting\n`)
+    return null
+  }
+
   // cache to disk
   const dir = extractors_dir(root)
   mkdirSync(dir, { recursive: true })

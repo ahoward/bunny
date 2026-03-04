@@ -207,7 +207,8 @@ async function run_pipeline(
       const answer = buf.slice(0, n).toString().trim().toLowerCase()
       return answer === "" || answer === "y" || answer === "yes"
     } catch {
-      return true // default to yes on fd error
+      process.stderr.write("warning: could not read /dev/tty, defaulting to no\n")
+      return false // safe default
     } finally {
       if (fd !== null) closeSync(fd)
     }
