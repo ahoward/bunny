@@ -22,12 +22,24 @@ digest → think → propose → build → ruminate
 
 every cycle compounds. even throwaway spikes teach the graph something.
 
+## quick start
+
+```bash
+# install into any git repo
+cd my-project
+curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
+export PATH="./bin:$PATH"
+
+# or from source
+git clone https://github.com/ahoward/bunny.git && cd bunny
+./dev/setup && export PATH="./bin:$PATH"
+```
+
+`bny init` detects your project type (bun, node, rust, go, python, make) and generates appropriate dev scripts.
+
 ## the happy path
 
 ```bash
-# --- 0. setup ---
-bny init && export PATH="./bin:$PATH"
-
 # --- 1. seed — feed the knowledge graph ---
 bny digest README.md                                # ingest a file
 bny digest https://example.com/api-docs             # ingest a URL
@@ -160,21 +172,6 @@ bny ps                                              # show running bny processes
 ./dev/pre_flight                                    # validate before starting work
 ./dev/post_flight                                   # validate before committing
 ```
-
-## quick start
-
-```bash
-# install into any git repo
-cd my-project
-curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
-export PATH="./bin:$PATH"
-
-# or from source
-git clone https://github.com/ahoward/bunny.git && cd bunny
-./dev/setup && export PATH="./bin:$PATH"
-```
-
-`bny init` detects your project type (bun, node, rust, go, python, make) and generates appropriate dev scripts.
 
 ## directory layout
 
