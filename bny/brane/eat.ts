@@ -2,7 +2,7 @@
 //
 // bny brane eat — ingest information into the brane
 //
-// feeds a source (file, directory, or URL) through all active POVs.
+// feeds a source (file, directory, or URL) through all active lenses.
 // the LLM extracts concepts and updates the worldview.
 //
 // usage:
@@ -15,7 +15,7 @@
 import { success, error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, load_source, load_worldview, load_active_povs,
+  ensure_brane, load_source, load_worldview, load_active_lenses,
   call_claude, parse_json, apply_operations,
   stash_source, preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
@@ -80,22 +80,22 @@ flags:
 
   // -- load context --
 
-  const povs = load_active_povs(root)
+  const lenses = load_active_lenses(root)
   const worldview = load_worldview(root)
 
   // -- build prompt --
 
-  const pov_block = povs.length > 0
-    ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-    : "(no active points of view)"
+  const lens_block = lenses.length > 0
+    ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+    : "(no active lenses)"
 
   const worldview_block = worldview.length > 0
     ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
     : "(empty — first ingestion)"
 
-  const eat_prompt = `# Points of View
+  const eat_prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 
@@ -116,7 +116,7 @@ ${loaded.content}
 # Instructions
 
 You are maintaining a knowledge base as markdown files.
-Filter this information through all points of view above.
+Filter this information through all active lenses above.
 Not everything should be absorbed — only concepts that matter
 through your active lenses. Be selective.
 

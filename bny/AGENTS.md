@@ -79,10 +79,13 @@ bin/              # executables (bny entry point)
 bny/              # dark factory CLI — tool code (symlinkable)
   lib/            # shared modules (assassin, ralph, feature, prompt, brane, map, spinner)
   ai/             # ai subcommands (init)
-  brane/          # knowledge commands (eat, ask, storm, enhance, digest, pov, tldr)
+  brane/          # knowledge commands (eat, ask, storm, enhance, rebuild, lens, tldr, loop)
   dev/            # wrappers for ./dev/* scripts
   templates/      # spec, plan, tasks templates
-  specify.ts      # create feature branch + spec
+  build.ts        # the dark factory (full pipeline or per-step)
+  spike.ts        # exploratory build (guardrails off)
+  proposal.ts     # brane → roadmap bridge
+  specify.ts      # create feature spec
   plan.ts         # create implementation plan
   tasks.ts        # generate task list
   implement.ts    # claude autonomous implementation
@@ -108,15 +111,13 @@ dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 1. Run `./dev/pre_flight` — confirm environment is ready
 2. Read `.bny/roadmap.md` — find "Next" item
 3. Read `.bny/guardrails.json` — know the constraints
-4. Run `/bny.specify` — creates `specs/{feature}/spec.md`
-5. Open PR for human review
-6. After approval: `/bny.plan` → `/bny.tasks`
-7. Review tests with Gemini (antagonist)
-8. Implement via `/bny.implement`
-9. Run `./dev/test` after every change
-10. Run `./dev/post_flight` before committing
-11. If stuck (tests won't pass) → Human checkpoint
-12. On completion → Update .bny/roadmap.md, append to `.bny/decisions.md`
+4. Run `bny build "description"` — full pipeline (specify → plan → tasks → review → implement → ruminate)
+5. Or run steps individually: `bny build specify "desc"`, `bny build plan`, etc.
+6. For exploratory work: `bny spike "description"` — same steps, no review
+7. Run `./dev/test` after every change
+8. Run `./dev/post_flight` before committing
+9. If stuck (tests won't pass) → Human checkpoint
+10. On completion → Update .bny/roadmap.md, append to `.bny/decisions.md`
 
 ## Don't
 

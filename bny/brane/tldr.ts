@@ -14,7 +14,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs"
 import { resolve, relative } from "node:path"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, worldview_dir, load_state, list_all_povs, list_sources,
+  ensure_brane, worldview_dir, load_state, list_all_lenses, list_sources,
 } from "../lib/brane.ts"
 
 interface FileEntry {
@@ -114,16 +114,16 @@ flags:
   const { files, dirs } = scan_worldview(wv_dir, wv_dir)
 
   if (files.length === 0) {
-    process.stderr.write("worldview is empty — eat some information first\n")
+    process.stderr.write("worldview is empty — digest some information first\n")
     return 0
   }
 
   // povs
   const state = load_state(root)
-  const all_povs = list_all_povs(root)
-  const pov_info = all_povs.map(name => ({
+  const all_lenses = list_all_lenses(root)
+  const lens_info = all_lenses.map(name => ({
     name,
-    active: state.active_povs.includes(name),
+    active: state.active_lenses.includes(name),
   }))
 
   // sources
@@ -134,7 +134,7 @@ flags:
     const total_lines = files.reduce((sum, f) => sum + f.lines, 0)
     const out = {
       files,
-      povs: pov_info,
+      lenses: lens_info,
       sources: { count: sources.length, last: last_source },
       stats: { files: files.length, dirs: dirs.size, total_lines },
     }
@@ -174,8 +174,8 @@ flags:
   }
 
   // footer
-  const pov_str = pov_info.map(p => `${p.name} (${p.active ? "on" : "off"})`).join(", ")
-  process.stdout.write(`povs: ${pov_str}\n`)
+  const lens_str = lens_info.map(p => `${p.name} (${p.active ? "on" : "off"})`).join(", ")
+  process.stdout.write(`lenses: ${lens_str}\n`)
   process.stdout.write(`sources: ${sources.length} stashed${last_source ? ` (last: ${last_source})` : ""}\n`)
 
   return 0

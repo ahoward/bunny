@@ -19,7 +19,7 @@ import { resolve, basename } from "node:path"
 import { success, error } from "../src/lib/result.ts"
 import { find_root } from "./lib/feature.ts"
 import {
-  ensure_brane, load_worldview, load_active_povs,
+  ensure_brane, load_worldview, load_active_lenses,
   call_claude, parse_json, list_sources,
 } from "./lib/brane.ts"
 import { create_spinner } from "./lib/spinner.ts"
@@ -169,13 +169,13 @@ async function cmd_propose(argv: string[]): Promise<number> {
 
   // -- load brane context --
 
-  const povs = load_active_povs(root)
+  const lenses = load_active_lenses(root)
   const worldview = load_worldview(root)
   const sources = list_sources(root)
 
-  const pov_block = povs.length > 0
-    ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-    : "(no active points of view)"
+  const lens_block = lenses.length > 0
+    ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+    : "(no active lenses)"
 
   const worldview_block = worldview.length > 0
     ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
@@ -189,9 +189,9 @@ async function cmd_propose(argv: string[]): Promise<number> {
 
   // -- build prompt (brane only, no code context) --
 
-  const prompt = `# Points of View
+  const prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 
@@ -407,12 +407,12 @@ flags:
 
   // -- load brane context --
 
-  const povs = load_active_povs(root)
+  const lenses = load_active_lenses(root)
   const worldview = load_worldview(root)
 
-  const pov_block = povs.length > 0
-    ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-    : "(no active points of view)"
+  const lens_block = lenses.length > 0
+    ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+    : "(no active lenses)"
 
   const worldview_block = worldview.length > 0
     ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
@@ -442,9 +442,9 @@ flags:
 
   // -- build prompt --
 
-  const prompt = `# Points of View
+  const prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 

@@ -20,7 +20,7 @@ import { resolve, relative } from "node:path"
 import { success, error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, load_worldview, load_active_povs, worldview_dir,
+  ensure_brane, load_worldview, load_active_lenses, worldview_dir,
   call_claude, parse_json, apply_operations,
   preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
@@ -78,7 +78,7 @@ flags:
 
   const initial_worldview = load_worldview(root)
   if (initial_worldview.length === 0) {
-    process.stdout.write(JSON.stringify(error({ worldview: [{ code: "empty", message: "worldview is empty — eat some information first" }] }, meta()), null, 2) + "\n")
+    process.stdout.write(JSON.stringify(error({ worldview: [{ code: "empty", message: "worldview is empty — digest some information first" }] }, meta()), null, 2) + "\n")
     return 1
   }
 
@@ -115,12 +115,12 @@ flags:
     if (rounds > 1) process.stderr.write(`\n[round ${round}/${rounds}]\n`)
 
     // reload each round
-    const povs = load_active_povs(root)
+    const lenses = load_active_lenses(root)
     const worldview = load_worldview(root)
 
-    const pov_block = povs.length > 0
-      ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-      : "(no active points of view)"
+    const lens_block = lenses.length > 0
+      ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+      : "(no active lenses)"
 
     const worldview_block = worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
 
@@ -128,9 +128,9 @@ flags:
       ? `\nFocus especially on: ${focus_label}\n`
       : ""
 
-    const enhance_prompt = `# Points of View
+    const enhance_prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 

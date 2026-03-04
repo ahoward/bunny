@@ -18,7 +18,7 @@ import { resolve } from "node:path"
 import { success, error } from "../src/lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import {
-  ensure_brane, load_worldview, load_active_povs,
+  ensure_brane, load_worldview, load_active_lenses,
   call_claude, parse_json, apply_operations,
   preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
@@ -138,12 +138,12 @@ flags:
 
   // -- load brane context --
 
-  const povs = load_active_povs(root)
+  const lenses = load_active_lenses(root)
   const worldview = load_worldview(root)
 
-  const pov_block = povs.length > 0
-    ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-    : "(no active points of view)"
+  const lens_block = lenses.length > 0
+    ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+    : "(no active lenses)"
 
   const worldview_block = worldview.length > 0
     ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
@@ -151,9 +151,9 @@ flags:
 
   // -- build prompt --
 
-  const ruminate_prompt = `# Points of View
+  const ruminate_prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 
@@ -177,7 +177,7 @@ You are reflecting on a completed implementation cycle. Your job is to extract
 durable knowledge — patterns, decisions, architectural insights, lessons —
 and integrate them into the worldview.
 
-Filter through all active points of view above. Focus on:
+Filter through all active lenses above. Focus on:
 - **Patterns** that emerged during implementation (reusable approaches)
 - **Decisions** made and their rationale (why X over Y)
 - **Gaps** discovered (things the worldview was missing)

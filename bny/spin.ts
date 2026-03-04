@@ -54,7 +54,7 @@ workflow:
   bny spin --log                            # watch progress
   cat .bny/spin/latest.log                  # review output
   echo "feedback" > feedback.md             # write feedback
-  bny brane eat feedback.md                 # feed back into brane
+  bny digest feedback.md                     # feed back into brane
   bny spin                                  # next iteration
 `)
       return 0

@@ -1,20 +1,20 @@
 #!/usr/bin/env bun
 //
-// bny brane digest — reprocess all sources through current POVs
+// bny brane rebuild — rebuild worldview from all sources
 //
 // clears the worldview and re-eats every stashed source in chronological
-// order. use this after adding/removing POVs to rebuild the brane
+// order. use this after adding/removing lenses to rebuild the brane
 // through your current lenses.
 //
 // usage:
-//   bny brane digest              # rebuild worldview from all sources
-//   bny brane digest --dry-run    # show what would be re-eaten
+//   bny brane rebuild              # rebuild worldview from all sources
+//   bny brane rebuild --dry-run   # show what would be re-eaten
 //
 
 import { success, error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, load_worldview, load_active_povs,
+  ensure_brane, load_worldview, load_active_lenses,
   call_claude, parse_json, apply_operations,
   list_sources, load_stashed_source, clear_worldview,
   confirm_intake, regenerate_index,
@@ -34,10 +34,10 @@ export async function main(argv: string[]): Promise<number> {
     } else if (arg === "--yes" || arg === "-y") {
       auto_yes = true
     } else if (arg === "--help" || arg === "-h") {
-      process.stdout.write(`usage: bny brane digest [--dry-run] [--yes]
+      process.stdout.write(`usage: bny brane rebuild [--dry-run] [--yes]
 
 clears the worldview and re-eats all stashed sources through
-current POVs. rebuilds the brane from scratch.
+current lenses. rebuilds the brane from scratch.
 
 flags:
   --dry-run    list sources, don't re-eat
@@ -48,7 +48,7 @@ flags:
   }
 
   function meta() {
-    return { path: "/bny/brane/digest", timestamp: new Date().toISOString(), duration_ms: 0 }
+    return { path: "/bny/brane/rebuild", timestamp: new Date().toISOString(), duration_ms: 0 }
   }
 
   // -- setup --
@@ -114,23 +114,23 @@ flags:
       continue
     }
 
-    const spin = create_spinner(`digesting: ${entry.label} (${entry.size} bytes)`)
+    const spin = create_spinner(`rebuilding: ${entry.label} (${entry.size} bytes)`)
 
     // load current state (evolves each iteration)
-    const povs = load_active_povs(root)
+    const lenses = load_active_lenses(root)
     const worldview = load_worldview(root)
 
-    const pov_block = povs.length > 0
-      ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-      : "(no active points of view)"
+    const lens_block = lenses.length > 0
+      ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+      : "(no active lenses)"
 
     const worldview_block = worldview.length > 0
       ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
       : "(empty — first ingestion)"
 
-    const eat_prompt = `# Points of View
+    const eat_prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 
@@ -151,7 +151,7 @@ ${content}
 # Instructions
 
 You are maintaining a knowledge base as markdown files.
-Filter this information through all points of view above.
+Filter this information through all active lenses above.
 Not everything should be absorbed — only concepts that matter
 through your active lenses. Be selective.
 

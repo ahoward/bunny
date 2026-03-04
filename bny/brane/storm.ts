@@ -3,7 +3,7 @@
 // bny brane storm — divergent brainstorming against the brane
 //
 // "brane storming." takes a seed (text, file, or URL) and generates
-// new ideas, questions, POV suggestions, and source recommendations.
+// new ideas, questions, lens suggestions, and source recommendations.
 // goes OUTWARD — expands, not summarizes.
 //
 // usage:
@@ -19,7 +19,7 @@
 import { success, error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, load_source, load_worldview, load_active_povs,
+  ensure_brane, load_source, load_worldview, load_active_lenses,
   call_claude, parse_json, apply_operations,
   preview_operations, print_intake_diff, confirm_intake,
   regenerate_index, print_storm_suggestions,
@@ -109,12 +109,12 @@ flags:
     if (rounds > 1) process.stderr.write(`\n[round ${round}/${rounds}]\n`)
 
     // reload each round
-    const povs = load_active_povs(root)
+    const lenses = load_active_lenses(root)
     const worldview = load_worldview(root)
 
-    const pov_block = povs.length > 0
-      ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-      : "(no active points of view)"
+    const lens_block = lenses.length > 0
+      ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+      : "(no active lenses)"
 
     const worldview_block = worldview.length > 0
       ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
@@ -124,9 +124,9 @@ flags:
       ? `# Seed\n\n${seed_label !== "inline" ? `Source: ${seed_label}\n\n` : ""}${seed_content}`
       : "(no seed — brainstorm from the worldview itself)"
 
-    const storm_prompt = `# Points of View
+    const storm_prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 
@@ -147,7 +147,7 @@ Your job is NOT to summarize or organize. Your job is to EXPAND.
 
 Given the seed and current worldview, generate:
 1. New worldview files that explore angles NOT currently covered
-2. Suggestions for the user (new POVs to add, questions to investigate, sources to read)
+2. Suggestions for the user (new lenses to add, questions to investigate, sources to read)
 
 Think divergently:
 - What assumptions does the worldview make that could be challenged?
@@ -168,7 +168,7 @@ Respond with ONLY valid JSON (no markdown fences):
   ],
   "reasoning": "what new directions you explored and why",
   "suggestions": [
-    {"kind": "pov", "value": "security-skeptic", "reason": "the worldview assumes trust..."},
+    {"kind": "lens", "value": "security-skeptic", "reason": "the worldview assumes trust..."},
     {"kind": "question", "value": "What happens at 10x scale?", "reason": "..."},
     {"kind": "source", "value": "https://...", "reason": "this paper covers..."}
   ]

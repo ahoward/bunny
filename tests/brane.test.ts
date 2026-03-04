@@ -3,6 +3,22 @@ import { parse_json, apply_operations, preview_operations, worldview_dir } from 
 import { mkdirSync, rmSync, existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 
+// -- test cli via subprocess --
+
+function bny(...args: string[]): { stdout: string, stderr: string, exit: number } {
+  const proc = Bun.spawnSync(["bun", "bin/bny.ts", ...args], {
+    stdout: "pipe",
+    stderr: "pipe",
+    cwd: import.meta.dir + "/..",
+    env: { ...process.env, BNY_NO_SPINNER: "1" },
+  })
+  return {
+    stdout: new TextDecoder().decode(proc.stdout).trim(),
+    stderr: new TextDecoder().decode(proc.stderr).trim(),
+    exit: proc.exitCode ?? 1,
+  }
+}
+
 describe("parse_json", () => {
   test("strict JSON passes through", () => {
     const result = parse_json<{ a: number }>('{"a": 1}')
@@ -109,5 +125,54 @@ describe("path traversal guard", () => {
     const ops = [{ action: "create" as const, path: "topics/sub/deep.md", content: "# Deep\nNested." }]
     const diffs = preview_operations(test_root, ops)
     expect(diffs.length).toBe(1)
+  })
+})
+
+describe("renamed commands", () => {
+  test("bny digest --help exits 0", () => {
+    const r = bny("digest", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+    expect(r.stdout).toContain("source")
+  })
+
+  test("bny brane lens --help exits 0", () => {
+    const r = bny("brane", "lens", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+    expect(r.stdout).toContain("lens")
+  })
+
+  test("bny brane rebuild --help exits 0", () => {
+    const r = bny("brane", "rebuild", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+    expect(r.stdout).toContain("rebuild")
+  })
+
+  test("bny brane eat still works (hidden alias)", () => {
+    const r = bny("brane", "eat", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+  })
+
+  test("digest strips file:// prefix", () => {
+    // digest --dry-run should pass through to eat with the prefix stripped
+    const r = bny("digest", "--dry-run", "file://README.md")
+    expect(r.exit).toBe(0)
+    // Should show the eat prompt (since it delegates to eat)
+    expect(r.stdout).toContain("Active Lenses")
+  })
+
+  test("help --json shows digest and lens", () => {
+    const r = bny("help", "--json")
+    expect(r.exit).toBe(0)
+    const parsed = JSON.parse(r.stdout)
+    const keys = parsed.commands.map((c: any) => c.key)
+    expect(keys).toContain("digest")
+    expect(keys).toContain("brane/lens")
+    expect(keys).toContain("brane/rebuild")
+    expect(keys).not.toContain("brane/pov")
+    expect(keys).not.toContain("brane/digest")
   })
 })

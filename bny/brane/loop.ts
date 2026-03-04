@@ -21,7 +21,7 @@ import { resolve } from "node:path"
 import { success, error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, load_source, load_worldview, load_active_povs,
+  ensure_brane, load_source, load_worldview, load_active_lenses,
   call_claude, call_claude_with_tools, parse_json, apply_operations,
   stash_source, preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
@@ -206,13 +206,13 @@ async function run_round(
 ): Promise<{ journal: RoundJournal, should_stop: boolean }> {
 
   // 1. reload brane state (picks up previous round changes)
-  const povs = load_active_povs(root)
+  const lenses = load_active_lenses(root)
   const worldview = load_worldview(root)
   const history = load_round_journals(root, state.slug)
 
-  const pov_block = povs.length > 0
-    ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-    : "(no active points of view)"
+  const lens_block = lenses.length > 0
+    ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+    : "(no active lenses)"
 
   const worldview_block = worldview.length > 0
     ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
@@ -225,9 +225,9 @@ async function run_round(
     : "(none)"
 
   // 2. REFLECT — identify gaps, generate search queries
-  const reflect_prompt = `# Points of View
+  const reflect_prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 
@@ -393,19 +393,19 @@ Skip: paywalled content, social media posts, SEO spam.
       .join("\n\n---\n\n")
 
     const current_worldview = load_worldview(root)
-    const current_povs = load_active_povs(root)
+    const current_lenses = load_active_lenses(root)
 
     const wv_block = current_worldview.length > 0
       ? current_worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
       : "(empty worldview)"
 
-    const pov_blk = current_povs.length > 0
-      ? current_povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-      : "(no active points of view)"
+    const lens_blk = current_lenses.length > 0
+      ? current_lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+      : "(no active lenses)"
 
-    const eat_prompt = `# Points of View
+    const eat_prompt = `# Active Lenses
 
-${pov_blk}
+${lens_blk}
 
 ---
 
@@ -426,7 +426,7 @@ ${combined_content}
 # Instructions
 
 You are maintaining a knowledge base as markdown files.
-Filter this information through all points of view above.
+Filter this information through all active lenses above.
 Focus on information relevant to the research goal: "${state.goal}"
 Not everything should be absorbed — only concepts that matter
 through your active lenses. Be selective.
@@ -662,13 +662,13 @@ export async function main(argv: string[]): Promise<number> {
   // -- dry run --
 
   if (dry_run) {
-    const povs = load_active_povs(root)
+    const dry_lenses = load_active_lenses(root)
     const worldview = load_worldview(root)
     const history = load_round_journals(root, state.slug)
 
-    const pov_block = povs.length > 0
-      ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-      : "(no active points of view)"
+    const dry_lens_block = dry_lenses.length > 0
+      ? dry_lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+      : "(no active lenses)"
 
     const worldview_block = worldview.length > 0
       ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
@@ -676,9 +676,9 @@ export async function main(argv: string[]): Promise<number> {
 
     process.stdout.write(`# Reflect Prompt (round ${state.rounds_completed + 1})
 
-# Points of View
+# Active Lenses
 
-${pov_block}
+${dry_lens_block}
 
 ---
 

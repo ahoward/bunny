@@ -60,7 +60,7 @@ seed → feed brane → think (loop/storm/enhance)
 - [x] bny ai init — bootstrap AI tool awareness via symlinks
 - [x] absorb .specify/ into bny/ — templates, constitution, scripts eliminated
 - [x] bny ps — process table scan via pgrep, no extra state
-- [x] bny brane — eat, ask, storm, enhance, digest, pov, tldr
+- [x] bny brane — eat, ask, storm, enhance, rebuild, lens, tldr
 - [x] bny ruminate — post-build reflection feeding brane
 - [x] bny map — tree-sitter structural codebase maps
 - [x] bny next/spin — autonomous pipeline orchestration

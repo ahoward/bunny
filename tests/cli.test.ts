@@ -49,8 +49,9 @@ describe("cli dispatch", () => {
     const r = bny("help", "brane")
     expect(r.exit).toBe(0)
     expect(r.stdout).toContain("bny brane commands:")
-    expect(r.stdout).toContain("eat")
+    expect(r.stdout).toContain("rebuild")
     expect(r.stdout).toContain("ask")
+    expect(r.stdout).toContain("lens")
     expect(r.stdout).toContain("tldr")
   })
 

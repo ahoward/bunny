@@ -34,8 +34,9 @@ import { main as ipm_main } from "../bny/ipm.ts"
 import { main as ai_init_main } from "../bny/ai/init.ts"
 import { main as brane_eat_main } from "../bny/brane/eat.ts"
 import { main as brane_ask_main } from "../bny/brane/ask.ts"
-import { main as brane_digest_main } from "../bny/brane/digest.ts"
-import { main as brane_pov_main } from "../bny/brane/pov.ts"
+import { main as brane_rebuild_main } from "../bny/brane/rebuild.ts"
+import { main as brane_lens_main } from "../bny/brane/lens.ts"
+import { main as digest_main } from "../bny/digest.ts"
 import { main as brane_storm_main } from "../bny/brane/storm.ts"
 import { main as brane_enhance_main } from "../bny/brane/enhance.ts"
 import { main as brane_tldr_main } from "../bny/brane/tldr.ts"
@@ -73,10 +74,11 @@ const COMMANDS: Record<string, CommandFn> = {
   "build":          build_main,
   "spike":          spike_main,
   "ai/init":        ai_init_main,
+  "digest":         digest_main,
   "brane/eat":      brane_eat_main,
   "brane/ask":      brane_ask_main,
-  "brane/digest":   brane_digest_main,
-  "brane/pov":      brane_pov_main,
+  "brane/rebuild":  brane_rebuild_main,
+  "brane/lens":     brane_lens_main,
   "brane/storm":    brane_storm_main,
   "brane/enhance":  brane_enhance_main,
   "brane/tldr":     brane_tldr_main,
@@ -108,13 +110,13 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "implement":       { desc: "drive AI implementation loop",       group: "workflow" },
   "review":          { desc: "antagonist review (gemini)",         group: "workflow" },
   "ruminate":        { desc: "reflect on build, feed brane",       group: "workflow" },
-  "brane/eat":       { desc: "ingest file/dir/URL into brane",    group: "knowledge" },
+  "digest":          { desc: "ingest file/dir/URL into brane",    group: "knowledge" },
   "brane/ask":       { desc: "query the brane (read-only)",       group: "knowledge" },
   "brane/storm":     { desc: "divergent brainstorming",            group: "knowledge" },
   "brane/enhance":   { desc: "convergent worldview refinement",    group: "knowledge" },
   "brane/tldr":      { desc: "worldview outline with TL;DR synopses", group: "knowledge" },
-  "brane/digest":    { desc: "rebuild worldview from all sources", group: "knowledge" },
-  "brane/pov":       { desc: "manage worldview perspectives",      group: "knowledge" },
+  "brane/rebuild":   { desc: "rebuild worldview from all sources", group: "knowledge" },
+  "brane/lens":      { desc: "manage worldview lenses",            group: "knowledge" },
   "brane/loop":      { desc: "autonomous goal-directed thought loop", group: "knowledge" },
   "next":            { desc: "full pipeline for next roadmap item", group: "orchestration" },
   "spin":            { desc: "autonomous factory run (tmux)",      group: "orchestration" },

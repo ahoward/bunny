@@ -84,13 +84,18 @@ flags:
   write(".bny/brane/index.md", BRANE_INDEX)
 
   if (!minimal) {
+    // -- detect project type --
+
+    const project = detect_project_type(root)
+    process.stderr.write(`  detected ${project.type} project\n`)
+
     // -- dev/ scripts --
 
-    write("dev/setup", DEV_SETUP, true)
-    write("dev/test", DEV_TEST, true)
+    write("dev/setup", dev_setup(project), true)
+    write("dev/test", dev_test(project), true)
     write("dev/health", DEV_HEALTH, true)
-    write("dev/pre_flight", DEV_PRE_FLIGHT, true)
-    write("dev/post_flight", DEV_POST_FLIGHT, true)
+    write("dev/pre_flight", dev_pre_flight(project), true)
+    write("dev/post_flight", dev_post_flight(project), true)
 
     // -- .githooks/ --
 
@@ -231,7 +236,7 @@ const WORLDVIEW = `# Worldview
 
 This is the project's accumulated knowledge and perspective.
 
-Feed documents, research, and feedback with \`bny brane eat\`.
+Feed documents, research, and feedback with \`bny digest\`.
 Query the brane with \`bny brane ask\`.
 `
 
@@ -244,24 +249,87 @@ const BRANE_INDEX = `# Brane Index
 (none yet)
 `
 
-const DEV_SETUP = `#!/usr/bin/env bash
+// -- project type detection --
+
+interface ProjectType {
+  type:        string
+  install_cmd: string
+  test_cmd:    string
+}
+
+function detect_project_type(root: string): ProjectType {
+  if (existsSync(resolve(root, "bun.lock")) || existsSync(resolve(root, "bunfig.toml"))) {
+    return { type: "bun", install_cmd: "bun install", test_cmd: "bun test" }
+  }
+  if (existsSync(resolve(root, "package.json"))) {
+    return { type: "node", install_cmd: "npm install", test_cmd: "npm test" }
+  }
+  if (existsSync(resolve(root, "Cargo.toml"))) {
+    return { type: "rust", install_cmd: "cargo build", test_cmd: "cargo test" }
+  }
+  if (existsSync(resolve(root, "go.mod"))) {
+    return { type: "go", install_cmd: "go mod download", test_cmd: "go test ./..." }
+  }
+  if (existsSync(resolve(root, "pyproject.toml")) || existsSync(resolve(root, "setup.py"))) {
+    return { type: "python", install_cmd: "pip install -e .", test_cmd: "pytest" }
+  }
+  if (existsSync(resolve(root, "Makefile"))) {
+    return { type: "make", install_cmd: "make setup", test_cmd: "make test" }
+  }
+  return { type: "generic", install_cmd: "echo 'no install step configured'", test_cmd: "echo 'no test step configured'" }
+}
+
+function dev_setup(p: ProjectType): string {
+  return `#!/usr/bin/env bash
 set -e
 
 cd "$(dirname "$0")/.."
 
 echo "installing dependencies..."
-bun install
+${p.install_cmd}
 
 echo "configuring git hooks..."
 git config core.hooksPath .githooks
 
 echo "done."
 `
+}
 
-const DEV_TEST = `#!/usr/bin/env bash
+function dev_test(p: ProjectType): string {
+  return `#!/usr/bin/env bash
 set -e
-BUNNY_LOG=0 exec bun test "$@"
+cd "$(dirname "$0")/.."
+BUNNY_LOG=0 exec ${p.test_cmd} "$@"
 `
+}
+
+function dev_pre_flight(p: ProjectType): string {
+  return `#!/usr/bin/env bash
+set -e
+cd "$(dirname "$0")/.."
+
+echo "pre_flight: checking..."
+
+# tests pass
+./dev/test 2>/dev/null || { echo "pre_flight: FAIL — tests"; exit 1; }
+
+echo "pre_flight: ok"
+`
+}
+
+function dev_post_flight(_p: ProjectType): string {
+  return `#!/usr/bin/env bash
+set -e
+cd "$(dirname "$0")/.."
+
+echo "post_flight: checking..."
+
+# tests pass
+./dev/test 2>/dev/null || { echo "post_flight: FAIL — tests"; exit 1; }
+
+echo "post_flight: ok"
+`
+}
 
 const DEV_HEALTH = `#!/usr/bin/env bash
 set -e
@@ -269,30 +337,6 @@ cd "$(dirname "$0")/.."
 
 # customize this for your project
 echo '{"status":"success","path":"/health","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}'
-`
-
-const DEV_PRE_FLIGHT = `#!/usr/bin/env bash
-set -e
-cd "$(dirname "$0")/.."
-
-echo "pre_flight: checking..."
-
-# tests pass
-bun test 2>/dev/null || { echo "pre_flight: FAIL — tests"; exit 1; }
-
-echo "pre_flight: ok"
-`
-
-const DEV_POST_FLIGHT = `#!/usr/bin/env bash
-set -e
-cd "$(dirname "$0")/.."
-
-echo "post_flight: checking..."
-
-# tests pass
-bun test 2>/dev/null || { echo "post_flight: FAIL — tests"; exit 1; }
-
-echo "post_flight: ok"
 `
 
 const HOOK_PRE_COMMIT = `#!/usr/bin/env bash

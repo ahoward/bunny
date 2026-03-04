@@ -1,7 +1,7 @@
 //
 // bny/lib/brane.ts — shared brane operations
 //
-// provides: paths, state, worldview/pov loading, claude calls,
+// provides: paths, state, worldview/lens loading, claude calls,
 //           json parsing, file operations, initialization
 //
 
@@ -14,7 +14,7 @@ import { check_secrets } from "./secrets.ts"
 // -- types --
 
 export interface BraneState {
-  active_povs: string[]
+  active_lenses: string[]
 }
 
 export interface FileOp {
@@ -29,7 +29,7 @@ export interface EatResponse {
 }
 
 export interface StormSuggestion {
-  kind:   "pov" | "question" | "source"
+  kind:   "lens" | "question" | "source"
   value:  string
   reason: string
 }
@@ -61,8 +61,8 @@ export function worldview_dir(root: string): string {
   return resolve(root, ".bny/brane/worldview")
 }
 
-export function povs_dir(root: string): string {
-  return resolve(root, ".bny/brane/povs")
+export function lenses_dir(root: string): string {
+  return resolve(root, ".bny/brane/lenses")
 }
 
 export function sources_dir(root: string): string {
@@ -81,11 +81,17 @@ export function manifest_path(root: string): string {
 
 export function load_state(root: string): BraneState {
   const path = state_path(root)
-  if (!existsSync(path)) return { active_povs: ["all"] }
+  if (!existsSync(path)) return { active_lenses: ["all"] }
   try {
-    return JSON.parse(readFileSync(path, "utf-8")) as BraneState
+    const raw = JSON.parse(readFileSync(path, "utf-8"))
+    // migration: active_povs → active_lenses
+    if (raw.active_povs && !raw.active_lenses) {
+      raw.active_lenses = raw.active_povs
+      delete raw.active_povs
+    }
+    return raw as BraneState
   } catch {
-    return { active_povs: ["all"] }
+    return { active_lenses: ["all"] }
   }
 }
 
@@ -120,17 +126,17 @@ export function load_worldview(root: string): PromptSection[] {
   return read_md_files_recursive(dir, dir)
 }
 
-export function load_active_povs(root: string): PromptSection[] {
+export function load_active_lenses(root: string): PromptSection[] {
   const state = load_state(root)
-  const dir = povs_dir(root)
+  const dir = lenses_dir(root)
   const sections: PromptSection[] = []
 
-  for (const name of state.active_povs) {
+  for (const name of state.active_lenses) {
     const path = resolve(dir, `${name}.md`)
     if (existsSync(path)) {
       const content = readFileSync(path, "utf-8").trim()
       if (content.length > 0) {
-        sections.push({ heading: `pov: ${name}`, content })
+        sections.push({ heading: `lens: ${name}`, content })
       }
     }
   }
@@ -138,8 +144,8 @@ export function load_active_povs(root: string): PromptSection[] {
   return sections
 }
 
-export function list_all_povs(root: string): string[] {
-  const dir = povs_dir(root)
+export function list_all_lenses(root: string): string[] {
+  const dir = lenses_dir(root)
   if (!existsSync(dir)) return []
   return readdirSync(dir)
     .filter(f => f.endsWith(".md"))
@@ -413,7 +419,7 @@ export function confirm_intake(): boolean {
 
 // -- initialization --
 
-const DEFAULT_POV = `# all
+const DEFAULT_LENS = `# all
 
 Absorb broadly. Extract key concepts, relationships, and insights
 from all perspectives. Note tensions and contradictions between ideas.
@@ -421,14 +427,14 @@ Organize by natural topic boundaries.
 `
 
 export function ensure_brane(root: string): void {
-  const dirs = [brane_dir(root), worldview_dir(root), povs_dir(root), sources_dir(root)]
+  const dirs = [brane_dir(root), worldview_dir(root), lenses_dir(root), sources_dir(root)]
   for (const d of dirs) mkdirSync(d, { recursive: true })
 
   const sp = state_path(root)
-  if (!existsSync(sp)) save_state(root, { active_povs: ["all"] })
+  if (!existsSync(sp)) save_state(root, { active_lenses: ["all"] })
 
-  const all_pov = resolve(povs_dir(root), "all.md")
-  if (!existsSync(all_pov)) writeFileSync(all_pov, DEFAULT_POV)
+  const all_lens = resolve(lenses_dir(root), "all.md")
+  if (!existsSync(all_lens)) writeFileSync(all_lens, DEFAULT_LENS)
 }
 
 // -- source stashing --

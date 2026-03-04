@@ -111,7 +111,7 @@ export async function main(argv: string[]): Promise<number> {
     if (brane_files > 0) {
       const kb = (brane_bytes / 1024).toFixed(1)
       process.stdout.write(`\nbrane: ${brane_files} files, ${kb}KB`)
-      if (brane_warn) process.stdout.write(` (warning: exceeds ${(BRANE_WARN_BYTES / 1024).toFixed(0)}KB — consider brane digest)`)
+      if (brane_warn) process.stdout.write(` (warning: exceeds ${(BRANE_WARN_BYTES / 1024).toFixed(0)}KB — consider brane rebuild)`)
       process.stdout.write("\n")
     }
 

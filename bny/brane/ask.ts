@@ -16,7 +16,7 @@
 import { error } from "../../src/lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, load_source, load_worldview, load_active_povs,
+  ensure_brane, load_source, load_worldview, load_active_lenses,
   call_claude, list_sources,
 } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
@@ -74,18 +74,18 @@ the brane is not modified.
 
   // -- load context --
 
-  const povs = load_active_povs(root)
+  const lenses = load_active_lenses(root)
   const worldview = load_worldview(root)
 
   if (worldview.length === 0) {
-    process.stderr.write("warning: worldview is empty — eat some information first\n")
+    process.stderr.write("warning: worldview is empty — digest some information first\n")
   }
 
   // -- build prompt --
 
-  const pov_block = povs.length > 0
-    ? povs.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
-    : "(no active points of view)"
+  const lens_block = lenses.length > 0
+    ? lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
+    : "(no active lenses)"
 
   const worldview_block = worldview.length > 0
     ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
@@ -102,9 +102,9 @@ the brane is not modified.
 
   const file_list = worldview.map(w => w.heading).join(", ")
 
-  const ask_prompt = `# Points of View
+  const ask_prompt = `# Active Lenses
 
-${pov_block}
+${lens_block}
 
 ---
 
@@ -130,7 +130,7 @@ ${input_content}
 
 # Instructions
 
-Answer based on your worldview. Synthesize across all points of view.
+Answer based on your worldview. Synthesize across all active lenses.
 If the input is a document, evaluate it — note alignment, conflicts, gaps,
 and recommendations based on what you already know.
 If the input is a question, answer it from what you know.
