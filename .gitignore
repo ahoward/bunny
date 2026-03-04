@@ -6,6 +6,7 @@ dist/
 bin/
 !bin/bny
 *.tsbuildinfo
+bny-snapshot
 
 # bny project state (tracked) + runtime (ignored)
 .bny/*
@@ -41,3 +42,6 @@ Thumbs.db
 tests/.seeds/
 tmp/
 coverage/
+
+# model caches
+.fastembed_cache/
