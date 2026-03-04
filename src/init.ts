@@ -151,8 +151,12 @@ flags:
   // -- check git repo --
 
   if (!existsSync(resolve(root, ".git"))) {
-    process.stderr.write("error: not a git repository — run 'git init' first\n")
-    return 1
+    const proc = Bun.spawnSync(["git", "init"], { cwd: root, stderr: "pipe" })
+    if (proc.exitCode !== 0) {
+      process.stderr.write("error: git init failed\n")
+      return 1
+    }
+    process.stderr.write("initialized git repo\n")
   }
 
   // -- scaffold --

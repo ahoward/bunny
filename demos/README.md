@@ -12,7 +12,7 @@ each demo was built from a single sentence and the dark factory.
 
 that's it. one command per project. here's what happens inside:
 
-1. `git init` + `bny init` — scaffold a fresh project
+1. `bny init` — scaffold dev scripts and agent config (auto-runs `git init` if needed)
 2. `bny digest seed.md` — feed the one-sentence idea into the brane
 3. `bny brane storm` — divergent brainstorming against the idea
 4. `bny brane tldr` — summarize what the brane knows
