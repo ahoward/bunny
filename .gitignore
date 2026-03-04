@@ -37,5 +37,8 @@ tests/.seeds/
 tmp/
 coverage/
 
+# demo experiments (ephemeral QA output)
+demos/*/
+
 # model caches
 .fastembed_cache/

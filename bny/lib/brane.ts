@@ -203,6 +203,15 @@ export function usage_summary(root: string): { calls: number, prompt_chars: numb
 
 const CLAUDE_TIMEOUT_SECS = 300 // 5 minutes default; override with BNY_CLAUDE_TIMEOUT
 
+// macOS has no `timeout` — try `gtimeout` (brew install coreutils), else skip
+const TIMEOUT_CMD: string | null = (() => {
+  for (const cmd of ["timeout", "gtimeout"]) {
+    const r = Bun.spawnSync(["which", cmd], { stdout: "pipe", stderr: "pipe" })
+    if (r.exitCode === 0) return cmd
+  }
+  return null
+})()
+
 export function call_claude(prompt: string, root: string): string | null {
   // secret detection
   if (!check_secrets(prompt, "prompt")) return null
@@ -221,9 +230,9 @@ export function call_claude(prompt: string, root: string): string | null {
   if (model) claude_args.push("--model", model)
   claude_args.push("-")
 
-  // use `timeout` to prevent indefinite blocking (0 = no timeout)
-  const cmd = timeout_secs > 0
-    ? ["timeout", String(timeout_secs), "claude", ...claude_args]
+  // use `timeout` to prevent indefinite blocking (0 or no timeout cmd = skip)
+  const cmd = (timeout_secs > 0 && TIMEOUT_CMD)
+    ? [TIMEOUT_CMD, String(timeout_secs), "claude", ...claude_args]
     : ["claude", ...claude_args]
 
   const start = Date.now()
@@ -269,7 +278,9 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
   for (const tool of allowed_tools) claude_args.push("--allowedTools", tool)
   claude_args.push("--max-turns", String(max_turns), "-")
 
-  const cmd = ["timeout", String(timeout_secs), "claude", ...claude_args]
+  const cmd = (timeout_secs > 0 && TIMEOUT_CMD)
+    ? [TIMEOUT_CMD, String(timeout_secs), "claude", ...claude_args]
+    : ["claude", ...claude_args]
 
   const start = Date.now()
   const proc = Bun.spawnSync(cmd, {

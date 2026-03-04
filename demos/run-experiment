@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+#
+# run-experiment — QA harness for bny from a new user's perspective
+#
+# usage:
+#   ./demos/run-experiment <name> <seed-description>
+#
+# creates demos/<name>/, inits bny, exercises brane, runs build.
+# captures all output to demos/<name>/experiment.log
+# errors are collected in demos/<name>/errors.log
+#
+# examples:
+#   ./demos/run-experiment fizzbuzz-api "a REST API that serves fizzbuzz"
+#   ./demos/run-experiment word-counter "a CLI that counts words, lines, and chars"
+#
+
+set -euo pipefail
+
+NAME="${1:?usage: run-experiment <name> <seed-description>}"
+DESC="${2:?usage: run-experiment <name> <seed-description>}"
+BUNNY_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DEMO_DIR="$BUNNY_ROOT/demos/$NAME"
+LOG="$DEMO_DIR/experiment.log"
+ERRORS="$DEMO_DIR/errors.log"
+
+export PATH="$BUNNY_ROOT/bin:$PATH"
+
+if [ -d "$DEMO_DIR" ]; then
+  echo "error: demos/$NAME already exists" >&2
+  exit 1
+fi
+
+# -- helpers --
+
+step() {
+  local label="$1"
+  shift
+  echo "" >> "$LOG"
+  echo "=== STEP: $label ===" >> "$LOG"
+  echo "--- cmd: $* ---" >> "$LOG"
+  echo "  [$label] $*"
+
+  if "$@" >> "$LOG" 2>&1; then
+    echo "--- exit: 0 ---" >> "$LOG"
+  else
+    local code=$?
+    echo "--- exit: $code ---" >> "$LOG"
+    echo "STEP=$label CMD=$* EXIT=$code" >> "$ERRORS"
+    echo "  !! error (exit $code) — logged"
+  fi
+}
+
+# -- setup --
+
+echo "=== experiment: $NAME ==="
+echo "=== description: $DESC ==="
+echo ""
+
+mkdir -p "$DEMO_DIR"
+echo "experiment: $NAME" > "$LOG"
+echo "description: $DESC" >> "$LOG"
+echo "started: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$LOG"
+touch "$ERRORS"
+
+cd "$DEMO_DIR"
+
+# -- phase 1: init --
+
+step "git-init"       git init
+step "bny-init"       bny init
+
+# -- phase 2: seed --
+
+echo "$DESC" > seed.md
+step "digest-seed"    bny digest seed.md
+
+# -- phase 3: exercise brane --
+
+step "brane-storm"    bny brane storm "$DESC"
+step "brane-tldr"     bny brane tldr
+step "brane-ask"      bny brane ask "what are the key design decisions for this project?"
+
+# -- phase 4: build --
+
+step "build"          bny build --yes "$DESC"
+
+# -- phase 5: check --
+
+step "dev-test"       ./dev/test
+
+# -- summary --
+
+echo "" >> "$LOG"
+echo "finished: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$LOG"
+
+ERROR_COUNT=$(wc -l < "$ERRORS" | tr -d ' ')
+echo ""
+echo "=== done: $NAME ==="
+echo "  log:    demos/$NAME/experiment.log"
+echo "  errors: $ERROR_COUNT"
+if [ "$ERROR_COUNT" -gt 0 ]; then
+  echo ""
+  cat "$ERRORS" | sed 's/^/  !! /'
+fi
