@@ -88,26 +88,26 @@ export async function main(argv: string[]): Promise<number> {
 
   assassin.install(resolve(root, ".bny"))
 
-  const prompt_tmp = resolve(root, ".bny/implement-prompt.tmp")
+  const prompt_tmp = resolve(root, `.bny/implement-prompt-${process.pid}.tmp`)
   await Bun.write(prompt_tmp, prompt)
 
   // strip CLAUDECODE env var so nested claude sessions work
   const spawn_env = { ...process.env }
   delete spawn_env.CLAUDECODE
 
-  // model version pinning
+  // model version pinning — array spawn, no shell interpolation
   const model = spawn_env.BNY_MODEL || null
-  const model_flag = model ? ` --model ${model}` : ""
+  const cmd: string[] = ["claude", "-p", "--continue", "--dangerously-skip-permissions"]
+  if (model) cmd.push("--model", model)
 
-  const proc = Bun.spawn(
-    ["bash", "-c", `claude -p -${model_flag} --continue --dangerously-skip-permissions < "${prompt_tmp}"`],
-    {
-      stdout: "inherit",
-      stderr: "inherit",
-      cwd:    root,
-      env:    spawn_env,
-    },
-  )
+  const prompt_file = Bun.file(prompt_tmp)
+  const proc = Bun.spawn(cmd, {
+    stdout: "inherit",
+    stderr: "inherit",
+    stdin:  prompt_file,
+    cwd:    root,
+    env:    spawn_env,
+  })
 
   assassin.track(proc.pid, proc.pid)
   const exit_code = await proc.exited

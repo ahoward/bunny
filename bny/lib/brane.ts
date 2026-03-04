@@ -201,6 +201,8 @@ export function usage_summary(root: string): { calls: number, prompt_chars: numb
 
 // -- llm --
 
+const CLAUDE_TIMEOUT_SECS = 300 // 5 minutes default; override with BNY_CLAUDE_TIMEOUT
+
 export function call_claude(prompt: string, root: string): string | null {
   // secret detection
   if (!check_secrets(prompt, "prompt")) return null
@@ -211,7 +213,14 @@ export function call_claude(prompt: string, root: string): string | null {
 
   // model version pinning: --model flag or BNY_MODEL env var
   const model = env.BNY_MODEL || null
-  const cmd = model ? ["claude", "-p", "--model", model, "-"] : ["claude", "-p", "-"]
+  const timeout_secs = parseInt(env.BNY_CLAUDE_TIMEOUT || "", 10) || CLAUDE_TIMEOUT_SECS
+
+  const claude_args: string[] = ["-p"]
+  if (model) claude_args.push("--model", model)
+  claude_args.push("-")
+
+  // use `timeout` to prevent indefinite blocking
+  const cmd = ["timeout", String(timeout_secs), "claude", ...claude_args]
 
   const start = Date.now()
   const proc = Bun.spawnSync(cmd, {
@@ -222,6 +231,13 @@ export function call_claude(prompt: string, root: string): string | null {
     env,
   })
   const duration_ms = Date.now() - start
+
+  if (proc.exitCode === 124) {
+    process.stderr.write(`error: claude timed out after ${timeout_secs}s\n`)
+    log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
+    return null
+  }
+
   if (proc.exitCode !== 0) {
     const err = new TextDecoder().decode(proc.stderr).trim()
     process.stderr.write(`error: claude failed: ${err}\n`)
@@ -266,6 +282,9 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
 }
 
 export function parse_json<T>(raw: string): T | null {
+  // try raw first — if LLM returned clean JSON, skip all heuristics
+  try { return JSON.parse(raw.trim()) as T } catch { /* continue */ }
+
   let cleaned = raw.trim()
 
   // strip markdown fences (```json ... ``` or ``` ... ```)
@@ -273,43 +292,82 @@ export function parse_json<T>(raw: string): T | null {
     cleaned = cleaned.replace(/^```(?:json|jsonc)?\s*\n?/, "").replace(/\n?\s*```\s*$/, "")
   }
 
-  // strip leading prose before first { or [
-  const first_brace = cleaned.indexOf("{")
-  const first_bracket = cleaned.indexOf("[")
-  let start = -1
-  if (first_brace >= 0 && first_bracket >= 0) start = Math.min(first_brace, first_bracket)
-  else if (first_brace >= 0) start = first_brace
-  else if (first_bracket >= 0) start = first_bracket
-  if (start > 0) cleaned = cleaned.slice(start)
+  // try after fence strip
+  try { return JSON.parse(cleaned) as T } catch { /* continue */ }
 
-  // strip trailing prose after last } or ]
-  const last_brace = cleaned.lastIndexOf("}")
-  const last_bracket = cleaned.lastIndexOf("]")
-  const end = Math.max(last_brace, last_bracket)
-  if (end >= 0 && end < cleaned.length - 1) cleaned = cleaned.slice(0, end + 1)
+  // extract the outermost JSON object or array by matching braces/brackets
+  // this avoids corrupting content when prose contains [ or /* characters
+  const extracted = extract_json_block(cleaned)
+  if (!extracted) return null
 
-  // try strict parse first
-  try {
-    return JSON.parse(cleaned) as T
-  } catch {
-    // continue to permissive parsing
-  }
+  // try strict parse on extracted block
+  try { return JSON.parse(extracted) as T } catch { /* continue */ }
 
-  // strip single-line comments (// ...)
-  cleaned = cleaned.replace(/^\s*\/\/.*$/gm, "")
+  // permissive: strip comments and trailing commas
+  let permissive = extracted
 
-  // strip multi-line comments (/* ... */)
-  cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, "")
+  // strip single-line comments (// ...) only on lines that are pure comments
+  permissive = permissive.replace(/^\s*\/\/.*$/gm, "")
 
   // strip trailing commas before } or ]
-  cleaned = cleaned.replace(/,\s*([}\]])/g, "$1")
+  permissive = permissive.replace(/,\s*([}\]])/g, "$1")
 
-  // try again
-  try {
-    return JSON.parse(cleaned) as T
-  } catch {
-    return null
+  try { return JSON.parse(permissive) as T } catch { return null }
+}
+
+// extract the first balanced JSON object {...} or array [...] from text
+function extract_json_block(text: string): string | null {
+  // find the first { or [ that starts a JSON structure
+  let start = -1
+  let open_char = ""
+  let close_char = ""
+
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "{") { start = i; open_char = "{"; close_char = "}"; break }
+    if (text[i] === "[") { start = i; open_char = "["; close_char = "]"; break }
   }
+  if (start < 0) return null
+
+  // walk forward, tracking nesting and string escapes
+  let depth = 0
+  let in_string = false
+  let escape_next = false
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i]
+
+    if (escape_next) { escape_next = false; continue }
+    if (ch === "\\") { escape_next = true; continue }
+    if (ch === '"') { in_string = !in_string; continue }
+    if (in_string) continue
+
+    if (ch === open_char) depth++
+    else if (ch === close_char) {
+      depth--
+      if (depth === 0) return text.slice(start, i + 1)
+    }
+  }
+
+  // unbalanced — return from start to end as best effort
+  return text.slice(start)
+}
+
+// -- call_claude with JSON retry --
+
+export function call_claude_json<T>(prompt: string, root: string, label: string): T | null {
+  const raw = call_claude(prompt, root)
+  if (!raw) return null
+
+  const parsed = parse_json<T>(raw)
+  if (parsed) return parsed
+
+  // retry once with hint
+  process.stderr.write("warning: failed to parse response, retrying...\n")
+  const retry_prompt = prompt + "\n\nYour last response was not valid JSON. Respond with ONLY valid JSON, no markdown fences or prose."
+  const retry_raw = call_claude(retry_prompt, root)
+  if (!retry_raw) return null
+
+  return parse_json<T>(retry_raw)
 }
 
 // -- file operations --
@@ -411,7 +469,8 @@ export function confirm_intake(): boolean {
     const answer = buf.slice(0, n).toString().trim().toLowerCase()
     return answer === "" || answer === "y" || answer === "yes"
   } catch {
-    return true // default to yes on fd error
+    process.stderr.write("warning: could not read /dev/tty, defaulting to no\n")
+    return false // default to no on fd error — safe default
   } finally {
     if (fd !== null) closeSync(fd)
   }
@@ -581,10 +640,38 @@ export function print_storm_suggestions(suggestions: StormSuggestion[]): void {
 
 // -- source loading --
 
+const SSRF_BLOCKED_HOSTS = [
+  /^localhost$/i,
+  /^127\.\d+\.\d+\.\d+$/,
+  /^10\.\d+\.\d+\.\d+$/,
+  /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/,
+  /^192\.168\.\d+\.\d+$/,
+  /^0\.0\.0\.0$/,
+  /^\[::1?\]$/,
+  /^169\.254\.\d+\.\d+$/,        // link-local
+  /^metadata\.google\.internal$/i, // cloud metadata
+]
+
+const MAX_SOURCE_BYTES = 10 * 1024 * 1024 // 10MB
+
+function is_ssrf_blocked(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return SSRF_BLOCKED_HOSTS.some(re => re.test(parsed.hostname))
+  } catch {
+    return true // unparseable URL → block
+  }
+}
+
 export function load_source(source: string, root: string): { content: string, label: string } | null {
   // URL
   if (source.startsWith("http://") || source.startsWith("https://")) {
-    const proc = Bun.spawnSync(["curl", "-sL", "--max-time", "30", source], {
+    if (is_ssrf_blocked(source)) {
+      process.stderr.write(`error: blocked request to private/local address: ${source}\n`)
+      return null
+    }
+
+    const proc = Bun.spawnSync(["curl", "-sL", "--max-time", "30", "--max-filesize", String(MAX_SOURCE_BYTES), source], {
       stdout: "pipe",
       stderr: "pipe",
       cwd: root,

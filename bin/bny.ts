@@ -353,7 +353,13 @@ function parse_args(argv: string[]): ParsedArgs {
     }
 
     if (arg === "--model" && i + 1 < argv.length) {
-      result.model = argv[i + 1]
+      const val = argv[i + 1]
+      if (!/^[a-zA-Z0-9._-]+$/.test(val)) {
+        process.stderr.write(`bny: invalid --model value '${val}' (alphanumeric, hyphens, dots only)\n`)
+        process.exitCode = 1
+        return result
+      }
+      result.model = val
       i += 2
       continue
     }

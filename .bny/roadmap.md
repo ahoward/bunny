@@ -20,14 +20,7 @@ seed → feed brane → think (loop/storm/enhance)
 
 ### hardening (carried forward)
 
-- [ ] P0: fix shell injection in --model flag — validate model name, use array spawn in implement.ts + review.ts
-- [ ] P1: SSRF guard in load_source() — blocklist private/local IPs, add --max-filesize to curl
-- [ ] P1: validate --model input — reject shell metacharacters (alphanumeric/hyphens/dots only)
-- [ ] P1: parse_json corrupts globs — /* in patterns and [ in prose stripped; needs smarter extraction
-- [ ] P2: extract duplicate call_claude retry logic into call_claude_with_retry<T>()
-- [ ] P2: call_claude() timeout — Bun.spawnSync blocks indefinitely if claude hangs
-- [ ] P2: unique temp files in implement.ts — concurrent runs collide on .bny/implement-prompt.tmp
-- [ ] P2: confirm_intake() default to no on error — currently auto-confirms on fd error
+(all items completed)
 
 ## Completed
 
@@ -41,6 +34,13 @@ seed → feed brane → think (loop/storm/enhance)
 
 - [x] P3: secret detection — scan content before LLM API calls
 - [x] P3: model version pinning — --model flag or BNY_MODEL env var
+- [x] P0: fix shell injection in --model — array spawn in implement.ts + review.ts, validate input
+- [x] P1: SSRF guard in load_source() — blocklist private/local IPs, --max-filesize for curl
+- [x] P1: parse_json corruption fix — balanced brace extraction instead of naive /* stripping
+- [x] P2: call_claude_json<T>() retry helper — DRY pattern for call+parse+retry
+- [x] P2: call_claude() timeout — `timeout` wrapper prevents indefinite blocking (BNY_CLAUDE_TIMEOUT)
+- [x] P2: unique temp files — PID-namespaced in implement.ts + review.ts
+- [x] P2: confirm_intake() defaults to no on fd error
 - [x] review cleanup — spinner unref, TL;DR consistency, DRY index regen
 - [x] bny help — agent-friendly help system with grouped commands, namespace help, --json
 - [x] bunny spinner — TTY-aware progress indicators across all brane commands

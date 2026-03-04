@@ -55,9 +55,15 @@ describe("parse_json", () => {
     expect(result).toEqual({ f: 1 })
   })
 
-  test("strips multi-line comments", () => {
+  test("multi-line comments no longer stripped (protects globs)", () => {
+    // /* ... */ stripping was removed because it corrupts glob patterns like src/*.ts
     const result = parse_json<{ g: string }>("{/* comment */\"g\": \"val\"}")
-    expect(result).toEqual({ g: "val" })
+    expect(result).toBeNull()
+  })
+
+  test("glob patterns in values are preserved", () => {
+    const result = parse_json<{ pattern: string }>('{"pattern": "src/*.ts"}')
+    expect(result).toEqual({ pattern: "src/*.ts" })
   })
 
   test("handles fences + prose + trailing commas", () => {
@@ -162,6 +168,17 @@ describe("renamed commands", () => {
     expect(r.exit).toBe(0)
     // Should show the eat prompt (since it delegates to eat)
     expect(r.stdout).toContain("Active Lenses")
+  })
+
+  test("--model rejects shell metacharacters", () => {
+    const r = bny("--model", "foo$(evil)", "status", "--help")
+    expect(r.exit).toBe(1)
+    expect(r.stderr).toContain("invalid --model")
+  })
+
+  test("--model accepts valid model names", () => {
+    const r = bny("--model", "claude-sonnet-4-20250514", "status", "--help")
+    expect(r.exit).toBe(0)
   })
 
   test("help --json shows digest and lens", () => {

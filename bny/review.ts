@@ -117,21 +117,21 @@ export async function main(argv: string[]): Promise<number> {
 
   assassin.install(resolve(root, ".bny"))
 
-  const prompt_tmp = resolve(root, ".bny/review-prompt.tmp")
+  const prompt_tmp = resolve(root, `.bny/review-prompt-${process.pid}.tmp`)
   await Bun.write(prompt_tmp, prompt)
 
-  // model version pinning (gemini CLI may support --model)
+  // model version pinning — array spawn, no shell interpolation
   const model = process.env.BNY_MODEL || null
-  const model_flag = model ? ` --model ${model}` : ""
+  const cmd: string[] = ["gemini", "-p"]
+  if (model) cmd.push("--model", model)
 
-  const proc = Bun.spawn(
-    ["bash", "-c", `gemini -p -${model_flag} < "${prompt_tmp}"`],
-    {
-      stdout: "inherit",
-      stderr: "inherit",
-      cwd:    root,
-    },
-  )
+  const prompt_file = Bun.file(prompt_tmp)
+  const proc = Bun.spawn(cmd, {
+    stdout: "inherit",
+    stderr: "inherit",
+    stdin:  prompt_file,
+    cwd:    root,
+  })
 
   assassin.track(proc.pid, proc.pid)
   const exit_code = await proc.exited
