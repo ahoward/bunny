@@ -2,13 +2,12 @@
 
 ## What This Is
 
-Bunny is a Bun + TypeScript project template with the bny dark factory CLI.
+Bunny is a Bun + TypeScript CLI that manages a persistent knowledge graph for software projects.
 
 ## Key Files
 
 - `./.bny/roadmap.md` - **START HERE** — Driving task list for all development
 - `./.bny/guardrails.json` - Machine-readable agent constraints
-- `./dna/technical/development-loop.md` - Antagonistic Testing process
 
 ## Protocol
 
@@ -38,10 +37,19 @@ Append a one-liner to `.bny/decisions.md` recording what you did and why.
 
 ## Development Process: Antagonistic Testing
 
-**See:** `./dna/technical/development-loop.md`
+1. **Design Interface** — Define public API
+2. **Design Tests (Claude)** — Write test cases
+3. **Review Tests (Gemini)** — Antagonist review, incorporate suggestions
+4. **Implement** — Write code
+5. **Loop Until Green** — Fix failures, re-run tests
+6. **If Stuck → Human Checkpoint** — Only when tests cannot pass
 
-1. Design interface → 2. Design tests (Claude) → 3. Review tests (Gemini)
-4. Implement → 5. Loop until green → 6. **Human checkpoint** (only if stuck)
+Rules:
+- Tests MUST exist before implementation
+- Gemini reviews tests, finds blind spots
+- After Gemini review, tests are LOCKED
+- Human checkpoint ONLY when stuck (not pre-approval)
+- No changing tests after review without human approval
 
 ## Coding Conventions
 
@@ -69,13 +77,11 @@ src/              # source code
   lib/            # shared types, result helpers, logging
 tests/            # tests
   fixtures/       # deterministic test inputs (POD)
-specs/            # feature specs (one dir per feature)
 bin/              # executables (bny entry point)
 .bny/             # project state (git-tracked, per-project)
   roadmap.md      # what to work on next
   guardrails.json # agent constraints
   decisions.md    # append-only decision log
-  constitution.md # project principles
 bny/              # dark factory CLI — tool code (symlinkable)
   lib/            # shared modules (assassin, ralph, feature, prompt, brane, map, spinner)
   ai/             # ai subcommands (init)
@@ -84,6 +90,7 @@ bny/              # dark factory CLI — tool code (symlinkable)
   templates/      # spec, plan, tasks templates
   build.ts        # the dark factory (full pipeline or per-step)
   spike.ts        # exploratory build (guardrails off)
+  digest.ts       # top-level digest command (URI scheme support)
   proposal.ts     # brane → roadmap bridge
   specify.ts      # create feature spec
   plan.ts         # create implementation plan
@@ -100,8 +107,6 @@ bny/              # dark factory CLI — tool code (symlinkable)
   ipm.ts          # iteration planning meeting
   ps.ts           # show running bny processes
   init.ts         # scaffold a new project
-dna/              # project knowledge — context only, no operational deps
-  technical/      # development loop, conventions
 dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 .githooks/        # git hooks (pre-commit, pre-push)
 ```
