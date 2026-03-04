@@ -31,7 +31,7 @@ export interface RalphResult {
   session_id:   string
 }
 
-const BNY_LOG_ENABLED = process.env.BUNNY_LOG !== "0"
+const BNY_LOG_ENABLED = process.env.BUNNY_LOG === "1"
 
 function log_iteration(entry: {
   session_id:  string

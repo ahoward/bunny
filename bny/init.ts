@@ -328,7 +328,7 @@ workflow:
 
 state lives in \`.bny/\`. do not modify state files directly.`
 
-const HOOK_PRE_COMMIT_CONTENT = `BUNNY_LOG=0 ./dev/post_flight`
+const HOOK_PRE_COMMIT_CONTENT = `./dev/post_flight`
 
 const HOOK_PRE_PUSH_CONTENT = `./dev/test`
 
@@ -498,7 +498,7 @@ function dev_test(p: ProjectType): string {
 # bny-generated
 set -e
 cd "$(dirname "$0")/.."
-BUNNY_LOG=0 exec ${p.test_cmd} "$@"
+exec ${p.test_cmd} "$@"
 `
 }
 

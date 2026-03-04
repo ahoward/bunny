@@ -2,7 +2,7 @@
 // log.ts - structured call logging
 //
 // writes JSON lines to stderr for every app.call.
-// disable with BUNNY_LOG=0.
+// quiet by default. enable with BUNNY_LOG=1.
 //
 
 export interface LogEntry {
@@ -12,7 +12,7 @@ export interface LogEntry {
   timestamp:   string
 }
 
-const enabled = process.env.BUNNY_LOG !== "0"
+const enabled = process.env.BUNNY_LOG === "1"
 
 export function log_call(entry: LogEntry): void {
   if (!enabled) return

@@ -31,7 +31,7 @@ async function run_checks(): Promise<Check[]> {
   const test_proc = Bun.spawn(["bun", "test"], {
     stdout: "pipe",
     stderr: "pipe",
-    env: { ...process.env, BUNNY_LOG: "0" }
+    env: process.env
   })
   const test_exit = await test_proc.exited
   checks.push({
