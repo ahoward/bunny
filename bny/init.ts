@@ -2,8 +2,8 @@
 //
 // bny init — scaffold a project for bny
 //
-// creates .bny/, dev/, .githooks/ with lean defaults.
-// safe to re-run: skips existing files unless --force.
+// drops in as a guest: marker-delimited blocks in existing files,
+// creates only what's missing, fully reversible with `bny uninit`.
 //
 // usage:
 //   bny init              # scaffold everything
@@ -11,8 +11,107 @@
 //   bny init --minimal    # just .bny/ state, no dev scripts
 //
 
-import { existsSync, mkdirSync, writeFileSync, chmodSync, readFileSync } from "node:fs"
-import { resolve } from "node:path"
+import { existsSync, mkdirSync, writeFileSync, chmodSync, readFileSync, lstatSync, readlinkSync, unlinkSync } from "node:fs"
+import { resolve, dirname } from "node:path"
+
+// -- marker block operations --
+
+type PatchResult = "created" | "updated" | "skipped"
+
+function patch_file(
+  abs_path: string,
+  content: string,
+  start_marker: string,
+  end_marker: string,
+): PatchResult {
+  const dir = dirname(abs_path)
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+
+  const block = `${start_marker}\n${content}\n${end_marker}\n`
+
+  if (!existsSync(abs_path)) {
+    writeFileSync(abs_path, block)
+    return "created"
+  }
+
+  const existing = readFileSync(abs_path, "utf-8")
+  const start_idx = existing.indexOf(start_marker)
+  const end_idx = existing.indexOf(end_marker)
+
+  if (start_idx === -1) {
+    // no marker found — append block
+    const sep = existing.length > 0 && !existing.endsWith("\n") ? "\n\n" : existing.length > 0 ? "\n" : ""
+    writeFileSync(abs_path, existing + sep + block)
+    return "updated"
+  }
+
+  if (start_idx !== -1 && end_idx !== -1 && end_idx > start_idx) {
+    // marker found — check if content is same
+    const old_block = existing.slice(start_idx, end_idx + end_marker.length)
+    const new_block = `${start_marker}\n${content}\n${end_marker}`
+    if (old_block === new_block) return "skipped"
+
+    // replace between markers
+    const before = existing.slice(0, start_idx)
+    const after = existing.slice(end_idx + end_marker.length)
+    writeFileSync(abs_path, before + new_block + after)
+    return "updated"
+  }
+
+  // malformed markers — append fresh block
+  const sep = existing.endsWith("\n") ? "\n" : "\n\n"
+  writeFileSync(abs_path, existing + sep + block)
+  return "updated"
+}
+
+function patch_agent_file(root: string, rel_path: string): PatchResult | "converted" {
+  const abs_path = resolve(root, rel_path)
+
+  // handle symlink → real file conversion
+  if (existsSync(abs_path)) {
+    try {
+      const stat = lstatSync(abs_path)
+      if (stat.isSymbolicLink()) {
+        const target = readlinkSync(abs_path)
+        let content = ""
+        try {
+          content = readFileSync(abs_path, "utf-8")
+        } catch {
+          // broken symlink — start fresh
+        }
+        unlinkSync(abs_path)
+        // filter out any existing bny marker block from the symlink target content
+        const cleaned = strip_marker_content(content, "<!-- bny:start -->", "<!-- bny:end -->")
+        if (cleaned.trim().length > 0) {
+          writeFileSync(abs_path, cleaned)
+        }
+        // now patch the marker block in
+        patch_file(abs_path, AGENT_BLOCK, "<!-- bny:start -->", "<!-- bny:end -->")
+        return "converted"
+      }
+    } catch {
+      // not a symlink, fall through
+    }
+  }
+
+  return patch_file(
+    abs_path,
+    AGENT_BLOCK,
+    "<!-- bny:start -->",
+    "<!-- bny:end -->",
+  )
+}
+
+function strip_marker_content(text: string, start_marker: string, end_marker: string): string {
+  const start_idx = text.indexOf(start_marker)
+  const end_idx = text.indexOf(end_marker)
+  if (start_idx === -1 || end_idx === -1 || end_idx <= start_idx) return text
+  const before = text.slice(0, start_idx)
+  const after = text.slice(end_idx + end_marker.length)
+  return (before + after).replace(/\n{3,}/g, "\n\n").trim() + "\n"
+}
+
+// -- main --
 
 export async function main(argv: string[]): Promise<number> {
   let force = false
@@ -24,7 +123,7 @@ export async function main(argv: string[]): Promise<number> {
     else if (arg === "--help" || arg === "-h") {
       process.stdout.write(`usage: bny init [--force] [--minimal]
 
-scaffolds a project for bny.
+scaffolds a project for bny (guest, not landlord).
 
 creates:
   .bny/              project state (constitution, guardrails, roadmap, decisions)
@@ -32,8 +131,15 @@ creates:
   dev/               development scripts (setup, test, health, pre_flight, post_flight)
   .githooks/         git hooks (pre-commit, pre-push)
 
+patches (marker-delimited blocks):
+  CLAUDE.md          bny usage instructions
+  GEMINI.md          bny usage instructions
+  AGENTS.md          bny usage instructions
+  .gitignore         bny ignore patterns
+  .githooks/*        bny hook lines
+
 flags:
-  --force, -f     overwrite existing files
+  --force, -f     overwrite existing files (state + dev scripts only)
   --minimal       just .bny/ state, no dev scripts or hooks
 `)
       return 0
@@ -52,36 +158,58 @@ flags:
   // -- scaffold --
 
   let created = 0
+  let updated = 0
   let skipped = 0
+  let converted = 0
 
-  function write(rel_path: string, content: string, executable = false): void {
+  function tally(result: PatchResult | "converted", label: string): void {
+    if (result === "created")   { created++;   process.stderr.write(`  create   ${label}\n`) }
+    if (result === "updated")   { updated++;   process.stderr.write(`  update   ${label}\n`) }
+    if (result === "skipped")   { skipped++ }
+    if (result === "converted") { converted++; process.stderr.write(`  convert  ${label}\n`) }
+  }
+
+  function write_state(rel_path: string, content: string): void {
     const abs = resolve(root, rel_path)
     if (existsSync(abs) && !force) {
       skipped++
       return
     }
-    const dir = resolve(abs, "..")
+    const dir = dirname(abs)
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
     writeFileSync(abs, content)
-    if (executable) chmodSync(abs, 0o755)
-    process.stderr.write(`  create  ${rel_path}\n`)
+    process.stderr.write(`  create   ${rel_path}\n`)
+    created++
+  }
+
+  function write_script(rel_path: string, content: string): void {
+    const abs = resolve(root, rel_path)
+    if (existsSync(abs) && !force) {
+      skipped++
+      return
+    }
+    const dir = dirname(abs)
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+    writeFileSync(abs, content)
+    chmodSync(abs, 0o755)
+    process.stderr.write(`  create   ${rel_path}\n`)
     created++
   }
 
   process.stderr.write(`[bny init] ${force ? "(force) " : ""}${minimal ? "(minimal) " : ""}\n\n`)
 
-  // -- .bny/ state --
+  // -- .bny/ state (skip-if-exists, same as before) --
 
-  write(".bny/constitution.md", CONSTITUTION)
-  write(".bny/guardrails.json", GUARDRAILS)
-  write(".bny/roadmap.md", ROADMAP)
-  write(".bny/decisions.md", DECISIONS)
-  write(".bny/todos.md", TODOS)
+  write_state(".bny/constitution.md", CONSTITUTION)
+  write_state(".bny/guardrails.json", GUARDRAILS)
+  write_state(".bny/roadmap.md", ROADMAP)
+  write_state(".bny/decisions.md", DECISIONS)
+  write_state(".bny/todos.md", TODOS)
 
   // -- .bny/brane/ --
 
-  write(".bny/brane/worldview.md", WORLDVIEW)
-  write(".bny/brane/index.md", BRANE_INDEX)
+  write_state(".bny/brane/worldview.md", WORLDVIEW)
+  write_state(".bny/brane/index.md", BRANE_INDEX)
 
   if (!minimal) {
     // -- detect project type --
@@ -89,29 +217,65 @@ flags:
     const project = detect_project_type(root)
     process.stderr.write(`  detected ${project.type} project\n`)
 
-    // -- dev/ scripts --
+    // -- dev/ scripts (skip-if-exists, with bny-generated marker) --
 
-    write("dev/setup", dev_setup(project), true)
-    write("dev/test", dev_test(project), true)
-    write("dev/health", DEV_HEALTH, true)
-    write("dev/pre_flight", dev_pre_flight(project), true)
-    write("dev/post_flight", dev_post_flight(project), true)
+    write_script("dev/setup", dev_setup(project))
+    write_script("dev/test", dev_test(project))
+    write_script("dev/health", DEV_HEALTH)
+    write_script("dev/pre_flight", dev_pre_flight(project))
+    write_script("dev/post_flight", dev_post_flight(project))
 
-    // -- .githooks/ --
+    // -- .githooks/ (marker blocks — append to existing or create) --
 
-    write(".githooks/pre-commit", HOOK_PRE_COMMIT, true)
-    write(".githooks/pre-push", HOOK_PRE_PUSH, true)
+    tally(
+      patch_file(resolve(root, ".githooks/pre-commit"), HOOK_PRE_COMMIT_CONTENT, "# bny:start", "# bny:end"),
+      ".githooks/pre-commit",
+    )
+    chmodSync(resolve(root, ".githooks/pre-commit"), 0o755)
 
-    // -- .gitignore additions --
+    tally(
+      patch_file(resolve(root, ".githooks/pre-push"), HOOK_PRE_PUSH_CONTENT, "# bny:start", "# bny:end"),
+      ".githooks/pre-push",
+    )
+    chmodSync(resolve(root, ".githooks/pre-push"), 0o755)
 
-    const gi_path = resolve(root, ".gitignore")
-    const gi_marker = "# bny"
-    const existing_gi = existsSync(gi_path) ? readFileSync(gi_path, "utf-8") : ""
-    if (!existing_gi.includes(gi_marker)) {
-      const additions = `\n${gi_marker}\n.bny/bny.pid\n.bny/children/\n.bny/spin/\n`
-      writeFileSync(gi_path, existing_gi.trimEnd() + "\n" + additions)
-      process.stderr.write(`  append  .gitignore\n`)
-      created++
+    // ensure shebang on newly created hook files
+    for (const hook of [".githooks/pre-commit", ".githooks/pre-push"]) {
+      const abs = resolve(root, hook)
+      const content = readFileSync(abs, "utf-8")
+      if (!content.startsWith("#!/")) {
+        writeFileSync(abs, `#!/usr/bin/env bash\nset -e\n\n${content}`)
+      }
+    }
+
+    // -- .gitignore (marker block) --
+
+    tally(
+      patch_file(resolve(root, ".gitignore"), GITIGNORE_CONTENT, "# bny:start", "# bny:end"),
+      ".gitignore",
+    )
+
+    // -- agent files (the big three — always create or patch) --
+
+    tally(patch_agent_file(root, "CLAUDE.md"), "CLAUDE.md")
+    tally(patch_agent_file(root, "GEMINI.md"), "GEMINI.md")
+    tally(patch_agent_file(root, "AGENTS.md"), "AGENTS.md")
+
+    // -- optional agent files (only if parent dir exists) --
+
+    const optional_agents: [string, string][] = [
+      [".github/agents",   ".github/agents/copilot-instructions.md"],
+      [".cursor/rules",    ".cursor/rules/bny.mdc"],
+      [".windsurf/rules",  ".windsurf/rules/bny.md"],
+      [".kilocode/rules",  ".kilocode/rules/bny.md"],
+      [".augment/rules",   ".augment/rules/bny.md"],
+      [".roo/rules",       ".roo/rules/bny.md"],
+    ]
+
+    for (const [dir, file] of optional_agents) {
+      if (existsSync(resolve(root, dir))) {
+        tally(patch_agent_file(root, file), file)
+      }
     }
 
     // -- configure git hooks path --
@@ -120,15 +284,20 @@ flags:
     const current_hooks = new TextDecoder().decode(hooks_check.stdout).trim()
     if (current_hooks !== ".githooks") {
       Bun.spawnSync(["git", "config", "core.hooksPath", ".githooks"], { stdout: "pipe", stderr: "pipe" })
-      process.stderr.write(`  config  git core.hooksPath → .githooks\n`)
+      process.stderr.write(`  config   git core.hooksPath → .githooks\n`)
     }
   }
 
   // -- summary --
 
-  process.stderr.write(`\n  ${created} created, ${skipped} skipped (already exist)\n`)
+  const parts = []
+  if (created > 0) parts.push(`${created} created`)
+  if (updated > 0) parts.push(`${updated} updated`)
+  if (converted > 0) parts.push(`${converted} converted`)
+  if (skipped > 0) parts.push(`${skipped} skipped`)
+  process.stderr.write(`\n  ${parts.join(", ")}\n`)
   if (skipped > 0 && !force) {
-    process.stderr.write(`  use --force to overwrite existing files\n`)
+    process.stderr.write(`  use --force to overwrite state/dev files\n`)
   }
   process.stderr.write(`\n  next: edit .bny/roadmap.md, then run 'bny ipm' to plan\n`)
 
@@ -138,6 +307,34 @@ flags:
 if (import.meta.main) process.exit(await main(process.argv.slice(2)))
 
 // -- templates --
+
+const AGENT_BLOCK = `## bny
+
+you have \`bny\` available — a persistent knowledge graph and build factory.
+
+commands:
+- \`bny digest <source>\` — ingest file, URL, or directory into the knowledge graph
+- \`bny brane ask "question"\` — query accumulated knowledge
+- \`bny brane tldr\` — instant outline of what the graph knows
+- \`bny build "description"\` — full pipeline: specify → plan → tasks → review → implement → ruminate
+- \`bny spike "description"\` — exploratory build (no review)
+- \`bny proposal "topic"\` — generate proposals from the graph
+
+workflow:
+- run \`./dev/test\` after code changes
+- run \`./dev/post_flight\` before commits
+- read \`.bny/guardrails.json\` for project constraints
+- append to \`.bny/decisions.md\` after completing work
+
+state lives in \`.bny/\`. do not modify state files directly.`
+
+const HOOK_PRE_COMMIT_CONTENT = `BUNNY_LOG=0 ./dev/post_flight`
+
+const HOOK_PRE_PUSH_CONTENT = `./dev/test`
+
+const GITIGNORE_CONTENT = `.bny/bny.pid
+.bny/children/
+.bny/spin/`
 
 const CONSTITUTION = `# Constitution
 
@@ -281,6 +478,7 @@ function detect_project_type(root: string): ProjectType {
 
 function dev_setup(p: ProjectType): string {
   return `#!/usr/bin/env bash
+# bny-generated
 set -e
 
 cd "$(dirname "$0")/.."
@@ -297,6 +495,7 @@ echo "done."
 
 function dev_test(p: ProjectType): string {
   return `#!/usr/bin/env bash
+# bny-generated
 set -e
 cd "$(dirname "$0")/.."
 BUNNY_LOG=0 exec ${p.test_cmd} "$@"
@@ -305,6 +504,7 @@ BUNNY_LOG=0 exec ${p.test_cmd} "$@"
 
 function dev_pre_flight(p: ProjectType): string {
   return `#!/usr/bin/env bash
+# bny-generated
 set -e
 cd "$(dirname "$0")/.."
 
@@ -319,6 +519,7 @@ echo "pre_flight: ok"
 
 function dev_post_flight(_p: ProjectType): string {
   return `#!/usr/bin/env bash
+# bny-generated
 set -e
 cd "$(dirname "$0")/.."
 
@@ -332,19 +533,10 @@ echo "post_flight: ok"
 }
 
 const DEV_HEALTH = `#!/usr/bin/env bash
+# bny-generated
 set -e
 cd "$(dirname "$0")/.."
 
 # customize this for your project
 echo '{"status":"success","path":"/health","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}'
-`
-
-const HOOK_PRE_COMMIT = `#!/usr/bin/env bash
-set -e
-BUNNY_LOG=0 exec ./dev/post_flight
-`
-
-const HOOK_PRE_PUSH = `#!/usr/bin/env bash
-set -e
-exec ./dev/test
 `

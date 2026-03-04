@@ -144,10 +144,9 @@ describe("command registry consistency", () => {
     }
   })
 
-  test("namespaces include ai, brane, dev", () => {
+  test("namespaces include brane, dev", () => {
     const r = bny("help", "--json")
     const parsed = JSON.parse(r.stdout)
-    expect(parsed.namespaces).toContain("ai")
     expect(parsed.namespaces).toContain("brane")
     expect(parsed.namespaces).toContain("dev")
   })

@@ -1,1 +1,1 @@
-bny/AGENTS.md
+AGENTS.md

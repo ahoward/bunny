@@ -31,7 +31,7 @@ import { main as spin_main } from "../bny/spin.ts"
 import { main as todo_main } from "../bny/todo.ts"
 import { main as close_issue_main } from "../bny/close-issue.ts"
 import { main as ipm_main } from "../bny/ipm.ts"
-import { main as ai_init_main } from "../bny/ai/init.ts"
+import { main as uninit_main } from "../bny/uninit.ts"
 import { main as brane_eat_main } from "../bny/brane/eat.ts"
 import { main as brane_ask_main } from "../bny/brane/ask.ts"
 import { main as brane_rebuild_main } from "../bny/brane/rebuild.ts"
@@ -73,7 +73,7 @@ const COMMANDS: Record<string, CommandFn> = {
   "proposal":       proposal_main,
   "build":          build_main,
   "spike":          spike_main,
-  "ai/init":        ai_init_main,
+  "uninit":         uninit_main,
   "digest":         digest_main,
   "brane/eat":      brane_eat_main,
   "brane/ask":      brane_ask_main,
@@ -129,8 +129,8 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "status":          { desc: "show current feature state",         group: "plumbing" },
   "ps":              { desc: "show running bny processes",         group: "plumbing" },
   "map":             { desc: "structural codebase map + index (tree-sitter)", group: "plumbing" },
-  "ai/init":         { desc: "bootstrap AI tool integration",      group: "plumbing" },
-  "init":            { desc: "scaffold a new project for bny",     group: "plumbing" },
+  "init":            { desc: "scaffold a project for bny (guest mode)", group: "plumbing" },
+  "uninit":          { desc: "cleanly remove all bny traces",          group: "plumbing" },
 }
 
 const GROUP_ORDER = ["development", "workflow", "knowledge", "orchestration", "chores", "plumbing"]
@@ -447,9 +447,14 @@ async function main(): Promise<void> {
     }
   }
 
-  // init runs before .bny/ exists — skip root check + assassin
+  // init/uninit run before .bny/ exists or after it's removed — skip root check + assassin
   if (args.command === "init") {
     process.exitCode = await init_main(args.rest)
+    return
+  }
+
+  if (args.command === "uninit") {
+    process.exitCode = await uninit_main(args.rest)
     return
   }
 
