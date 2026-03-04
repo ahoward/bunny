@@ -360,7 +360,7 @@ Start simple. Three similar lines > one premature abstraction.
 Complexity MUST be justified.
 
 ### V. The Strange Loop
-bny builds bny. The brane accumulates knowledge. Each iteration enriches
+The knowledge graph accumulates understanding. Each iteration enriches
 the next. Guardrails bound each iteration. The loop is powerful because
 it is constrained.
 

@@ -5,7 +5,7 @@ set -e
 cd "$(dirname "$0")/.."
 
 echo "installing dependencies..."
-bun install
+echo 'no install step configured'
 
 echo "configuring git hooks..."
 git config core.hooksPath .githooks

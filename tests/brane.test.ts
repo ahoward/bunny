@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test"
-import { parse_json, apply_operations, preview_operations, worldview_dir } from "../src/lib/brane.ts"
+import { parse_json, apply_operations, preview_operations, worldview_dir, strip_index_preamble } from "../src/lib/brane.ts"
 import { mkdirSync, rmSync, existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 
@@ -191,5 +191,37 @@ describe("renamed commands", () => {
     expect(keys).toContain("brane/rebuild")
     expect(keys).not.toContain("brane/pov")
     expect(keys).not.toContain("brane/digest")
+  })
+})
+
+describe("strip_index_preamble", () => {
+  test("passes clean markdown through", () => {
+    const input = "# Index\n\n- item 1\n- item 2"
+    expect(strip_index_preamble(input)).toBe("# Index\n\n- item 1\n- item 2")
+  })
+
+  test("strips conversational preamble before first header", () => {
+    const input = "It looks like your message is just a test.\n\n# Index\n\n- item 1"
+    expect(strip_index_preamble(input)).toBe("# Index\n\n- item 1")
+  })
+
+  test("strips code fences", () => {
+    const input = "```markdown\n# Index\n\n- item 1\n```"
+    expect(strip_index_preamble(input)).toBe("# Index\n\n- item 1")
+  })
+
+  test("strips both preamble and code fences", () => {
+    const input = "Here is the index:\n\n```markdown\n# Index\n\n- item 1\n```"
+    expect(strip_index_preamble(input)).toBe("# Index\n\n- item 1")
+  })
+
+  test("returns null for content with no markdown headers", () => {
+    const input = "This is just conversational text with no structure."
+    expect(strip_index_preamble(input)).toBeNull()
+  })
+
+  test("returns null for empty content", () => {
+    expect(strip_index_preamble("")).toBeNull()
+    expect(strip_index_preamble("   ")).toBeNull()
   })
 })

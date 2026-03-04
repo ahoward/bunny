@@ -647,20 +647,41 @@ ${updated_worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")}
 Generate a concise index.md that summarizes what this knowledge base contains.
 Use markdown headers and bullet points. Link to files using relative paths.
 Keep it scannable — someone should understand the full scope in 30 seconds.
-Respond with ONLY the markdown content (no JSON, no fences).
+
+IMPORTANT: Respond with ONLY structured markdown content. No conversational preamble,
+no explanations, no "Here is..." or "It looks like..." — start directly with a markdown header.
 `
 
   const index_raw = call_claude(index_prompt, root)
   if (index_raw) {
-    let index_content = index_raw.trim()
-    if (index_content.startsWith("```")) {
-      index_content = index_content.replace(/^```(?:markdown)?\n?/, "").replace(/\n?```$/, "")
+    const index_content = strip_index_preamble(index_raw)
+    if (index_content) {
+      writeFileSync(resolve(worldview_dir(root), "index.md"), index_content + "\n")
+      spin.stop("🐰 regenerated index")
+    } else {
+      spin.stop("warning: index generation produced no valid markdown")
     }
-    writeFileSync(resolve(worldview_dir(root), "index.md"), index_content.trim() + "\n")
-    spin.stop("🐰 regenerated index")
   } else {
     spin.stop()
   }
+}
+
+// strip conversational preamble and code fences from index content
+export function strip_index_preamble(raw: string): string | null {
+  let content = raw.trim()
+
+  // strip code fences anywhere in the content
+  content = content.replace(/```(?:markdown)?\n?([\s\S]*?)```/g, "$1")
+
+  // strip conversational preamble before first markdown header
+  const header_idx = content.indexOf("#")
+  if (header_idx < 0) return null
+  if (header_idx > 0) content = content.slice(header_idx)
+
+  content = content.trim()
+  if (!content.includes("#")) return null
+
+  return content
 }
 
 // -- storm suggestions --

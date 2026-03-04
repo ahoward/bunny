@@ -253,8 +253,11 @@ async function run_pipeline(
 
   // -- 4. review --
 
+  const warnings: string[] = []
+
   if (!await run_fn(() => review_main([]), "review")) {
     process.stderr.write("warning: review failed, continuing without antagonist review\n")
+    warnings.push("review")
   }
 
   // -- 5. implement --
@@ -281,9 +284,16 @@ async function run_pipeline(
   const ruminate_args = opts.auto_yes ? ["--yes"] : []
   if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
     process.stderr.write("warning: ruminate failed, continuing...\n")
+    warnings.push("ruminate")
   }
 
   // -- done --
+
+  if (warnings.length > 0) {
+    process.stderr.write(`\n[bny build] complete with warnings: ${warnings.join(", ")}\n`)
+    process.stderr.write(`  ${label}\n`)
+    return 2
+  }
 
   process.stderr.write(`\n[bny build] complete: ${label}\n`)
   return 0

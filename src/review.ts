@@ -11,7 +11,7 @@
 //   bny review --prompt-only      # writes review-prompt.md instead
 //
 
-import { existsSync, unlinkSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
@@ -117,27 +117,21 @@ export async function main(argv: string[]): Promise<number> {
 
   assassin.install(resolve(root, "bny"))
 
-  const prompt_tmp = resolve(root, `bny/review-prompt-${process.pid}.tmp`)
-  await Bun.write(prompt_tmp, prompt)
-
   // model version pinning — array spawn, no shell interpolation
   const model = process.env.BNY_MODEL || null
-  const cmd: string[] = ["gemini", "-p"]
+  const cmd: string[] = ["gemini", "-p", prompt]
   if (model) cmd.push("--model", model)
 
-  const prompt_file = Bun.file(prompt_tmp)
   const proc = Bun.spawn(cmd, {
     stdout: "inherit",
     stderr: "inherit",
-    stdin:  prompt_file,
+    stdin:  "ignore",
     cwd:    root,
   })
 
   assassin.track(proc.pid, proc.pid)
   const exit_code = await proc.exited
   assassin.untrack(proc.pid)
-
-  try { unlinkSync(prompt_tmp) } catch {}
 
   return exit_code
 }

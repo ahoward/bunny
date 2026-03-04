@@ -1,64 +1,49 @@
 # Spec: REST API Serves FizzBuzz
 
 ## Summary
-
-A minimal REST API that serves fizzbuzz over HTTP using Bun.
+A stateless HTTP API that computes fizzbuzz for single numbers and ranges.
 
 ## Endpoints
 
-### GET /fizzbuzz/:number
-
+### GET /fizzbuzz/:n
 Returns the fizzbuzz result for a single positive integer.
 
-**Success (200):**
+**Response 200:**
 ```json
-{ "input": 15, "result": "fizzbuzz" }
+{"number": 15, "result": "fizzbuzz"}
 ```
 
-**Invalid input (400):**
+**Response 400:** invalid input (non-integer, negative, zero, float)
 ```json
-{ "error": "invalid_input", "message": "Expected positive integer, got '3.7'" }
+{"error": {"code": "INVALID_INPUT", "message": "Expected a positive integer", "param": "n"}}
 ```
 
 ### GET /fizzbuzz?from=1&to=100
+Returns fizzbuzz results for a range of integers.
 
-Returns fizzbuzz results for a range of positive integers.
-
-**Success (200):**
+**Response 200:**
 ```json
-{ "from": 1, "to": 5, "results": [
-  { "input": 1, "result": "1" },
-  { "input": 2, "result": "2" },
-  { "input": 3, "result": "fizz" },
-  { "input": 4, "result": "4" },
-  { "input": 5, "result": "buzz" }
-]}
+{"results": [{"number": 1, "result": "1"}, {"number": 3, "result": "fizz"}], "count": 100}
 ```
 
-**Invalid range (400):**
-```json
-{ "error": "invalid_input", "message": "from must be <= to" }
-```
-
-**Range too large (400):**
-```json
-{ "error": "invalid_input", "message": "Range too large (max 1000)" }
-```
+**Constraints:**
+- `from` and `to` must be positive integers
+- `from <= to`
+- max range size: 1000
 
 ### GET /health
+Returns `{"status": "ok"}` with 200.
 
-Returns `{ "status": "ok" }`.
+### Unknown routes
+Return 404: `{"error": {"code": "NOT_FOUND", "message": "Route not found"}}`
 
 ## Rules
+- Classic fizzbuzz: divisible by 3 → "fizz", by 5 → "buzz", by 15 → "fizzbuzz"
+- Non-matching numbers return the number as a string
+- All responses are `application/json`
+- No external dependencies beyond Bun stdlib
 
-- Multiples of 15 → "fizzbuzz"
-- Multiples of 3 (not 15) → "fizz"
-- Multiples of 5 (not 15) → "buzz"
-- Everything else → the number as a string
-
-## Constraints
-
-- Strict input validation: reject non-positive-integers
-- JSON responses only
-- No dependencies beyond Bun built-ins
-- Stateless, pure computation
+## Tech
+- Bun + TypeScript
+- Raw `Bun.serve()` — no framework
+- No database, no state

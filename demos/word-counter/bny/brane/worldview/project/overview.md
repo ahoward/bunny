@@ -9,4 +9,4 @@ A command-line tool that counts words, lines, and characters in files.
 
 ## Nature
 
-This is a focused CLI utility in the tradition of Unix `wc`. It takes file inputs and produces structured counts as output.
+This is a text analysis utility operating on files provided as input. It follows the classic Unix tradition of simple, composable CLI tools that do one thing well.

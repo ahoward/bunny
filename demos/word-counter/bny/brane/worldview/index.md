@@ -1,12 +1,30 @@
-I need your approval to run `./dev/test`. Could you approve it?
+# Knowledge Base Index
+Project knowledge organized by topic: design decisions, implementation patterns, and context.
 
-In the meantime — the project is a fully working word-counter CLI with:
+## Project
 
-- **`bin/wc.ts`** — thin entry point
-- **`src/cli.ts`** — argument parsing, I/O, formatting (columnar + JSON)
-- **`src/lib/counter.ts`** — pure functions (`count_words`, `count_lines`, `count_chars`, `count_all`)
-- **`src/lib/types.ts`** — POD type (`CountResult`)
-- **`tests/counter.test.ts`** — 15 unit tests for pure functions
-- **`tests/cli.test.ts`** — 7 integration tests via subprocess
+- [Overview](worldview/project/overview.md) — Word Counter CLI: a Unix-style tool for counting words, lines, and characters
+- [Scope Questions](worldview/project/scope-questions.md) — Key decisions: stdin support, multiple files, flags, encoding
 
-The roadmap is empty — no pending work items. What would you like me to do?
+## Design
+
+- [Unix Philosophy](worldview/design/unix-philosophy.md) — Composability via wc-compatibility; clone first, extend later
+- [Output Format](worldview/design/output-format.md) — wc-compatible 8-char padded columns; exit codes; partial output on failure
+- [Edge Cases](worldview/design/edge-cases.md) — Resolved: bytes not chars, newline counting, whitespace-split words
+
+## Implementation
+
+- [Patterns](worldview/implementation/patterns.md) — Pure core / thin shell, CLI test harness, fixture-per-behavior
+
+## Context
+
+- [Performance](worldview/context/performance.md) — Read-all-at-once is correct for now; streaming deferred until needed
+- [Testing Strategy](worldview/context/testing-strategy.md) — Two-layer testing, committed fixtures, antagonistic review
+
+## Lenses
+
+- [all](lenses/all.md) — Broad absorption lens for concepts, relationships, and insights
+
+## Sources
+
+- `sources/2026-03-04T23-02-03-479Z-seed-md.txt` — Initial project seed document

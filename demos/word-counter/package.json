@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "wc": "bin/wc.ts"
+    "wc-tool": "./bin/wc-tool"
   },
   "scripts": {
     "test": "bun test"
+  },
+  "devDependencies": {
+    "bun-types": "^1.3.10"
   }
 }

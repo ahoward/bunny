@@ -1,0 +1,43 @@
+#!/usr/bin/env bun
+import { count_text, type TextCounts } from "../src/count_text";
+
+function format_line(counts: TextCounts, label: string): string {
+  return `${String(counts.lines).padStart(8)}${String(counts.words).padStart(8)}${String(counts.characters).padStart(8)} ${label}`;
+}
+
+async function main(): Promise<number> {
+  const files = process.argv.slice(2);
+
+  if (files.length === 0) {
+    const content = await Bun.stdin.text();
+    const counts = count_text(content);
+    console.log(format_line(counts, ""));
+    return 0;
+  }
+
+  let exit_code = 0;
+  const totals: TextCounts = { lines: 0, words: 0, characters: 0 };
+
+  for (const file of files) {
+    const f = Bun.file(file);
+    if (!(await f.exists())) {
+      console.error(`wc-tool: ${file}: No such file`);
+      exit_code = 1;
+      continue;
+    }
+    const content = await f.text();
+    const counts = count_text(content);
+    totals.lines += counts.lines;
+    totals.words += counts.words;
+    totals.characters += counts.characters;
+    console.log(format_line(counts, file));
+  }
+
+  if (files.length > 1) {
+    console.log(format_line(totals, "total"));
+  }
+
+  return exit_code;
+}
+
+process.exit(await main());

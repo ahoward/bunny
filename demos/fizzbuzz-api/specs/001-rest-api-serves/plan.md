@@ -4,20 +4,27 @@
 
 ```
 src/
-  fizzbuzz.ts      # pure fizzbuzz logic
-  server.ts        # Bun.serve HTTP server + routing
-  validate.ts      # input validation helpers
+  fizzbuzz.ts      — pure fizzbuzz function
+  server.ts        — Bun.serve() with routing
+  validation.ts    — input parsing and validation
+  types.ts         — shared POD types
 tests/
-  fizzbuzz.test.ts # unit tests for fizzbuzz logic
-  server.test.ts   # API-level integration tests
+  fizzbuzz.test.ts — unit tests for core function
+  server.test.ts   — integration tests for HTTP layer
 ```
 
-## Steps
+## Implementation Order
 
-1. Initialize Bun project (package.json, tsconfig.json)
-2. Implement `fizzbuzz(n)` — pure function, no I/O
-3. Implement input validation — `parse_positive_int(s)`
-4. Implement HTTP server with routes: `/fizzbuzz/:number`, `/fizzbuzz?from=&to=`, `/health`
-5. Write unit tests for fizzbuzz logic
-6. Write integration tests for HTTP endpoints
-7. Wire up `dev/test` to run `bun test`
+1. **Types** — define Result, ErrorResponse, FizzbuzzResult POD types
+2. **Core function** — `fizzbuzz(n: number): string` — pure, no HTTP
+3. **Validation** — `parse_positive_int(s: string): number | null`
+4. **Server** — `Bun.serve()` with route matching, content-type headers
+5. **Dev scripts** — wire up `./dev/test` to `bun test`
+
+## Decisions
+
+- Path params for single (`/fizzbuzz/:n`), query params for range
+- Numbers echo back as integers in JSON, results as strings
+- Max range size 1000, return 400 beyond that
+- No framework — raw `Bun.serve()` with manual URL parsing
+- Tests before implementation (per protocol)

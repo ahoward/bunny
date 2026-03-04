@@ -2,60 +2,60 @@ import { describe, expect, test } from "bun:test";
 import { fizzbuzz, fizzbuzz_range } from "../src/fizzbuzz";
 
 describe("fizzbuzz", () => {
-  test("returns 'fizz' for multiples of 3", () => {
+  test("returns 'fizz' for multiples of 3 (not 5)", () => {
     expect(fizzbuzz(3)).toBe("fizz");
     expect(fizzbuzz(6)).toBe("fizz");
     expect(fizzbuzz(9)).toBe("fizz");
+    expect(fizzbuzz(12)).toBe("fizz");
   });
 
-  test("returns 'buzz' for multiples of 5", () => {
+  test("returns 'buzz' for multiples of 5 (not 3)", () => {
     expect(fizzbuzz(5)).toBe("buzz");
     expect(fizzbuzz(10)).toBe("buzz");
     expect(fizzbuzz(20)).toBe("buzz");
+    expect(fizzbuzz(25)).toBe("buzz");
   });
 
   test("returns 'fizzbuzz' for multiples of 15", () => {
     expect(fizzbuzz(15)).toBe("fizzbuzz");
     expect(fizzbuzz(30)).toBe("fizzbuzz");
     expect(fizzbuzz(45)).toBe("fizzbuzz");
+    expect(fizzbuzz(60)).toBe("fizzbuzz");
   });
 
-  test("returns the number as string for non-multiples", () => {
+  test("returns the number as a string for non-matches", () => {
     expect(fizzbuzz(1)).toBe("1");
     expect(fizzbuzz(2)).toBe("2");
     expect(fizzbuzz(4)).toBe("4");
     expect(fizzbuzz(7)).toBe("7");
+    expect(fizzbuzz(97)).toBe("97");
+  });
+
+  test("handles boundary values", () => {
+    expect(fizzbuzz(1)).toBe("1");
+    expect(fizzbuzz(100)).toBe("buzz");
   });
 
   test("handles large numbers", () => {
-    expect(fizzbuzz(999999999999990)).toBe("fizzbuzz");
-    expect(fizzbuzz(999999999999991)).toBe("999999999999991");
+    expect(fizzbuzz(999999)).toBe("fizz");
+    expect(fizzbuzz(1000000)).toBe("buzz");
+    expect(fizzbuzz(999990)).toBe("fizzbuzz");
   });
 });
 
 describe("fizzbuzz_range", () => {
-  test("returns correct results for 1 to 5", () => {
-    const results = fizzbuzz_range(1, 5);
-    expect(results).toEqual([
-      { input: 1, result: "1" },
-      { input: 2, result: "2" },
-      { input: 3, result: "fizz" },
-      { input: 4, result: "4" },
-      { input: 5, result: "buzz" },
-    ]);
+  test("returns correct results for 1..15", () => {
+    const results = fizzbuzz_range(1, 15);
+    expect(results).toHaveLength(15);
+    expect(results[0]).toEqual({ number: 1, result: "1" });
+    expect(results[2]).toEqual({ number: 3, result: "fizz" });
+    expect(results[4]).toEqual({ number: 5, result: "buzz" });
+    expect(results[14]).toEqual({ number: 15, result: "fizzbuzz" });
   });
 
-  test("handles single-element range", () => {
-    expect(fizzbuzz_range(15, 15)).toEqual([{ input: 15, result: "fizzbuzz" }]);
-  });
-
-  test("returns correct results for 13 to 16", () => {
-    const results = fizzbuzz_range(13, 16);
-    expect(results).toEqual([
-      { input: 13, result: "13" },
-      { input: 14, result: "14" },
-      { input: 15, result: "fizzbuzz" },
-      { input: 16, result: "16" },
-    ]);
+  test("returns single element when from equals to", () => {
+    const results = fizzbuzz_range(5, 5);
+    expect(results).toHaveLength(1);
+    expect(results[0]).toEqual({ number: 5, result: "buzz" });
   });
 });

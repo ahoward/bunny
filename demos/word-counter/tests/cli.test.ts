@@ -1,80 +1,55 @@
-import { describe, expect, test, beforeAll, afterAll } from "bun:test";
-import { mkdtemp, writeFile, rm } from "fs/promises";
-import { join } from "path";
-import { tmpdir } from "os";
+import { describe, it, expect } from "bun:test";
+import { resolve } from "path";
 
-let tmp_dir: string;
-let sample_file: string;
-let empty_file: string;
+const bin = resolve(import.meta.dir, "../bin/wc-tool");
+const fixtures = resolve(import.meta.dir, "fixtures");
 
-beforeAll(async () => {
-  tmp_dir = await mkdtemp(join(tmpdir(), "wc-test-"));
-  sample_file = join(tmp_dir, "sample.txt");
-  empty_file = join(tmp_dir, "empty.txt");
-  await writeFile(sample_file, "hello world\nfoo bar baz\n");
-  await writeFile(empty_file, "");
-});
-
-afterAll(async () => {
-  await rm(tmp_dir, { recursive: true });
-});
-
-const run_cli = async (args: string[]) => {
-  const entry = join(import.meta.dir, "..", "bin", "wc.ts");
-  const proc = Bun.spawn(["bun", "run", entry, ...args], {
+async function run(args: string[], stdin?: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  const proc = Bun.spawn(["bun", bin, ...args], {
+    stdin: stdin !== undefined ? new Response(stdin).body : undefined,
     stdout: "pipe",
     stderr: "pipe",
   });
   const stdout = await new Response(proc.stdout).text();
   const stderr = await new Response(proc.stderr).text();
-  const exit_code = await proc.exited;
-  return { stdout, stderr, exit_code };
-};
+  const exitCode = await proc.exited;
+  return { stdout, stderr, exitCode };
+}
 
 describe("CLI", () => {
-  test("prints counts for a file in columnar format", async () => {
-    const { stdout, exit_code } = await run_cli([sample_file]);
-    expect(exit_code).toBe(0);
-    // format: lines words chars filename
-    expect(stdout.trim()).toMatch(/^\s*2\s+5\s+24\s+/);
+  it("counts a single file", async () => {
+    const { stdout, exitCode } = await run([`${fixtures}/multi-line.txt`]);
+    expect(exitCode).toBe(0);
+    // output format: lines words characters filename
+    expect(stdout.trim()).toMatch(/^\s*2\s+9\s+44\s+/);
   });
 
-  test("prints JSON with --json flag", async () => {
-    const { stdout, exit_code } = await run_cli(["--json", sample_file]);
-    expect(exit_code).toBe(0);
-    const result = JSON.parse(stdout.trim());
-    expect(result.lines).toBe(2);
-    expect(result.words).toBe(5);
-    expect(result.chars).toBe(24);
+  it("counts multiple files with total", async () => {
+    const { stdout, exitCode } = await run([
+      `${fixtures}/single-word.txt`,
+      `${fixtures}/multi-line.txt`,
+    ]);
+    expect(exitCode).toBe(0);
+    const lines = stdout.trim().split("\n");
+    expect(lines.length).toBe(3); // two files + total
+    expect(lines[2]).toMatch(/total$/);
   });
 
-  test("handles empty file", async () => {
-    const { stdout, exit_code } = await run_cli([empty_file]);
-    expect(exit_code).toBe(0);
-    expect(stdout.trim()).toMatch(/^\s*0\s+0\s+0\s+/);
+  it("reads from stdin when no files given", async () => {
+    const { stdout, exitCode } = await run([], "hello world\n");
+    expect(exitCode).toBe(0);
+    expect(stdout.trim()).toMatch(/^\s*1\s+2\s+12/);
   });
 
-  test("errors on missing file", async () => {
-    const { stderr, exit_code } = await run_cli(["/nonexistent/file.txt"]);
-    expect(exit_code).toBe(1);
-    expect(stderr.length).toBeGreaterThan(0);
+  it("exits 1 for missing file", async () => {
+    const { stderr, exitCode } = await run([`${fixtures}/nonexistent.txt`]);
+    expect(exitCode).toBe(1);
+    expect(stderr).toMatch(/nonexistent\.txt/);
   });
 
-  test("shows only words with --words flag", async () => {
-    const { stdout, exit_code } = await run_cli(["--words", sample_file]);
-    expect(exit_code).toBe(0);
-    expect(stdout.trim()).toMatch(/^\s*5\s+/);
-  });
-
-  test("shows only lines with --lines flag", async () => {
-    const { stdout, exit_code } = await run_cli(["--lines", sample_file]);
-    expect(exit_code).toBe(0);
-    expect(stdout.trim()).toMatch(/^\s*2\s+/);
-  });
-
-  test("shows only chars with --chars flag", async () => {
-    const { stdout, exit_code } = await run_cli(["--chars", sample_file]);
-    expect(exit_code).toBe(0);
-    expect(stdout.trim()).toMatch(/^\s*24\s+/);
+  it("handles empty file", async () => {
+    const { stdout, exitCode } = await run([`${fixtures}/empty.txt`]);
+    expect(exitCode).toBe(0);
+    expect(stdout.trim()).toMatch(/^\s*0\s+0\s+0/);
   });
 });

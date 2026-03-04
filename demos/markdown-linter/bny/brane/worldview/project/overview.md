@@ -5,8 +5,9 @@ A command-line tool that lints markdown files for common issues.
 
 Static analysis for markdown documents, catching formatting problems, structural issues, and style inconsistencies before they reach readers.
 
-## Core Concept
+## Key Concepts
 
-- **Input**: Markdown files
-- **Output**: Lint warnings and errors identifying common issues
+- **Input**: Markdown files (`.md`)
+- **Output**: Lint diagnostics (errors, warnings)
 - **Interface**: CLI (command-line invocation)
+- **Domain**: Developer tooling / documentation quality

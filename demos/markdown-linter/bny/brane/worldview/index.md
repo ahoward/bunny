@@ -1,32 +1,27 @@
 # Knowledge Base Index
 
-## Project: Markdown Linter CLI
+## Project
+- [Project Overview](project/overview.md) — CLI tool for static analysis of markdown files
+- [Competitive Landscape](competitive/landscape.md) — markdownlint, remark-lint, mdformat, Vale; differentiation via speed, zero-config, auto-fix
 
-A Bun/TypeScript CLI for static analysis of markdown documents — catching formatting, structural, and style issues.
+## Design
+- [AST Parsing](design/ast-parsing.md) — remark-parse as stateless singleton, CommonMark baseline, mdast position tracking
+- [Rule Architecture](design/rule-architecture.md) — POD objects with discriminated union (`line` | `ast`), no classes or visitors
+- [Rule Catalog](design/rule-catalog.md) — structural, whitespace, link, code, list, content, and meta rule categories
+- [Diagnostic Format](design/diagnostic-format.md) — `file:line:col: severity [rule] message`, 1-indexed, future JSON/SARIF formatters
 
-### Project
+## Implementation
+- [Lint Engine](implementation/lint-engine-pattern.md) — parse → lint → sort → format pipeline, fault isolation per rule, exit codes 0/1/2
+- [Rule Pattern](implementation/rule-pattern.md) — POD `{ name, kind, check }` objects, line rules dominate (3 of 4 MVP)
+- [Testing Patterns](implementation/testing-patterns.md) — inline content strings, `check()` wrapper, CLI integration via `Bun.spawnSync()`
 
-- **[Overview](project/overview.md)** — Purpose, input/output model, core concept
-- **[CLI Interface Design](project/cli-interface-design.md)** — Invocation patterns, output formats (human/json/compact), exit codes
-- **[Parser Strategy](project/parser-strategy.md)** — Hybrid line-by-line tokenizer with stateful tracking; no external deps
-- **[Rule Taxonomy](project/rule-taxonomy.md)** — 8 v1 rules: 3 structural (error), 4 formatting + 1 style (warning)
-- **[Auto-Fix](project/auto-fix.md)** — Fixable vs unfixable classification, `--fix` strategy, idempotency
+## Philosophy & Constraints
+- [Unix Philosophy](philosophy/unix-philosophy.md) — composability, silent on success, Bun's fast startup advantage
+- [Scope Creep Risks](concerns/scope-creep.md) — MVP = structural + whitespace rules only, no network I/O or prose analysis
+- [Testing Strategy](concerns/testing-strategy.md) — rule units, parser fidelity, integration, snapshots, antagonistic review
 
-### Design
-
-- **[Error Messages](design/error-messages.md)** — Anatomy of good lint messages: location, severity, rule ID, suggestion, docs link
-- **[Plugin Architecture](design/plugin-architecture.md)** — Declarative rule files over full plugin API for the 80% case
-
-### Patterns
-
-- **[Hybrid Tokenizer](patterns/hybrid-tokenizer.md)** — Line-by-line regex + state machine emitting Block POD objects
-- **[Rule-as-POD](patterns/rule-as-pod.md)** — Rules are plain data with embedded check functions; no classes or registration
-- **[Pipeline Architecture](patterns/pipeline-architecture.md)** — Linear flow: CLI → Linter → Tokenizer → Rules → Formatter → Exit code
-
-### Landscape
-
-- **[Existing Tools](landscape/existing-tools.md)** — markdownlint, remark-lint, mdl; gaps in speed, Bun-native support, opinionated defaults
-
-### Concerns
-
-- **[Edge Cases](concerns/edge-cases.md)** — Spec ambiguity, code block awareness, front matter, HTML, unicode, large files
+## Conventions
+- **Data**: Plain Old Data only — no classes
+- **Naming**: `snake_case` functions/vars, `PascalCase` types
+- **Null**: `null` over `undefined`
+- **Testing**: Antagonistic — Claude designs, Gemini reviews, then implement

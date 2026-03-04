@@ -14,7 +14,7 @@ import { mkdirSync, existsSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "./lib/result.ts"
 import {
-  find_root, next_feature_number, generate_branch_name,
+  find_root, current_feature, next_feature_number, generate_branch_name,
   feature_paths, set_current_feature,
 } from "./lib/feature.ts"
 
@@ -47,6 +47,18 @@ export async function main(argv: string[]): Promise<number> {
   // -- main --
 
   const root = find_root()
+
+  // guard: if a current feature already exists with a spec, don't re-specify
+  const existing = current_feature()
+  if (existing && !number_override) {
+    const existing_paths = feature_paths(root, existing)
+    if (existsSync(existing_paths.spec)) {
+      process.stderr.write(`[specify] feature already active: ${existing}\n`)
+      process.stderr.write(`  spec: ${existing_paths.spec}\n`)
+      return 0
+    }
+  }
+
   const feature_num = number_override ?? next_feature_number(root)
   const suffix = generate_branch_name(description)
   const padded = String(feature_num).padStart(3, "0")

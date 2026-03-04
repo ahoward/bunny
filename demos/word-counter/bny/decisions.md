@@ -4,4 +4,4 @@ Append-only record of decisions made during development.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-03-04 | Implemented word counter CLI with count_words/count_lines/count_chars + CLI with --json/--words/--lines/--chars flags | Core feature per seed.md; POSIX wc semantics for words (whitespace split), lines (newline count), chars (code points not bytes); 31 tests green |
+| 2026-03-04 | Implemented 001-cli-tool-counts: count_text module + wc-tool CLI with wc-compatible output format (8-char padded columns), byte-based character counting, stdin support, multi-file totals, exit code 1 on missing files | Matches wc behavior for Unix composability; tests-first with 13 passing tests |

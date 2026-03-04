@@ -125,26 +125,12 @@ function extract_feature_number(name: string): number {
 export function next_feature_number(root: string): number {
   let highest = 0
 
-  // scan specs/ directories
+  // scan specs/ directories — source of truth for feature numbering
   const specs_dir = resolve(root, "specs")
   if (existsSync(specs_dir)) {
     for (const entry of readdirSync(specs_dir, { withFileTypes: true })) {
       if (entry.isDirectory()) {
         const n = extract_feature_number(entry.name)
-        if (n > highest) highest = n
-      }
-    }
-  }
-
-  // scan git branches (local + remote)
-  const proc = Bun.spawnSync(["git", "branch", "-a"], { stdout: "pipe", stderr: "pipe" })
-  if (proc.exitCode === 0) {
-    const output = new TextDecoder().decode(proc.stdout)
-    for (const line of output.split("\n")) {
-      // clean: "  remotes/origin/001-foo" → "001-foo"
-      const clean = line.replace(/^[* ]+/, "").replace(/^remotes\/[^/]+\//, "").trim()
-      if (FEATURE_PATTERN.test(clean)) {
-        const n = extract_feature_number(clean)
         if (n > highest) highest = n
       }
     }

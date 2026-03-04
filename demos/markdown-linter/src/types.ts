@@ -1,60 +1,38 @@
-// POD types for the markdown linter
+import type { Root, Content } from "mdast"
 
-export type Severity = "error" | "warning" | "info";
+export type Severity = "error" | "warning" | "info"
 
-export type LintMessage = {
-  file: string;
-  line: number;
-  column: number;
-  severity: Severity;
-  message: string;
-  rule_id: string;
-  suggestion: string | null;
-};
+export type Diagnostic = {
+  file: string
+  line: number
+  column: number
+  severity: Severity
+  rule: string
+  message: string
+}
 
-export type LintResult = {
-  file: string;
-  messages: LintMessage[];
-  error_count: number;
-  warning_count: number;
-  info_count: number;
-};
+export type LineRuleContext = {
+  file: string
+  lines: string[]
+  content: string
+}
 
-export type BlockType =
-  | "heading"
-  | "paragraph"
-  | "fenced_code"
-  | "indented_code"
-  | "blank"
-  | "list_item"
-  | "blockquote"
-  | "html_block"
-  | "front_matter"
-  | "thematic_break";
+export type AstRuleContext = {
+  file: string
+  ast: Root
+  content: string
+}
 
-export type Block = {
-  type: BlockType;
-  line_start: number;
-  line_end: number;
-  raw: string;
-  meta: Record<string, string | number | null>;
-};
+export type LineRule = {
+  name: string
+  kind: "line"
+  check: (ctx: LineRuleContext) => Diagnostic[]
+}
 
-export type Rule = {
-  id: string;
-  description: string;
-  severity: Severity;
-  check: (blocks: Block[], lines: string[], file: string) => LintMessage[];
-};
+export type AstRule = {
+  name: string
+  kind: "ast"
+  check: (ctx: AstRuleContext) => Diagnostic[]
+}
 
-export type LintConfig = {
-  rules: Record<string, { enabled: boolean; severity: Severity }>;
-};
-
-export type OutputFormat = "human" | "json" | "compact";
-
-export type CliOptions = {
-  files: string[];
-  format: OutputFormat;
-  config_path: string | null;
-};
+export type Rule = LineRule | AstRule
