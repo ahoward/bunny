@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test"
-import { scan_secrets, check_secrets } from "../bny/lib/secrets.ts"
+import { scan_secrets, check_secrets } from "../src/lib/secrets.ts"
 
 describe("scan_secrets", () => {
   const saved_env: Record<string, string | undefined> = {}

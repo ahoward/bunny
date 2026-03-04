@@ -10,4 +10,5 @@ Append-only record of decisions made during development.
 | 2026-03-04 | AGENTS.md moved from `bny/` to repo root as real file | CLAUDE.md/GEMINI.md symlink to it; bny/AGENTS.md was confusing (described bny internals, not usage) |
 | 2026-03-04 | 32 slash commands consolidated into single `/bny` | bny already has its own dispatcher; one command rules them all |
 | 2026-03-04 | BUNNY_LOG inverted to opt-in (`BUNNY_LOG=1`) | every caller was suppressing it with `BUNNY_LOG=0`; default should match common case |
-| 2026-03-04 | Tracked state lives in `bny/`, not `.bny/` | `.bny/` is runtime-only (brane, children, proposals); source repo state is tracked alongside CLI source |
+| 2026-03-04 | Tracked state lives in `bny/`, not `.bny/` | `.bny/` is dead; `bny/` is the single state directory for any project |
+| 2026-03-04 | CLI source moved from `bny/` to `src/` | `bny/` is project state only; `src/` + `bin/` hold all CLI source code |

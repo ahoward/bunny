@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+#
+# build + publish a github release with cross-compiled binaries
+#
+# usage:
+#   dev/release <version>              # e.g. dev/release 0.2.0
+#   dev/release <version> --draft      # create as draft (don't publish yet)
+#   dev/release <version> --dry-run    # build binaries, skip gh release
+#
+
+set -e
+
+# -- args --
+
+VERSION=""
+DRAFT=false
+DRY_RUN=false
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --draft)   DRAFT=true; shift ;;
+    --dry-run) DRY_RUN=true; shift ;;
+    --help|-h)
+      echo "usage: dev/release <version> [--draft] [--dry-run]"
+      echo ""
+      echo "  <version>   semver without v prefix (e.g. 0.2.0)"
+      echo "  --draft     create release as draft"
+      echo "  --dry-run   build binaries only, don't create release"
+      exit 0
+      ;;
+    -*)
+      echo "error: unknown flag: $1"
+      exit 1
+      ;;
+    *)
+      if [ -z "$VERSION" ]; then
+        VERSION="$1"; shift
+      else
+        echo "error: unexpected arg: $1"; exit 1
+      fi
+      ;;
+  esac
+done
+
+if [ -z "$VERSION" ]; then
+  echo "error: version required"
+  echo "usage: dev/release <version> [--draft] [--dry-run]"
+  exit 1
+fi
+
+TAG="v${VERSION}"
+
+# -- preflight --
+
+echo "[release] $TAG"
+echo ""
+
+# check tools
+for cmd in bun gh git; do
+  if ! command -v "$cmd" &> /dev/null; then
+    echo "error: $cmd not found"
+    exit 1
+  fi
+done
+
+# check clean working tree
+if [ -n "$(git status --porcelain)" ]; then
+  echo "error: working tree not clean — commit or stash first"
+  exit 1
+fi
+
+# check tag doesn't exist
+if git rev-parse "$TAG" &> /dev/null 2>&1; then
+  echo "error: tag $TAG already exists"
+  exit 1
+fi
+
+# run tests
+echo "  tests..."
+./dev/test > /dev/null 2>&1 || {
+  echo "error: tests failed — fix before releasing"
+  exit 1
+}
+echo "  tests: ok"
+
+# -- build binaries --
+
+TARGETS=(
+  "bun-darwin-arm64:bny-darwin-arm64"
+  "bun-darwin-x64:bny-darwin-x64"
+  "bun-linux-arm64:bny-linux-arm64"
+  "bun-linux-x64:bny-linux-x64"
+)
+
+BUILD_DIR="dist/release-${TAG}"
+rm -rf "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
+
+echo ""
+echo "  building binaries..."
+
+for entry in "${TARGETS[@]}"; do
+  target="${entry%%:*}"
+  name="${entry##*:}"
+  outfile="${BUILD_DIR}/${name}"
+  echo "    $name ($target)"
+  bun build --compile bin/bny.ts --target="$target" --outfile "$outfile" 2>&1 | tail -1
+done
+
+echo ""
+echo "  binaries:"
+ls -lh "$BUILD_DIR/" | tail -n +2 | awk '{printf "    %-24s %s\n", $NF, $5}'
+
+if [ "$DRY_RUN" = true ]; then
+  echo ""
+  echo "  dry run — skipping tag + release"
+  echo "  binaries in: $BUILD_DIR/"
+  exit 0
+fi
+
+# -- generate release notes --
+
+PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+echo ""
+
+if [ -n "$PREV_TAG" ]; then
+  echo "  generating notes since $PREV_TAG..."
+  COMMITS=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" --no-merges)
+else
+  echo "  generating notes (first release)..."
+  COMMITS=$(git log --pretty=format:"- %s" --no-merges -20)
+fi
+
+NOTES="## bny ${TAG}
+
+### changes
+
+${COMMITS}
+
+### binaries
+
+| File | Platform |
+|------|----------|
+| \`bny-darwin-arm64\` | macOS Apple Silicon |
+| \`bny-darwin-x64\` | macOS Intel |
+| \`bny-linux-arm64\` | Linux ARM64 |
+| \`bny-linux-x64\` | Linux x86_64 |
+
+### install
+
+\`\`\`bash
+curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
+\`\`\`
+"
+
+echo ""
+echo "  release notes:"
+echo "  ─────────────────────────"
+echo "$NOTES" | sed 's/^/  /'
+echo "  ─────────────────────────"
+
+# -- tag + release --
+
+echo ""
+echo "  tagging $TAG..."
+git tag -a "$TAG" -m "release ${TAG}"
+git push origin "$TAG"
+
+DRAFT_FLAG=""
+if [ "$DRAFT" = true ]; then
+  DRAFT_FLAG="--draft"
+fi
+
+echo "  creating release..."
+gh release create "$TAG" \
+  --title "${TAG}" \
+  --notes "$NOTES" \
+  $DRAFT_FLAG \
+  "${BUILD_DIR}"/bny-*
+
+echo ""
+echo "  release: https://github.com/ahoward/bunny/releases/tag/${TAG}"
+echo ""
+echo "done."

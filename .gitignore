@@ -7,8 +7,10 @@ bin/
 *.tsbuildinfo
 bny-snapshot
 
-# bny runtime state (ephemeral, not tracked)
-.bny/
+# bny project state — track decisions + guardrails, ignore runtime
+bny/*
+!bny/decisions.md
+!bny/guardrails.md
 
 # env
 .env

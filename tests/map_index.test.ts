@@ -9,8 +9,8 @@ import {
   query_index, query_by_name, query_by_kind,
   focus_query, format_focus_markdown,
   index_stats, index_path,
-} from "../bny/lib/map_index.ts"
-import type { FileMap, CodebaseMap } from "../bny/lib/map.ts"
+} from "../src/lib/map_index.ts"
+import type { FileMap, CodebaseMap } from "../src/lib/map.ts"
 
 // -- fixtures --
 

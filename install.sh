@@ -125,7 +125,7 @@ if [ "$INSTALLED" = false ]; then
   echo "  bun:      $(bun --version)"
 
   # get source if needed
-  if [ -f "bin/bny.ts" ] && [ -d "bny/" ]; then
+  if [ -f "bin/bny.ts" ] && [ -d "src/" ]; then
     echo "  source:   local repo"
   else
     echo "  source:   cloning..."
@@ -156,7 +156,7 @@ fi
 
 # -- init --
 
-if [ "$SKIP_INIT" = false ] && [ ! -d ".bny" ]; then
+if [ "$SKIP_INIT" = false ] && [ ! -d "bny" ]; then
   echo ""
   echo "  running bny init..."
   "$DEST" init

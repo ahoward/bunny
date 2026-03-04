@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test"
-import { parse_json, apply_operations, preview_operations, worldview_dir } from "../bny/lib/brane.ts"
+import { parse_json, apply_operations, preview_operations, worldview_dir } from "../src/lib/brane.ts"
 import { mkdirSync, rmSync, existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 
@@ -87,7 +87,7 @@ describe("parse_json", () => {
 })
 
 describe("path traversal guard", () => {
-  const tmp = resolve(import.meta.dir, "../.bny/test-worldview-tmp")
+  const tmp = resolve(import.meta.dir, "../bny/test-worldview-tmp")
 
   function setup() {
     mkdirSync(resolve(tmp, "worldview"), { recursive: true })
@@ -100,12 +100,12 @@ describe("path traversal guard", () => {
   test("valid path is written", () => {
     setup()
     try {
-      // apply_operations uses worldview_dir(root) which is .bny/brane/worldview
+      // apply_operations uses worldview_dir(root) which is bny/brane/worldview
       // We need a root that makes worldview_dir point to our tmp dir
       // Instead, test via preview_operations which doesn't write
       const root_dir = resolve(tmp, "..")
       // preview_operations resolves paths relative to worldview_dir(root)
-      // worldview_dir returns resolve(root, ".bny/brane/worldview")
+      // worldview_dir returns resolve(root, "bny/brane/worldview")
       // We can't easily test this without the right directory structure
       // So let's just test that apply_operations works with a proper root
       const test_root = resolve(import.meta.dir, "..")

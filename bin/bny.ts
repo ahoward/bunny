@@ -12,44 +12,44 @@
 
 import { existsSync } from "node:fs"
 import { resolve, dirname } from "node:path"
-import * as assassin from "../bny/lib/assassin.ts"
-import { ralph } from "../bny/lib/ralph.ts"
+import * as assassin from "../src/lib/assassin.ts"
+import { ralph } from "../src/lib/ralph.ts"
 
 // -- static imports --
 
-import { main as specify_main } from "../bny/specify.ts"
-import { main as plan_main } from "../bny/plan.ts"
-import { main as tasks_main } from "../bny/tasks.ts"
-import { main as implement_main } from "../bny/implement.ts"
-import { main as review_main } from "../bny/review.ts"
-import { main as ruminate_main } from "../bny/ruminate.ts"
-import { main as status_main } from "../bny/status.ts"
-import { main as ps_main } from "../bny/ps.ts"
-import { main as map_main } from "../bny/map.ts"
-import { main as next_main } from "../bny/next.ts"
-import { main as spin_main } from "../bny/spin.ts"
-import { main as todo_main } from "../bny/todo.ts"
-import { main as close_issue_main } from "../bny/close-issue.ts"
-import { main as ipm_main } from "../bny/ipm.ts"
-import { main as uninit_main } from "../bny/uninit.ts"
-import { main as brane_eat_main } from "../bny/brane/eat.ts"
-import { main as brane_ask_main } from "../bny/brane/ask.ts"
-import { main as brane_rebuild_main } from "../bny/brane/rebuild.ts"
-import { main as brane_lens_main } from "../bny/brane/lens.ts"
-import { main as digest_main } from "../bny/digest.ts"
-import { main as brane_storm_main } from "../bny/brane/storm.ts"
-import { main as brane_enhance_main } from "../bny/brane/enhance.ts"
-import { main as brane_tldr_main } from "../bny/brane/tldr.ts"
-import { main as brane_loop_main } from "../bny/brane/loop.ts"
-import { main as dev_pre_flight_main } from "../bny/dev/pre-flight.ts"
-import { main as dev_post_flight_main } from "../bny/dev/post-flight.ts"
-import { main as dev_test_main } from "../bny/dev/test.ts"
-import { main as dev_health_main } from "../bny/dev/health.ts"
-import { main as dev_setup_main } from "../bny/dev/setup.ts"
-import { main as proposal_main } from "../bny/proposal.ts"
-import { main as build_main } from "../bny/build.ts"
-import { main as spike_main } from "../bny/spike.ts"
-import { main as init_main } from "../bny/init.ts"
+import { main as specify_main } from "../src/specify.ts"
+import { main as plan_main } from "../src/plan.ts"
+import { main as tasks_main } from "../src/tasks.ts"
+import { main as implement_main } from "../src/implement.ts"
+import { main as review_main } from "../src/review.ts"
+import { main as ruminate_main } from "../src/ruminate.ts"
+import { main as status_main } from "../src/status.ts"
+import { main as ps_main } from "../src/ps.ts"
+import { main as map_main } from "../src/map.ts"
+import { main as next_main } from "../src/next.ts"
+import { main as spin_main } from "../src/spin.ts"
+import { main as todo_main } from "../src/todo.ts"
+import { main as close_issue_main } from "../src/close-issue.ts"
+import { main as ipm_main } from "../src/ipm.ts"
+import { main as uninit_main } from "../src/uninit.ts"
+import { main as brane_eat_main } from "../src/brane/eat.ts"
+import { main as brane_ask_main } from "../src/brane/ask.ts"
+import { main as brane_rebuild_main } from "../src/brane/rebuild.ts"
+import { main as brane_lens_main } from "../src/brane/lens.ts"
+import { main as digest_main } from "../src/digest.ts"
+import { main as brane_storm_main } from "../src/brane/storm.ts"
+import { main as brane_enhance_main } from "../src/brane/enhance.ts"
+import { main as brane_tldr_main } from "../src/brane/tldr.ts"
+import { main as brane_loop_main } from "../src/brane/loop.ts"
+import { main as dev_pre_flight_main } from "../src/dev/pre-flight.ts"
+import { main as dev_post_flight_main } from "../src/dev/post-flight.ts"
+import { main as dev_test_main } from "../src/dev/test.ts"
+import { main as dev_health_main } from "../src/dev/health.ts"
+import { main as dev_setup_main } from "../src/dev/setup.ts"
+import { main as proposal_main } from "../src/proposal.ts"
+import { main as build_main } from "../src/build.ts"
+import { main as spike_main } from "../src/spike.ts"
+import { main as init_main } from "../src/init.ts"
 
 // -- command registry --
 
@@ -231,18 +231,17 @@ function show_help_json(topic: string | null): void {
 function find_root(quiet = false): string {
   let dir = process.cwd()
   while (dir !== "/") {
-    if (existsSync(resolve(dir, ".bny"))) return dir
     if (existsSync(resolve(dir, "bny"))) return dir
     dir = dirname(dir)
   }
   if (!quiet) {
-    process.stderr.write("bny: cannot find project root (no .bny/ or bny/ directory found)\n")
+    process.stderr.write("bny: cannot find project root (no bny/ directory found)\n")
     process.exitCode = 1
   }
   return process.cwd()
 }
 
-// defer root finding — init may run before .bny/ exists
+// defer root finding — init may run before bny/ exists
 let _root: string | null = null
 function get_root(quiet = false): string {
   if (!_root) _root = find_root(quiet)
@@ -447,7 +446,7 @@ async function main(): Promise<void> {
     }
   }
 
-  // init/uninit run before .bny/ exists or after it's removed — skip root check + assassin
+  // init/uninit run before bny/ exists or after it's removed — skip root check + assassin
   if (args.command === "init") {
     process.exitCode = await init_main(args.rest)
     return
@@ -463,9 +462,9 @@ async function main(): Promise<void> {
     process.env.BNY_MODEL = args.model
   }
 
-  // install assassin — pidfile at .bny/bny.pid, signal handlers
+  // install assassin — pidfile at bny/bny.pid, signal handlers
   const root = get_root()
-  assassin.install(resolve(root, ".bny"))
+  assassin.install(resolve(root, "bny"))
 
   const cmd_key = resolve_command(args.command, args.subcommand)
 

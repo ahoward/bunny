@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test"
-import { slugify, dedup_slug } from "../bny/proposal.ts"
+import { slugify, dedup_slug } from "../src/proposal.ts"
 
 // -- test cli via subprocess --
 

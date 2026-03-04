@@ -72,40 +72,23 @@ Rules:
 ## Directory Structure
 
 ```
-src/              # source code
-  handlers/       # app.call handlers (one file per endpoint)
-  lib/            # shared types, result helpers, logging
-tests/            # tests
-  fixtures/       # deterministic test inputs (POD)
-bin/              # executables (bny entry point)
-bny/roadmap.md    # what to work on next
-bny/guardrails.md # agent constraints
-bny/decisions.md  # append-only decision log
-bny/              # dark factory CLI — tool code (symlinkable)
-  lib/            # shared modules (assassin, ralph, feature, prompt, brane, map, spinner)
+src/              # CLI source code (the dark factory)
+  lib/            # shared modules (assassin, ralph, feature, prompt, brane, map, spinner, log, result, types)
   brane/          # knowledge commands (eat, ask, storm, enhance, rebuild, lens, tldr, loop)
   dev/            # wrappers for ./dev/* scripts
   templates/      # spec, plan, tasks templates
   build.ts        # the dark factory (full pipeline or per-step)
-  spike.ts        # exploratory build (guardrails off)
-  digest.ts       # top-level digest command (URI scheme support)
-  proposal.ts     # brane → roadmap bridge
-  specify.ts      # create feature spec
-  plan.ts         # create implementation plan
-  tasks.ts        # generate task list
-  implement.ts    # claude autonomous implementation
-  review.ts       # gemini antagonist review
-  ruminate.ts     # reflect on build, feed brane
-  status.ts       # show feature state
-  next.ts         # full pipeline for next roadmap item
-  spin.ts         # autonomous factory run (tmux)
-  map.ts          # structural codebase map (tree-sitter)
-  todo.ts         # project chore tracking
-  close-issue.ts  # close github issue
-  ipm.ts          # iteration planning meeting
-  ps.ts           # show running bny processes
   init.ts         # scaffold a project (guest mode)
   uninit.ts       # cleanly remove all bny traces
+  ...             # specify, plan, tasks, implement, review, ruminate, etc.
+  handlers/       # app.call handlers (one file per endpoint)
+tests/            # tests
+  fixtures/       # deterministic test inputs (POD)
+bin/              # executables (bny entry point)
+bny/              # project state (tracked)
+  roadmap.md      # what to work on next
+  guardrails.md   # agent constraints
+  decisions.md    # append-only decision log
 dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 .githooks/        # git hooks (pre-commit, pre-push)
 ```
