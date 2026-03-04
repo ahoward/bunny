@@ -6,8 +6,8 @@ Bunny is a Bun + TypeScript CLI that manages a persistent knowledge graph for so
 
 ## Key Files
 
-- `./.bny/roadmap.md` - **START HERE** — Driving task list for all development
-- `./.bny/guardrails.json` - Machine-readable agent constraints
+- `./bny/roadmap.md` - **START HERE** — Driving task list for all development
+- `./bny/guardrails.md` - Machine-readable agent constraints
 
 ## Protocol
 
@@ -25,7 +25,7 @@ All scripts return structured output (Result envelope or exit codes). Parse them
 
 ### Guardrails
 
-Read `.bny/guardrails.json` before starting work. It defines:
+Read `bny/guardrails.md` before starting work. It defines:
 - **protected_files** — never modify without human approval
 - **blast_radius** — max files/lines per PR, dependency rules
 - **forbidden_actions** — never do these autonomously
@@ -33,7 +33,7 @@ Read `.bny/guardrails.json` before starting work. It defines:
 
 ### After completing work
 
-Append a one-liner to `.bny/decisions.md` recording what you did and why.
+Append a one-liner to `bny/decisions.md` recording what you did and why.
 
 ## Development Process: Antagonistic Testing
 
@@ -78,10 +78,9 @@ src/              # source code
 tests/            # tests
   fixtures/       # deterministic test inputs (POD)
 bin/              # executables (bny entry point)
-.bny/             # project state (git-tracked, per-project)
-  roadmap.md      # what to work on next
-  guardrails.json # agent constraints
-  decisions.md    # append-only decision log
+bny/roadmap.md    # what to work on next
+bny/guardrails.md # agent constraints
+bny/decisions.md  # append-only decision log
 bny/              # dark factory CLI — tool code (symlinkable)
   lib/            # shared modules (assassin, ralph, feature, prompt, brane, map, spinner)
   brane/          # knowledge commands (eat, ask, storm, enhance, rebuild, lens, tldr, loop)
@@ -114,15 +113,15 @@ dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 ## Workflow: Picking Up Work
 
 1. Run `./dev/pre_flight` — confirm environment is ready
-2. Read `.bny/roadmap.md` — find "Next" item
-3. Read `.bny/guardrails.json` — know the constraints
+2. Read `bny/roadmap.md` — find "Next" item
+3. Read `bny/guardrails.md` — know the constraints
 4. Run `bny build "description"` — full pipeline (specify → plan → tasks → review → implement → ruminate)
 5. Or run steps individually: `bny build specify "desc"`, `bny build plan`, etc.
 6. For exploratory work: `bny spike "description"` — same steps, no review
 7. Run `./dev/test` after every change
 8. Run `./dev/post_flight` before committing
 9. If stuck (tests won't pass) → Human checkpoint
-10. On completion → Update .bny/roadmap.md, append to `.bny/decisions.md`
+10. On completion → Update bny/roadmap.md, append to `bny/decisions.md`
 
 ## Don't
 
@@ -132,5 +131,5 @@ dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 - Skip Gemini review
 - Change tests after review without human approval
 - Commit without running `./dev/post_flight`
-- Ignore `.bny/guardrails.json` constraints
+- Ignore `bny/guardrails.md` constraints
 - Modify protected files without human approval

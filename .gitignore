@@ -8,14 +8,8 @@ bin/
 *.tsbuildinfo
 bny-snapshot
 
-# bny project state (tracked) + runtime (ignored)
-.bny/*
-!.bny/roadmap.md
-!.bny/decisions.md
-!.bny/guardrails.json
-!.bny/constitution.md
-!.bny/todos.md
-!.bny/brane/
+# bny runtime state (ephemeral, not tracked)
+.bny/
 
 # env
 .env
