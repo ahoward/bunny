@@ -6,11 +6,17 @@
   <em>"why are you wearing that stupid man suit?"</em>
 </p>
 
-## a persistent knowledge graph for software projects
+## a dark factory
 
-most ai coding tools treat each task as isolated. knowledge evaporates between sessions.
+"dark factory" as in lights-out manufacturing — no humans on the floor. agents run autonomously, humans review output.
 
-bny manages a **persistent knowledge graph** — a self-organizing collection of markdown files that accumulates understanding across every interaction. the graph has provenance-tracked sources, filterable lenses, and full-text search. code is a side effect of the graph getting smarter.
+bny combines three things:
+
+1. **knowledge graph (brane)** — a persistent, self-organizing collection of markdown files that accumulates understanding across every interaction. provenance-tracked sources, filterable lenses, full-text search. knowledge compounds — even throwaway spikes teach the graph something.
+
+2. **code graph (map)** — structural awareness of your codebase via tree-sitter. functions, classes, imports, exports — parsed, not guessed. agents see the shape of the code, not just the text.
+
+3. **dark factory (build)** — a multi-agent pipeline that turns knowledge into working code. claude designs tests and implements. gemini reviews for blind spots and security holes. the pipeline runs end-to-end: specify → plan → tasks → review → implement → ruminate. output feeds back into the knowledge graph.
 
 ```
 digest → think → propose → build → ruminate
@@ -18,9 +24,7 @@ digest → think → propose → build → ruminate
   └──────────────────────────────────────┘
 ```
 
-**digest** information from files, URLs, and directories. the graph grows. **think** autonomously — search the web, fetch sources, refine understanding. **propose** concrete work from accumulated knowledge. **build** it with adversarial review and test-first implementation. **ruminate** on what was built — lessons feed back into the graph.
-
-every cycle compounds. even throwaway spikes teach the graph something.
+code is a side effect of the graph getting smarter.
 
 ## quick start
 
@@ -70,16 +74,27 @@ bny brane tldr                                      # see what the graph knows n
 bny brane ask "what are the security risks?"        # query the graph
 ```
 
-### four actors
+## demos
 
-1. **claude** designs tests and implements code
-2. **gemini** reviews for blind spots, edge cases, security holes
-3. **brane** the knowledge graph — accumulates understanding across iterations
-4. **human** seeds ideas, reviews output, course-corrects
+each demo was built from a single sentence — zero human intervention:
+
+```bash
+./demos/run-experiment fizzbuzz-api "a REST API that serves fizzbuzz over HTTP"
+./demos/run-experiment word-counter "a CLI tool that counts words, lines, and characters in files"
+./demos/run-experiment markdown-linter "a CLI that lints markdown files for common issues"
+```
+
+| demo | seed | source files | errors |
+|------|------|-------------|--------|
+| fizzbuzz-api | "a REST API that serves fizzbuzz over HTTP" | 3 | 0 |
+| word-counter | "a CLI tool that counts words, lines, and characters in files" | 3 | 0 |
+| markdown-linter | "a CLI that lints markdown files for common issues" | 6 | 0 |
+
+see [demos/](demos/) for full output — specs, brane state, source, tests, and pipeline logs.
 
 ## commands
 
-### knowledge graph
+### knowledge graph (brane)
 
 the graph is a collection of markdown files that self-organize as you feed it information. sources are stashed with provenance. lenses filter what gets absorbed.
 
@@ -109,9 +124,17 @@ bny brane lens on|off <name>                        # toggle a lens
 bny brane rebuild                                   # rebuild worldview from scratch
 ```
 
-### build (the dark factory)
+### code graph (map)
 
-the build pipeline — "dark factory" as in lights-out manufacturing: agents run autonomously, humans review output. runs all steps by default, or one step at a time.
+structural codebase awareness via tree-sitter WASM. parses your code into functions, classes, imports, exports — agents use this to understand the shape of the codebase.
+
+```bash
+bny map                                             # generate structural codebase map
+```
+
+### dark factory (build)
+
+the build pipeline runs all steps by default, or one step at a time.
 
 ```bash
 bny build                                           # full pipeline
@@ -149,7 +172,6 @@ bny proposal accept auth-system                     # accept → roadmap item
 ```bash
 bny next                                            # pick roadmap item, run full pipeline
 bny spin                                            # autonomous — run detached in tmux
-bny map                                             # structural codebase map (tree-sitter)
 bny --effort full build                             # 10 iters, $5 budget, 10min timeout
 ```
 
@@ -229,3 +251,4 @@ tests/            tests + fixtures
 ## more
 
 - [AGENTS.md](AGENTS.md) — the protocol ai agents must follow
+- [demos/](demos/) — projects built from a single sentence
