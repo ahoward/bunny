@@ -1,0 +1,435 @@
+experiment: markdown-linter
+description: a CLI that lints markdown files for common issues
+started: 2026-03-04T20:12:50Z
+
+=== STEP: git-init ===
+--- cmd: git init ---
+Initialized empty Git repository in /Users/ahoward/gh/ahoward/bunny/demos/markdown-linter/.git/
+--- exit: 0 ---
+
+=== STEP: bny-init ===
+--- cmd: bny init ---
+[bny init] 
+
+  create   bny/constitution.md
+  create   bny/guardrails.json
+  create   bny/roadmap.md
+  create   bny/decisions.md
+  create   bny/todos.md
+  create   bny/brane/worldview.md
+  create   bny/brane/index.md
+  detected generic project
+  create   dev/setup
+  create   dev/test
+  create   dev/health
+  create   dev/pre_flight
+  create   dev/post_flight
+  create   .githooks/pre-commit
+  create   .githooks/pre-push
+  create   .gitignore
+  create   CLAUDE.md
+  create   GEMINI.md
+  create   AGENTS.md
+  config   git core.hooksPath → .githooks
+
+  18 created
+
+  next: edit bny/roadmap.md, then run 'bny ipm' to plan
+--- exit: 0 ---
+
+=== STEP: digest-seed ===
+--- cmd: bny digest seed.md ---
+stashed: 2026-03-04T20-12-51-010Z-seed-md.txt (49 bytes)
+eating: seed.md...
+
+[intake]
+  + project/overview.md  (13 lines)
+
+reasoning: Absorbed the core project definition — a CLI that lints markdown files. This is the foundational concept for the knowledge graph. Filtered out nothing since this is the first ingestion and the seed establishes what the project is.
+
+1 operation(s) (1 new)
+applied 1 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "source": "seed.md",
+    "operations": [
+      {
+        "action": "create",
+        "path": "project/overview.md"
+      }
+    ],
+    "reasoning": "Absorbed the core project definition — a CLI that lints markdown files. This is the foundational concept for the knowledge graph. Filtered out nothing since this is the first ingestion and the seed establishes what the project is."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/eat",
+    "timestamp": "2026-03-04T20:13:04.459Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: brane-storm ===
+--- cmd: bny brane storm a CLI that lints markdown files for common issues ---
+storming: inline...
+
+[intake]
+  + project/rule-taxonomy.md  (34 lines)
+  + project/cli-interface-design.md  (36 lines)
+  + project/parser-strategy.md  (26 lines)
+  + project/auto-fix.md  (26 lines)
+  + landscape/existing-tools.md  (26 lines)
+  + design/error-messages.md  (26 lines)
+  + design/plugin-architecture.md  (35 lines)
+  + concerns/edge-cases.md  (37 lines)
+
+reasoning: Expanded from the bare project overview into the critical design decisions any markdown linter must confront: what rules to enforce and how to categorize them, how to parse markdown (the foundational technical choice), CLI interface design (the entire UX surface), auto-fix capability (the feature that differentiates useful from annoying), competitive landscape (why build another one?), error message quality (the teaching interface), extensibility model, and the gnarly edge cases that make markdown linting harder than it looks. Each file opens a design conversation the overview left implicit.
+
+8 operation(s) (8 new)
+applied 8 operation(s)
+regenerating index...
+
+[suggestions]
+  LENS     ci-pipeline
+           Most linter value is realized in CI, not local dev — a CI-focused lens would explore GitHub Actions integration, PR annotations, baseline/diff-only modes, and performance budgets
+  LENS     developer-experience
+           The worldview focuses on what the tool does but not how it feels — editor integration, watch mode, interactive fix selection, and onboarding UX deserve dedicated attention
+  QUESTION Should the linter target CommonMark, GFM, or be dialect-configurable?
+           This single decision cascades through parser choice, rule definitions, and user expectations — GFM tables and task lists are ubiquitous but not in CommonMark
+  QUESTION What's the performance target for linting 1,000 files?
+           Bun's fast startup is a potential differentiator, but only if the architecture supports parallel file processing — this needs an explicit goal
+  SOURCE   https://commonmark.org/
+           The CommonMark spec is the baseline for any markdown parser — many 'bugs' in linters come from not understanding spec edge cases
+  SOURCE   https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+           markdownlint's rule catalog is the de facto standard — studying it reveals which rules users actually care about and which cause configuration fatigue
+  QUESTION Is this a greenfield tool or a wrapper/fork of an existing linter?
+           The overview says 'a CLI that lints markdown' but doesn't say whether to build a parser from scratch or compose existing libraries — this changes the entire implementation strategy
+
+7 suggestion(s)
+{
+  "status": "success",
+  "result": {
+    "seed": "inline",
+    "rounds": 1,
+    "operations": 8,
+    "suggestions": [
+      {
+        "kind": "lens",
+        "value": "ci-pipeline",
+        "reason": "Most linter value is realized in CI, not local dev — a CI-focused lens would explore GitHub Actions integration, PR annotations, baseline/diff-only modes, and performance budgets"
+      },
+      {
+        "kind": "lens",
+        "value": "developer-experience",
+        "reason": "The worldview focuses on what the tool does but not how it feels — editor integration, watch mode, interactive fix selection, and onboarding UX deserve dedicated attention"
+      },
+      {
+        "kind": "question",
+        "value": "Should the linter target CommonMark, GFM, or be dialect-configurable?",
+        "reason": "This single decision cascades through parser choice, rule definitions, and user expectations — GFM tables and task lists are ubiquitous but not in CommonMark"
+      },
+      {
+        "kind": "question",
+        "value": "What's the performance target for linting 1,000 files?",
+        "reason": "Bun's fast startup is a potential differentiator, but only if the architecture supports parallel file processing — this needs an explicit goal"
+      },
+      {
+        "kind": "source",
+        "value": "https://commonmark.org/",
+        "reason": "The CommonMark spec is the baseline for any markdown parser — many 'bugs' in linters come from not understanding spec edge cases"
+      },
+      {
+        "kind": "source",
+        "value": "https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md",
+        "reason": "markdownlint's rule catalog is the de facto standard — studying it reveals which rules users actually care about and which cause configuration fatigue"
+      },
+      {
+        "kind": "question",
+        "value": "Is this a greenfield tool or a wrapper/fork of an existing linter?",
+        "reason": "The overview says 'a CLI that lints markdown' but doesn't say whether to build a parser from scratch or compose existing libraries — this changes the entire implementation strategy"
+      }
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/storm",
+    "timestamp": "2026-03-04T20:14:25.814Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: brane-tldr ===
+--- cmd: bny brane tldr ---
+
+🐰 brane  9 files, 4 dirs
+
+concerns/
+  edge-cases.md            Markdown's informal spec means linters must handle ambiguity, dialect differences, and adversarial input.
+
+design/
+  plugin-architecture.md   Should the linter support custom rules, and if so, how?
+  error-messages.md        A linter's error messages are its primary teaching tool — bad messages create annoyance, good messages create understanding.
+
+landscape/
+  existing-tools.md        The markdown linting space is mature — a new tool needs a clear reason to exist.
+
+project/
+  overview.md              A command-line tool that lints markdown files for common issues.
+  auto-fix.md              Detecting problems is table stakes — fixing them automatically is what makes a linter indispensable.
+  parser-strategy.md       The choice of markdown parser fundamentally constrains what rules can detect and how accurate they are.
+  cli-interface-design.md  The command-line interface is the entire UX — every design choice here determines whether people actually use the tool.
+  rule-taxonomy.md         A markdown linter's value lives or dies by how its rules are organized, categorized, and prioritized.
+
+lenses: all (on)
+sources: 1 stashed (last: 2026-03-04)
+--- exit: 0 ---
+
+=== STEP: brane-ask ===
+--- cmd: bny brane ask what are the key design decisions for this project? ---
+asking brane...
+# Key Design Decisions
+
+**1. Parser Strategy: Hybrid approach**
+Use a lightweight tokenizer for block-level structure (headings, code blocks, lists), then regex for formatting checks within each block. This avoids false positives from pure regex (e.g., flagging content inside fenced blocks) while staying fast and dependency-light for Bun.
+
+**2. Extensibility: Declarative rule files, not plugins**
+Skip a full plugin API. Support custom rules via JSON pattern definitions — covers 80% of use cases without plugin runtime complexity, version compatibility headaches, or quality variance. Power users contribute to core.
+
+**3. Rule Organization: Four categories, three severities**
+- Categories: structural, formatting, style, semantic
+- Severity: error/warning/info (not binary) — gives breathing room for stylistic preferences vs real problems
+
+**4. Auto-fix: Safe fixes only, never mixed with reporting**
+`--fix` applies only mechanical transforms (trailing whitespace, list markers, blank lines). Semantic fixes (alt text, broken links, heading restructuring) require human judgment. Fix first, then re-lint. Fixes must be idempotent.
+
+**5. CLI-first, CI-native**
+Multiple output formats (human, JSON, SARIF, compact). Meaningful exit codes (0/1/2/3). Pipe support via `--stdin`. This fills a gap — existing tools are editor-first with CI as afterthought.
+
+**6. Error messages as teaching tools**
+Every message includes: location, severity, description, rule ID, suggestion, and documentation link. No vague "invalid markdown" messages.
+
+**7. Configuration: Convention over configuration**
+Opinionated defaults out of the box (another gap in existing tools). Override via `.mlintrc.json`, `--config` flag, inline disable comments, or per-directory nested configs.
+
+**8. Spec target must be explicit**
+CommonMark vs GFM vs original Markdown differ on lazy continuation, list parsing, HTML blocks. The linter must declare which spec it follows. Must handle front matter, HTML blocks, and code blocks defensively.
+
+**9. Bun-native for speed**
+The differentiator against markdownlint/remark-lint/mdl: leverage Bun's fast startup and file I/O for large monorepos (thousands of files). Streaming/chunked processing for huge generated docs.
+
+---
+
+Sources:
+- project/parser-strategy.md (from: seed.md)
+- design/plugin-architecture.md (from: seed.md)
+- project/rule-taxonomy.md (from: seed.md)
+- project/auto-fix.md (from: seed.md)
+- project/cli-interface-design.md (from: seed.md)
+- design/error-messages.md (from: seed.md)
+- landscape/existing-tools.md (from: seed.md)
+- concerns/edge-cases.md (from: seed.md)
+- project/overview.md (from: seed.md)
+--- exit: 0 ---
+
+=== STEP: build ===
+--- cmd: bny build --yes a CLI that lints markdown files for common issues ---
+
+[bny build] a CLI that lints markdown files for common issues
+  max-iter: 5
+
+
+--- specify ---
+{
+  "status": "success",
+  "result": {
+    "feature_name": "001-cli-lints-markdown",
+    "feature_num": "001",
+    "spec_file": "/Users/ahoward/gh/ahoward/bunny/demos/markdown-linter/specs/001-cli-lints-markdown/spec.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/specify",
+    "timestamp": "2026-03-04T20:14:47.879Z",
+    "duration_ms": 0
+  }
+}
+
+--- plan ---
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cli-lints-markdown",
+    "plan_file": "/Users/ahoward/gh/ahoward/bunny/demos/markdown-linter/specs/001-cli-lints-markdown/plan.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/plan",
+    "timestamp": "2026-03-04T20:14:47.879Z",
+    "duration_ms": 0
+  }
+}
+
+--- tasks ---
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cli-lints-markdown",
+    "tasks_file": "/Users/ahoward/gh/ahoward/bunny/demos/markdown-linter/specs/001-cli-lints-markdown/tasks.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/tasks",
+    "timestamp": "2026-03-04T20:14:47.880Z",
+    "duration_ms": 0
+  }
+}
+
+--- review ---
+Not enough arguments following: p
+Usage: gemini [options] [command]
+
+Gemini CLI - Defaults to interactive mode. Use -p/--prompt for non-interactive (headless) mode.
+
+Commands:
+  gemini [query..]             Launch Gemini CLI  [default]
+  gemini mcp                   Manage MCP servers
+  gemini extensions <command>  Manage Gemini CLI extensions.  [aliases: extension]
+  gemini skills <command>      Manage agent skills.  [aliases: skill]
+  gemini hooks <command>       Manage Gemini CLI hooks.  [aliases: hook]
+
+Positionals:
+  query  Initial prompt. Runs in interactive mode by default; use -p/--prompt for non-interactive.
+
+Options:
+  -d, --debug                     Run in debug mode (open debug console with F12)  [boolean] [default: false]
+  -m, --model                     Model  [string]
+  -p, --prompt                    Run in non-interactive (headless) mode with the given prompt. Appended to input on stdin (if any).  [string]
+  -i, --prompt-interactive        Execute the provided prompt and continue in interactive mode  [string]
+  -s, --sandbox                   Run in sandbox?  [boolean]
+  -y, --yolo                      Automatically accept all actions (aka YOLO mode, see https://www.youtube.com/watch?v=xvFZjo5PgG0 for more details)?  [boolean] [default: false]
+      --approval-mode             Set the approval mode: default (prompt for approval), auto_edit (auto-approve edit tools), yolo (auto-approve all tools), plan (read-only mode)  [string] [choices: "default", "auto_edit", "yolo", "plan"]
+      --experimental-acp          Starts the agent in ACP mode  [boolean]
+      --allowed-mcp-server-names  Allowed MCP server names  [array]
+      --allowed-tools             Tools that are allowed to run without confirmation  [array]
+  -e, --extensions                A list of extensions to use. If not provided, all extensions are used.  [array]
+  -l, --list-extensions           List all available extensions and exit.  [boolean]
+  -r, --resume                    Resume a previous session. Use "latest" for most recent or index number (e.g. --resume 5)  [string]
+      --list-sessions             List available sessions for the current project and exit.  [boolean]
+      --delete-session            Delete a session by index number (use --list-sessions to see available sessions).  [string]
+      --include-directories       Additional directories to include in the workspace (comma-separated or multiple --include-directories)  [array]
+      --screen-reader             Enable screen reader mode for accessibility.  [boolean]
+  -o, --output-format             The format of the CLI output.  [string] [choices: "text", "json", "stream-json"]
+      --raw-output                Disable sanitization of model output (e.g. allow ANSI escape sequences). WARNING: This can be a security risk if the model output is untrusted.  [boolean]
+      --accept-raw-output-risk    Suppress the security warning when using --raw-output.  [boolean]
+  -v, --version                   Show version number  [boolean]
+  -h, --help                      Show help  [boolean]
+
+error: review failed (exit 1)
+warning: review failed, continuing without antagonist review
+
+--- implement (ralph, max-iter 5) ---
+All tasks complete. Here's a summary of what was built:
+
+## Markdown Linter CLI — Complete
+
+**42 tests passing, post_flight green.**
+
+### What was built:
+
+| File | Purpose |
+|------|---------|
+| `src/types.ts` | POD types (LintMessage, LintResult, Block, Rule, CliOptions) |
+| `src/tokenizer.ts` | Hybrid markdown tokenizer — block-level structure (headings, code fences, lists, blockquotes, front matter, thematic breaks) |
+| `src/rules.ts` | 8 lint rules across structural/formatting/style/semantic categories |
+| `src/linter.ts` | Orchestrator — tokenizes then runs all rules |
+| `src/formatter.ts` | 3 output formats: human, JSON, compact |
+| `src/cli.ts` | CLI entry point with arg parsing, directory recursion, exit codes |
+| `bin/mlint` | Executable entry point |
+
+### Rules implemented:
+- **no-heading-skip** — heading levels shouldn't skip (H1→H3)
+- **single-h1** — only one H1 per document
+- **no-trailing-whitespace** — ignores code blocks
+- **no-hard-tabs** — ignores code blocks
+- **no-consecutive-blank-lines** — max one blank line in a row
+- **fenced-code-language** — code blocks should specify language
+- **no-unclosed-fence** — fenced code blocks must be closed
+- **final-newline** — files should end with newline
+
+### Exit codes:
+0 = clean, 1 = warnings, 2 = errors, 3 = fatal
+
+--- ruminate ---
+[ruminate] feature: 001-cli-lints-markdown
+ruminating on: 001-cli-lints-markdown...
+
+[intake]
+  + patterns/hybrid-tokenizer.md  (28 lines)
+  + patterns/rule-as-pod.md  (27 lines)
+  + patterns/pipeline-architecture.md  (36 lines)
+  ~ project/parser-strategy.md  (+22, -16)
+  ~ project/rule-taxonomy.md  (+27, -24)
+  ~ project/cli-interface-design.md  (+20, -15)
+
+reasoning: Extracted three reusable patterns (hybrid tokenizer, rule-as-POD, pipeline architecture) that generalize beyond this project. Updated three existing worldview files (parser-strategy, rule-taxonomy, cli-interface-design) to reflect what was actually built vs. what was planned — capturing implementation reality, noting what shipped in v1 vs. what remains. Skipped: error-messages.md (design guidance still accurate, nothing new learned), plugin-architecture.md (not implemented, design still valid), edge-cases.md (concerns still relevant, no new discoveries), existing-tools.md (landscape unchanged), overview.md (still accurate), auto-fix.md (not implemented yet). The index.md was not updated because the new pattern files live outside the original structure and would need a new section added when patterns accumulate further.
+
+6 operation(s) (3 new, 3 updated)
+applied 6 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cli-lints-markdown",
+    "operations": [
+      {
+        "action": "create",
+        "path": "patterns/hybrid-tokenizer.md"
+      },
+      {
+        "action": "create",
+        "path": "patterns/rule-as-pod.md"
+      },
+      {
+        "action": "create",
+        "path": "patterns/pipeline-architecture.md"
+      },
+      {
+        "action": "update",
+        "path": "project/parser-strategy.md"
+      },
+      {
+        "action": "update",
+        "path": "project/rule-taxonomy.md"
+      },
+      {
+        "action": "update",
+        "path": "project/cli-interface-design.md"
+      }
+    ],
+    "reasoning": "Extracted three reusable patterns (hybrid tokenizer, rule-as-POD, pipeline architecture) that generalize beyond this project. Updated three existing worldview files (parser-strategy, rule-taxonomy, cli-interface-design) to reflect what was actually built vs. what was planned — capturing implementation reality, noting what shipped in v1 vs. what remains. Skipped: error-messages.md (design guidance still accurate, nothing new learned), plugin-architecture.md (not implemented, design still valid), edge-cases.md (concerns still relevant, no new discoveries), existing-tools.md (landscape unchanged), overview.md (still accurate), auto-fix.md (not implemented yet). The index.md was not updated because the new pattern files live outside the original structure and would need a new section added when patterns accumulate further."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/ruminate",
+    "timestamp": "2026-03-04T20:22:32.024Z",
+    "duration_ms": 0
+  }
+}
+
+[bny build] complete: a CLI that lints markdown files for common issues
+--- exit: 0 ---
+
+=== STEP: dev-test ===
+--- cmd: ./dev/test ---
+bun test v1.3.9 (cf6cdbbb)
+
+ 42 pass
+ 0 fail
+ 64 expect() calls
+Ran 42 tests across 3 files. [71.00ms]
+--- exit: 0 ---
+
+finished: 2026-03-04T20:22:32Z

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# bny-generated
+set -e
+cd "$(dirname "$0")/.."
+
+# customize this for your project
+echo '{"status":"success","path":"/health","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}'

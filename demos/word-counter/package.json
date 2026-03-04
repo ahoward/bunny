@@ -1,0 +1,11 @@
+{
+  "name": "word-counter",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "wc": "bin/wc.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

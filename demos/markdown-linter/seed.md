@@ -1,0 +1,1 @@
+a CLI that lints markdown files for common issues

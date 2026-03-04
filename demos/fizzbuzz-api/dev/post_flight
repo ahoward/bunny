@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# bny-generated
+set -e
+cd "$(dirname "$0")/.."
+
+echo "post_flight: checking..."
+
+# tests pass
+./dev/test 2>/dev/null || { echo "post_flight: FAIL — tests"; exit 1; }
+
+echo "post_flight: ok"
