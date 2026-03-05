@@ -208,13 +208,9 @@ export function call_claude(prompt: string, root: string): string | null {
   // secret detection
   if (!check_secrets(prompt, "prompt")) return null
 
-  // strip CLAUDECODE env var so nested claude sessions work
-  const env = { ...process.env }
-  delete env.CLAUDECODE
-
   // model version pinning: --model flag or BNY_MODEL env var
-  const model = env.BNY_MODEL || null
-  const timeout_env = env.BNY_CLAUDE_TIMEOUT
+  const model = process.env.BNY_MODEL || null
+  const timeout_env = process.env.BNY_CLAUDE_TIMEOUT
   const timeout_parsed = timeout_env !== undefined ? parseInt(timeout_env, 10) : NaN
   const timeout_secs = !isNaN(timeout_parsed) ? timeout_parsed : CLAUDE_TIMEOUT_SECS
 
@@ -226,7 +222,6 @@ export function call_claude(prompt: string, root: string): string | null {
   const r = spawn_sync({
     cmd: ["claude", ...claude_args],
     cwd: root,
-    env,
     stdin: prompt,
     timeout: timeout_secs,
     label: "claude",
@@ -251,12 +246,9 @@ export function call_claude(prompt: string, root: string): string | null {
 export function call_claude_with_tools(prompt: string, root: string, allowed_tools: string[], max_turns: number = 3): string | null {
   if (!check_secrets(prompt, "prompt")) return null
 
-  const env = { ...process.env }
-  delete env.CLAUDECODE
-
-  const model = env.BNY_MODEL || null
+  const model = process.env.BNY_MODEL || null
   // tool use gets more time: 2x the normal timeout
-  const base_timeout = env.BNY_CLAUDE_TIMEOUT !== undefined ? parseInt(env.BNY_CLAUDE_TIMEOUT, 10) : CLAUDE_TIMEOUT_SECS
+  const base_timeout = process.env.BNY_CLAUDE_TIMEOUT !== undefined ? parseInt(process.env.BNY_CLAUDE_TIMEOUT, 10) : CLAUDE_TIMEOUT_SECS
   const timeout_secs = (isNaN(base_timeout) ? CLAUDE_TIMEOUT_SECS : base_timeout) * 2
 
   const claude_args: string[] = ["-p"]
@@ -268,7 +260,6 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
   const r = spawn_sync({
     cmd: ["claude", ...claude_args],
     cwd: root,
-    env,
     stdin: prompt,
     timeout: timeout_secs,
     label: "claude (with tools)",

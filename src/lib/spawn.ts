@@ -8,6 +8,33 @@
 
 import * as assassin from "./assassin.ts"
 
+// -- agent environment scrubbing --
+//
+// when bny runs inside an AI agent (claude code, gemini cli, copilot cli),
+// the agent injects sentinel env vars that break nested subprocess spawning.
+// example: CLAUDECODE=1 causes `claude -p` to refuse to start.
+//
+// scrub_agent_env() strips these before spawning any child process.
+//
+
+const AGENT_ENV_PREFIXES = [
+  "CLAUDECODE",         // claude code sentinel — blocks nested sessions
+  "CLAUDE_CODE_",       // claude code behavioral flags
+  "CLAUDE_AGENT_",      // claude agent SDK
+  "GEMINI_CLI",         // gemini cli sentinel + IDE vars
+  "COPILOT_CLI",        // github copilot cli sentinel
+]
+
+export function scrub_agent_env(base?: Record<string, string | undefined>): Record<string, string | undefined> {
+  const env = { ...(base ?? process.env) }
+  for (const key of Object.keys(env)) {
+    if (AGENT_ENV_PREFIXES.some(prefix => key === prefix || key.startsWith(prefix))) {
+      delete env[key]
+    }
+  }
+  return env
+}
+
 // -- timeout detection (once at module load) --
 
 const TIMEOUT_CMD: string | null = (() => {
@@ -74,7 +101,7 @@ export function spawn_sync(opts: SpawnSyncOpts): SpawnResult {
     stderr: "pipe",
     stdin: stdin_value,
     cwd: opts.cwd,
-    env: opts.env,
+    env: opts.env ? scrub_agent_env(opts.env) : scrub_agent_env(),
   })
 
   const exit_code = proc.exitCode ?? 1
@@ -115,7 +142,7 @@ export async function spawn_async(opts: SpawnAsyncOpts): Promise<SpawnAsyncResul
     stderr: stderr_mode,
     stdin: opts.stdin || "ignore",
     cwd: opts.cwd,
-    env: opts.env,
+    env: opts.env ? scrub_agent_env(opts.env) : scrub_agent_env(),
     detached: true,
   })
 

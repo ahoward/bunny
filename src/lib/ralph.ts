@@ -13,6 +13,7 @@
 //
 
 import * as assassin from "./assassin.ts"
+import { scrub_agent_env } from "./spawn.ts"
 
 export interface RalphOptions {
   command?:     string[]                    // subprocess mode
@@ -91,6 +92,7 @@ export async function ralph(opts: RalphOptions): Promise<RalphResult> {
         stdout: "inherit",
         stderr: "inherit",
         stdin:  "inherit",
+        env:    scrub_agent_env(),
         detached: true,
       }
 

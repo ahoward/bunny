@@ -92,19 +92,14 @@ export async function main(argv: string[]): Promise<number> {
   const prompt_tmp = resolve(root, `bny/implement-prompt-${process.pid}.tmp`)
   await Bun.write(prompt_tmp, prompt)
 
-  // strip CLAUDECODE env var so nested claude sessions work
-  const spawn_env = { ...process.env }
-  delete spawn_env.CLAUDECODE
-
   // model version pinning — array spawn, no shell interpolation
-  const model = spawn_env.BNY_MODEL || null
+  const model = process.env.BNY_MODEL || null
   const cmd: string[] = ["claude", "-p", "--continue", "--dangerously-skip-permissions"]
   if (model) cmd.push("--model", model)
 
   const r = await spawn_async({
     cmd,
     cwd: root,
-    env: spawn_env,
     stdin: Bun.file(prompt_tmp),
     stdout: "inherit",
     stderr: "inherit",
