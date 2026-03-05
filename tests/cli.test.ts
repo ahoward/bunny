@@ -1,20 +1,5 @@
 import { describe, test, expect } from "bun:test"
-
-// -- test cli via subprocess --
-
-function bny(...args: string[]): { stdout: string, stderr: string, exit: number } {
-  const proc = Bun.spawnSync(["bun", "bin/bny.ts", ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-    cwd: import.meta.dir + "/..",
-    env: { ...process.env, BNY_NO_SPINNER: "1" },
-  })
-  return {
-    stdout: new TextDecoder().decode(proc.stdout).trim(),
-    stderr: new TextDecoder().decode(proc.stderr).trim(),
-    exit: proc.exitCode ?? 1,
-  }
-}
+import { bny } from "./helpers.ts"
 
 describe("cli dispatch", () => {
   test("bare bny shows help and exits 1", () => {

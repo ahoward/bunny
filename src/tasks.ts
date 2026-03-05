@@ -15,7 +15,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
-import { load_worldview, call_claude } from "./lib/brane.ts"
+import { load_worldview, call_claude, strip_index_preamble } from "./lib/brane.ts"
 import { which_check } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
@@ -124,9 +124,12 @@ export async function main(argv: string[]): Promise<number> {
     return 1
   }
 
+  // strip conversational preamble before first markdown heading
+  const cleaned = strip_index_preamble(raw) ?? raw
+
   // write tasks
   const header = `# Tasks: ${name}\n\n`
-  writeFileSync(paths.tasks, header + raw + "\n")
+  writeFileSync(paths.tasks, header + cleaned + "\n")
 
   const meta = {
     path: "/bny/tasks",

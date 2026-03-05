@@ -1,21 +1,6 @@
 import { describe, test, expect } from "bun:test"
 import { slugify, dedup_slug } from "../src/proposal.ts"
-
-// -- test cli via subprocess --
-
-function bny(...args: string[]): { stdout: string, stderr: string, exit: number } {
-  const proc = Bun.spawnSync(["bun", "bin/bny.ts", ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-    cwd: import.meta.dir + "/..",
-    env: { ...process.env, BNY_NO_SPINNER: "1" },
-  })
-  return {
-    stdout: new TextDecoder().decode(proc.stdout).trim(),
-    stderr: new TextDecoder().decode(proc.stderr).trim(),
-    exit: proc.exitCode ?? 1,
-  }
-}
+import { bny } from "./helpers.ts"
 
 describe("bny proposal", () => {
   test("--help exits 0 and shows usage", () => {
@@ -32,10 +17,10 @@ describe("bny proposal", () => {
     expect(r.stdout).toContain("accept")
   })
 
-  test("accept with no slug exits 1", () => {
+  test("accept with no slug and no proposals exits 1", () => {
     const r = bny("proposal", "accept")
     expect(r.exit).toBe(1)
-    expect(r.stderr).toContain("required")
+    expect(r.stderr).toContain("no proposals found")
   })
 
   test("accept nonexistent slug exits 1 with error", () => {

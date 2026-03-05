@@ -156,17 +156,35 @@ async function cmd_propose(argv: string[]): Promise<number> {
     }
   }
 
-  const topic = input_parts.join(" ").trim()
-  if (!topic) {
-    process.stdout.write(JSON.stringify(error({ input: [{ code: "required", message: "topic is required" }] }, meta()), null, 2) + "\n")
-    return 1
-  }
+  let topic = input_parts.join(" ").trim()
 
   // -- setup --
 
   const root = find_root()
   ensure_brane(root)
   ensure_proposals_dir(root)
+
+  // derive topic from worldview when none given
+  if (!topic) {
+    const worldview = load_worldview(root)
+    if (worldview.length === 0) {
+      process.stdout.write(JSON.stringify(error({ input: [{ code: "required", message: "topic is required (worldview is empty — nothing to derive from)" }] }, meta()), null, 2) + "\n")
+      return 1
+    }
+    if (!which_check("claude")) {
+      process.stdout.write(JSON.stringify(error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] }, meta()), null, 2) + "\n")
+      return 1
+    }
+    const wv_block = worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
+    const derive_prompt = `Given this project worldview, suggest a single concrete improvement topic (2-5 words, no quotes, no explanation — just the topic):\n\n${wv_block}`
+    const derived = call_claude(derive_prompt, root)
+    if (!derived) {
+      process.stderr.write("error: could not derive topic from worldview\n")
+      return 1
+    }
+    topic = derived.trim().replace(/^["']|["']$/g, "")
+    process.stderr.write(`[proposal] derived topic: ${topic}\n`)
+  }
 
   // -- load brane context --
 
@@ -354,19 +372,25 @@ flags:
     }
   }
 
-  const input = input_parts.join(" ").trim()
+  let input = input_parts.join(" ").trim()
+
+  // auto-accept when only one proposal exists
   if (!input) {
     const existing = list_existing_slugs(find_root())
-    process.stderr.write("bny proposal accept: slug or path is required\n")
-    if (existing.length > 0) {
+    if (existing.length === 1) {
+      input = existing[0]
+      process.stderr.write(`[proposal accept] auto-selecting: ${input}\n`)
+    } else if (existing.length === 0) {
+      process.stderr.write("bny proposal accept: no proposals found — run 'bny proposal \"topic\"' first\n")
+      return 1
+    } else {
+      process.stderr.write("bny proposal accept: slug or path is required\n")
       process.stderr.write(`\navailable proposals:\n`)
       for (const slug of existing) {
         process.stderr.write(`  ${slug}\n`)
       }
-    } else {
-      process.stderr.write("\nno proposals found — run 'bny proposal \"topic\"' first\n")
+      return 1
     }
-    return 1
   }
 
   // -- resolve to file --
