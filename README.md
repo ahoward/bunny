@@ -10,6 +10,26 @@
 
 "dark factory" as in lights-out manufacturing — no humans on the floor. agents run autonomously, humans review output.
 
+### what it does
+
+- **digest** — ingest files, directories, URLs into a persistent knowledge graph
+- **storm** — divergent brainstorming against the graph
+- **enhance** — convergent refinement of specific topics
+- **loop** — autonomous research: web search → fetch → digest → repeat
+- **lens** — filterable perspectives (security, performance, architecture)
+- **propose** — bridge knowledge to execution: graph generates roadmap items
+- **build** — 9-step dark factory: two agents, opposed incentives, tested code out
+- **spike** — same pipeline, guardrails off, all failures non-fatal
+- **map** — structural codebase awareness via tree-sitter (functions, classes, imports)
+
+### how it works
+
+```
+digest → think → propose → build → ruminate
+  ↑                                      |
+  └──────────────────────────────────────┘
+```
+
 bny combines three things:
 
 1. **knowledge graph (brane)** — a persistent, self-organizing collection of markdown files that accumulates understanding across every interaction. provenance-tracked sources, filterable lenses, full-text search. knowledge compounds — even throwaway spikes teach the graph something.
@@ -21,12 +41,6 @@ bny combines three things:
 ```
 specify → challenge → plan → tasks → test-gen → review → implement → verify → ruminate
 claude    gemini      claude  claude   gemini     gemini   claude      gemini   claude
-```
-
-```
-digest → think → propose → build → ruminate
-  ↑                                      |
-  └──────────────────────────────────────┘
 ```
 
 code is a side effect of the graph getting smarter.
@@ -135,8 +149,8 @@ bny proposal accept auth-system                     # accepted → roadmap item
 
 # --- 4. build — the dark factory ---
 bny build "add user auth"                           # full pipeline (9 steps, 2 agents)
+bny build --detached "add user auth"                # same thing, in tmux
 bny --effort full build                             # 10 retries, $5 budget
-bny spin                                            # run detached in tmux
 
 # --- 5. spike — build without guardrails ---
 bny spike "prototype oauth flow"                    # same pipeline, all failures non-fatal
@@ -246,7 +260,8 @@ bny proposal accept auth-system                     # accept → roadmap item
 
 ```bash
 bny next                                            # pick roadmap item, run full pipeline
-bny spin                                            # autonomous — run detached in tmux
+bny build --detached "add auth"                     # run in tmux, return immediately
+bny build --detached --attach "add auth"            # run in tmux, attach to watch
 bny --effort full build                             # 10 iters, $5 budget, 10min timeout
 ```
 
