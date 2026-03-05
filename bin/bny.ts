@@ -30,7 +30,6 @@ import { main as status_main } from "../src/status.ts"
 import { main as ps_main } from "../src/ps.ts"
 import { main as map_main } from "../src/map.ts"
 import { main as next_main } from "../src/next.ts"
-import { main as spin_main } from "../src/spin.ts"
 import { main as todo_main } from "../src/todo.ts"
 import { main as close_issue_main } from "../src/close-issue.ts"
 import { main as ipm_main } from "../src/ipm.ts"
@@ -72,7 +71,6 @@ const COMMANDS: Record<string, CommandFn> = {
   "ps":             ps_main,
   "map":            map_main,
   "next":           next_main,
-  "spin":           spin_main,
   "todo":           todo_main,
   "close-issue":    close_issue_main,
   "ipm":            ipm_main,
@@ -128,7 +126,6 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "brane/lens":      { desc: "manage worldview lenses",            group: "knowledge" },
   "brane/loop":      { desc: "autonomous goal-directed thought loop", group: "knowledge" },
   "next":            { desc: "full pipeline for next roadmap item", group: "orchestration" },
-  "spin":            { desc: "autonomous factory run (tmux)",      group: "orchestration" },
   "todo":            { desc: "manage project todos",               group: "chores" },
   "close-issue":     { desc: "close github issue",                 group: "chores" },
   "ipm":             { desc: "iteration planning meeting",         group: "chores" },

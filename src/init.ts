@@ -340,8 +340,7 @@ const HOOK_PRE_COMMIT_CONTENT = `./dev/post_flight`
 const HOOK_PRE_PUSH_CONTENT = `./dev/test`
 
 const GITIGNORE_CONTENT = `bny/bny.pid
-bny/children/
-bny/spin/`
+bny/children/`
 
 const CONSTITUTION = `# Constitution
 

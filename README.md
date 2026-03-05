@@ -149,7 +149,6 @@ bny proposal accept auth-system                     # accepted → roadmap item
 
 # --- 4. build — the dark factory ---
 bny build "add user auth"                           # full pipeline (9 steps, 2 agents)
-bny build --detached "add user auth"                # same thing, in tmux
 bny --effort full build                             # 10 retries, $5 budget
 
 # --- 5. spike — build without guardrails ---
@@ -260,8 +259,6 @@ bny proposal accept auth-system                     # accept → roadmap item
 
 ```bash
 bny next                                            # pick roadmap item, run full pipeline
-bny build --detached "add auth"                     # run in tmux, return immediately
-bny build --detached --attach "add auth"            # run in tmux, attach to watch
 bny --effort full build                             # 10 iters, $5 budget, 10min timeout
 ```
 
