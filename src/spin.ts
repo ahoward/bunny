@@ -2,7 +2,7 @@
 //
 // bny spin — launch an autonomous factory run, detached
 //
-// spawns bny next --auto in a tmux session with a clean env.
+// spawns bny next in a tmux session with a clean env.
 // returns immediately. the factory runs in the background.
 //
 // usage:
@@ -41,7 +41,7 @@ export async function main(argv: string[]): Promise<number> {
     } else if (arg === "--help" || arg === "-h") {
       process.stdout.write(`usage: bny spin [--attach] [--dry-run] [--log] [--max-iter N]
 
-launches bny next --auto in a detached tmux session.
+launches bny next in a detached tmux session.
 the factory runs autonomously — review the output after.
 
 flags:
@@ -149,8 +149,8 @@ workflow:
   // detect compiled binary vs bun dev mode
   const is_compiled = !process.execPath.endsWith("/bun")
   const next_cmd = is_compiled
-    ? [process.execPath, "next", "--auto", "--max-iter", String(max_iter)]
-    : ["bun", resolve(root, "src/next.ts"), "--auto", "--max-iter", String(max_iter)]
+    ? [process.execPath, "next", "--max-iter", String(max_iter)]
+    : ["bun", resolve(root, "src/next.ts"), "--max-iter", String(max_iter)]
 
   function shell_quote(s: string): string {
     return `'${s.replace(/'/g, "'\\''")}'`

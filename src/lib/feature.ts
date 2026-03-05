@@ -5,7 +5,7 @@
 //           next_feature_number, generate_branch_name, clean_name
 //
 
-import { existsSync, readdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { resolve, relative, dirname, basename } from "node:path"
 import { spawn_sync } from "./spawn.ts"
 
@@ -52,12 +52,15 @@ export function current_feature(): string | null {
   const env = process.env.SPECIFY_FEATURE
   if (env && env.length > 0) return env
 
-  // 2. state file (bny/current-feature)
+  // 2. highest-numbered dir in specs/ — source of truth
   const root = find_root()
-  const state_file = resolve(root, "bny/current-feature")
-  if (existsSync(state_file)) {
-    const name = readFileSync(state_file, "utf-8").trim()
-    if (name.length > 0) return name
+  const specs_dir = resolve(root, "specs")
+  if (existsSync(specs_dir)) {
+    const dirs = readdirSync(specs_dir, { withFileTypes: true })
+      .filter(e => e.isDirectory() && FEATURE_PATTERN.test(e.name))
+      .map(e => e.name)
+      .sort()
+    if (dirs.length > 0) return dirs[dirs.length - 1]
   }
 
   // 3. git branch
@@ -68,15 +71,6 @@ export function current_feature(): string | null {
   if (FEATURE_PATTERN.test(branch)) return branch
 
   return null
-}
-
-export function set_current_feature(root: string, name: string): void {
-  writeFileSync(resolve(root, "bny/current-feature"), name + "\n")
-}
-
-export function clear_current_feature(root: string): void {
-  const p = resolve(root, "bny/current-feature")
-  try { unlinkSync(p) } catch { /* ok */ }
 }
 
 // -- paths --

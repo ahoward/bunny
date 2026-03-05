@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 //
-// bny specify — create a feature workspace
+// bny specify — create a feature spec from the brane
 //
-// creates: specs/<name>/spec.md from template
-// writes bny/current-feature for downstream commands
+// reads the worldview + roadmap item, calls claude to generate
+// a real feature specification, writes specs/<name>/spec.md
 //
 // usage:
 //   bny specify "Add user authentication"
@@ -15,14 +15,17 @@ import { resolve } from "node:path"
 import { success, error } from "./lib/result.ts"
 import {
   find_root, current_feature, next_feature_number, generate_branch_name,
-  feature_paths, set_current_feature,
+  feature_paths,
 } from "./lib/feature.ts"
+import { load_worldview, call_claude } from "./lib/brane.ts"
+import { which_check } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
 
   const args: string[] = []
   let number_override: number | null = null
+  let dry_run = false
 
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--number") {
@@ -30,8 +33,10 @@ export async function main(argv: string[]): Promise<number> {
       if (!argv[i]) { process.stderr.write("error: --number requires a value\n"); return 1 }
       number_override = parseInt(argv[i], 10)
       if (isNaN(number_override)) { process.stderr.write("error: --number must be a number\n"); return 1 }
+    } else if (argv[i] === "--dry-run") {
+      dry_run = true
     } else if (argv[i] === "--help" || argv[i] === "-h") {
-      process.stdout.write("usage: bny specify [--number N] <description>\n")
+      process.stdout.write("usage: bny specify [--number N] [--dry-run] <description>\n")
       return 0
     } else {
       args.push(argv[i])
@@ -40,7 +45,7 @@ export async function main(argv: string[]): Promise<number> {
 
   const description = args.join(" ").trim()
   if (!description) {
-    process.stderr.write("usage: bny specify [--number N] <description>\n")
+    process.stderr.write("usage: bny specify [--number N] [--dry-run] <description>\n")
     return 1
   }
 
@@ -64,26 +69,69 @@ export async function main(argv: string[]): Promise<number> {
   const padded = String(feature_num).padStart(3, "0")
   const feature_name = `${padded}-${suffix}`
 
-  // create spec dir + copy template
+  // create spec dir
   const paths = feature_paths(root, feature_name)
   mkdirSync(paths.dir, { recursive: true })
 
-  const template = resolve(root, "src/templates/spec-template.md")
-  if (existsSync(template)) {
-    const today = new Date().toISOString().slice(0, 10)
-    let content = readFileSync(template, "utf-8")
-    content = content.replace("[FEATURE NAME]", description)
-    content = content.replace("[###-feature-name]", feature_name)
-    content = content.replace("[DATE]", today)
-    content = content.replace('"$ARGUMENTS"', `"${description}"`)
-    writeFileSync(paths.spec, content)
-  } else {
-    // touch the file
-    Bun.write(paths.spec, "")
+  // -- build prompt from worldview --
+
+  const worldview = load_worldview(root)
+  const worldview_block = worldview.length > 0
+    ? worldview.map(s => `## ${s.heading}\n\n${s.content}`).join("\n\n---\n\n")
+    : "(no worldview yet)"
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  const prompt = [
+    "You are writing a feature specification for a software project.",
+    "",
+    "# Project Knowledge (from the brane/worldview)",
+    "",
+    worldview_block,
+    "",
+    "---",
+    "",
+    `# Feature to Specify: "${description}"`,
+    `Feature branch: \`${feature_name}\``,
+    `Date: ${today}`,
+    "",
+    "Write a complete feature specification in markdown. Include:",
+    "",
+    "1. **User Scenarios & Testing** — Prioritized user stories (P1, P2, P3) with acceptance scenarios (Given/When/Then). Each story must be independently testable.",
+    "2. **Edge Cases** — Boundary conditions and error scenarios.",
+    "3. **Requirements** — Functional requirements (FR-001, FR-002, etc.) with MUST/SHOULD language. Mark unclear items with [NEEDS CLARIFICATION].",
+    "4. **Key Entities** — Core data types and their relationships.",
+    "5. **Success Criteria** — Measurable outcomes.",
+    "",
+    "Be specific and concrete. Use the worldview knowledge to inform the design.",
+    "Output ONLY the markdown content, no preamble or commentary.",
+  ].join("\n")
+
+  if (dry_run) {
+    process.stdout.write(prompt + "\n")
+    return 0
   }
 
-  // set current feature for downstream commands
-  set_current_feature(root, feature_name)
+  // -- check claude --
+
+  if (!which_check("claude")) {
+    process.stderr.write("error: claude CLI not found on PATH\n")
+    return 1
+  }
+
+  // -- call claude --
+
+  process.stderr.write(`[specify] generating spec for: ${description}\n`)
+
+  const raw = call_claude(prompt, root)
+  if (!raw) {
+    process.stderr.write("error: claude failed to generate spec\n")
+    return 1
+  }
+
+  // write spec
+  const header = `# Feature Specification: ${description}\n\n**Feature Branch**: \`${feature_name}\`\n**Created**: ${today}\n**Status**: Draft\n\n`
+  writeFileSync(paths.spec, header + raw + "\n")
 
   // output
   const meta = {

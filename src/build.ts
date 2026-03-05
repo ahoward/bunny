@@ -34,7 +34,7 @@ import { main as ruminate_main } from "./ruminate.ts"
 const STEPS = ["specify", "plan", "tasks", "review", "implement", "ruminate"] as const
 type Step = typeof STEPS[number]
 
-const HELP = `usage: bny build [step] [--dry-run] [--yes] [--max-iter N] [description]
+const HELP = `usage: bny build [step] [--dry-run] [--interactive] [--max-iter N] [description]
 
 the dark factory. runs the full build pipeline, or a single step.
 
@@ -47,9 +47,9 @@ steps:
   ruminate         reflect on build, feed brane
 
 flags:
-  --dry-run        show what would run, don't execute
-  --yes, -y        skip confirmations
-  --max-iter N     ralph iterations for implement (default: 5)
+  --dry-run          show what would run, don't execute
+  --interactive, -i  pause for human review at checkpoints
+  --max-iter N       ralph iterations for implement (default: 5)
 
 examples:
   bny build "add user auth"          # full pipeline
@@ -66,7 +66,7 @@ export async function main(argv: string[]): Promise<number> {
 
   let step: Step | null = null
   let dry_run = false
-  let auto_yes = false
+  let interactive = false
   let max_iter = 5
   const positional: string[] = []
 
@@ -78,8 +78,8 @@ export async function main(argv: string[]): Promise<number> {
       return 0
     } else if (arg === "--dry-run") {
       dry_run = true
-    } else if (arg === "--yes" || arg === "-y") {
-      auto_yes = true
+    } else if (arg === "--interactive" || arg === "-i") {
+      interactive = true
     } else if (arg === "--max-iter" && argv[i + 1]) {
       const val = parseInt(argv[i + 1], 10)
       if (!isNaN(val) && val > 0) max_iter = val
@@ -100,20 +100,20 @@ export async function main(argv: string[]): Promise<number> {
   // -- single step mode --
 
   if (step) {
-    return run_step(step, description, root, { dry_run, auto_yes, max_iter })
+    return run_step(step, description, root, { dry_run, interactive, max_iter })
   }
 
   // -- full pipeline mode --
 
-  return run_pipeline(description, root, { dry_run, auto_yes, max_iter })
+  return run_pipeline(description, root, { dry_run, interactive, max_iter })
 }
 
 // -- step runner --
 
 interface Opts {
-  dry_run:  boolean
-  auto_yes: boolean
-  max_iter: number
+  dry_run:     boolean
+  interactive: boolean
+  max_iter:    number
 }
 
 async function run_step(
@@ -143,7 +143,7 @@ async function run_step(
       return implement_main(description ? [description] : [])
     case "ruminate": {
       const args: string[] = []
-      if (opts.auto_yes) args.push("--yes")
+      if (!opts.interactive) args.push("--yes")
       if (description) args.push(description)
       return ruminate_main(args)
     }
@@ -197,7 +197,7 @@ async function run_pipeline(
   }
 
   function confirm(prompt: string): boolean {
-    if (opts.auto_yes) return true
+    if (!opts.interactive) return true
     process.stderr.write(prompt)
     const buf = Buffer.alloc(64)
     let fd: number | null = null
@@ -222,7 +222,7 @@ async function run_pipeline(
     }
 
     // human reviews spec
-    if (!opts.auto_yes) {
+    if (opts.interactive) {
       const feat = current_feature()
       if (feat) {
         const paths = feature_paths(root, feat)
@@ -281,7 +281,7 @@ async function run_pipeline(
 
   // -- 6. ruminate --
 
-  const ruminate_args = opts.auto_yes ? ["--yes"] : []
+  const ruminate_args = !opts.interactive ? ["--yes"] : []
   if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
     process.stderr.write("warning: ruminate failed, continuing...\n")
     warnings.push("ruminate")

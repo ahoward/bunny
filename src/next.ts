@@ -14,7 +14,7 @@
 
 import { existsSync, readFileSync, writeFileSync, openSync, readSync, closeSync } from "node:fs"
 import { resolve } from "node:path"
-import { find_root } from "./lib/feature.ts"
+import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { ralph } from "./lib/ralph.ts"
 import { main as specify_main } from "./specify.ts"
 import { main as plan_main } from "./plan.ts"
@@ -28,39 +28,38 @@ export async function main(argv: string[]): Promise<number> {
   // -- parse args --
 
   let dry_run = false
-  let auto_mode = false
+  let interactive = false
   let max_iter = 5
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     if (arg === "--dry-run") {
       dry_run = true
-    } else if (arg === "--auto") {
-      auto_mode = true
+    } else if (arg === "--interactive" || arg === "-i") {
+      interactive = true
     } else if (arg === "--max-iter" && argv[i + 1]) {
       const val = parseInt(argv[i + 1], 10)
       if (!isNaN(val) && val > 0) max_iter = val
       i++
     } else if (arg === "--help" || arg === "-h") {
-      process.stdout.write(`usage: bny next [--dry-run] [--auto] [--max-iter N]
+      process.stdout.write(`usage: bny next [--dry-run] [--interactive] [--max-iter N]
 
 picks the next roadmap item and runs the full pipeline:
   1. pre_flight
-  2. specify (create branch + spec)
-  3. human reviews spec (skipped in --auto)
-  4. plan
-  5. tasks
-  6. review (gemini)
-  7. implement (claude, with ralph)
-  8. ruminate (reflect + feed brane)
-  9. post_flight
-  10. update roadmap + decisions
-  11. report
+  2. specify (generate spec from brane)
+  3. plan (generate plan from spec)
+  4. tasks (generate task list)
+  5. review (gemini antagonist)
+  6. implement (claude, with ralph)
+  7. ruminate (reflect + feed brane)
+  8. post_flight
+  9. update roadmap + decisions
+  10. report
 
 flags:
-  --dry-run       show what would run, don't execute
-  --auto          skip human checkpoints (for bny spin)
-  --max-iter N    ralph iterations for implement (default: 5)
+  --dry-run          show what would run, don't execute
+  --interactive, -i  pause for human review at checkpoints
+  --max-iter N       ralph iterations for implement (default: 5)
 `)
       return 0
     }
@@ -143,18 +142,32 @@ flags:
   }
 
   function confirm(prompt: string): boolean {
+    // handle ctrl-c during confirmation
+    let interrupted = false
+    const on_sigint = () => { interrupted = true }
+    process.on("SIGINT", on_sigint)
+
     process.stderr.write(prompt)
     const buf = Buffer.alloc(64)
     let fd: number | null = null
     try {
       fd = openSync("/dev/tty", "r")
       const n = readSync(fd, buf, 0, 64)
+      if (interrupted) {
+        process.stderr.write("\naborted\n")
+        process.exit(130)
+      }
       const answer = buf.slice(0, n).toString().trim().toLowerCase()
       return answer === "" || answer === "y" || answer === "yes"
     } catch {
+      if (interrupted) {
+        process.stderr.write("\naborted\n")
+        process.exit(130)
+      }
       process.stderr.write("warning: could not read /dev/tty, defaulting to no\n")
       return false // safe default
     } finally {
+      process.removeListener("SIGINT", on_sigint)
       if (fd !== null) closeSync(fd)
     }
   }
@@ -171,8 +184,7 @@ flags:
     return 1
   }
 
-  // find the spec file that was just created
-  const { current_feature, feature_paths } = await import("./lib/feature.ts")
+  // find the spec that was just created
   const feature = current_feature()
   if (!feature) {
     process.stderr.write("error: could not determine feature branch after specify\n")
@@ -183,7 +195,7 @@ flags:
 
   // -- 3. human reviews spec --
 
-  if (!auto_mode) {
+  if (interactive) {
     process.stderr.write(`\n--- human checkpoint ---\n`)
     process.stderr.write(`spec: ${paths.spec}\n`)
     process.stderr.write(`\nreview the spec, edit if needed.\n`)
@@ -192,8 +204,6 @@ flags:
       process.stderr.write("aborted by human\n")
       return 0
     }
-  } else {
-    process.stderr.write(`\n--- auto: skipping spec review ---\n`)
   }
 
   // -- 4. plan --
@@ -228,20 +238,18 @@ flags:
 
   if (impl_result.status !== "complete") {
     process.stderr.write(`\nerror: implement ${impl_result.status} after ${impl_result.iterations} iterations\n`)
-    if (!auto_mode) {
+    if (interactive) {
       process.stderr.write(`\nimplementation did not complete cleanly.\n`)
       if (!confirm("continue anyway? [y/N] ")) {
         process.stderr.write("stopped at implement\n")
         return 1
       }
-    } else {
-      process.stderr.write(`\nauto: implementation did not complete cleanly, continuing\n`)
     }
   }
 
   // -- 8. ruminate (reflect + feed brane) --
 
-  const ruminate_args = auto_mode ? ["--yes"] : []
+  const ruminate_args = interactive ? [] : ["--yes"]
   if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
     process.stderr.write("warning: ruminate failed, continuing...\n")
   }
