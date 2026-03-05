@@ -22,6 +22,9 @@ import { main as plan_main } from "../src/plan.ts"
 import { main as tasks_main } from "../src/tasks.ts"
 import { main as implement_main } from "../src/implement.ts"
 import { main as review_main } from "../src/review.ts"
+import { main as challenge_main } from "../src/challenge.ts"
+import { main as testgen_main } from "../src/test-gen.ts"
+import { main as verify_main } from "../src/verify.ts"
 import { main as ruminate_main } from "../src/ruminate.ts"
 import { main as status_main } from "../src/status.ts"
 import { main as ps_main } from "../src/ps.ts"
@@ -61,6 +64,9 @@ const COMMANDS: Record<string, CommandFn> = {
   "tasks":          tasks_main,
   "implement":      implement_main,
   "review":         review_main,
+  "challenge":      challenge_main,
+  "test-gen":       testgen_main,
+  "verify":         verify_main,
   "ruminate":       ruminate_main,
   "status":         status_main,
   "ps":             ps_main,
@@ -109,6 +115,9 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "tasks":           { desc: "generate task list",                 group: "workflow" },
   "implement":       { desc: "drive AI implementation loop",       group: "workflow" },
   "review":          { desc: "antagonist review (gemini)",         group: "workflow" },
+  "challenge":       { desc: "adversary hardens the spec (gemini)", group: "workflow" },
+  "test-gen":        { desc: "generate test suite from spec (gemini)", group: "workflow" },
+  "verify":          { desc: "post-implementation adversary review (gemini)", group: "workflow" },
   "ruminate":        { desc: "reflect on build, feed brane",       group: "workflow" },
   "digest":          { desc: "ingest file/dir/URL into brane",    group: "knowledge" },
   "brane/ask":       { desc: "query the brane (read-only)",       group: "knowledge" },

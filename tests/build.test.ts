@@ -25,10 +25,13 @@ describe("bny build", () => {
     expect(r.exit).toBe(0)
     expect(r.stderr).toContain("would run")
     expect(r.stderr).toContain("specify")
+    expect(r.stderr).toContain("challenge")
     expect(r.stderr).toContain("plan")
     expect(r.stderr).toContain("tasks")
+    expect(r.stderr).toContain("test-gen")
     expect(r.stderr).toContain("review")
     expect(r.stderr).toContain("implement")
+    expect(r.stderr).toContain("verify")
     expect(r.stderr).toContain("ruminate")
   })
 
@@ -75,15 +78,18 @@ describe("bny spike", () => {
     expect(r.stderr).toContain("no current feature")
   })
 
-  test("--dry-run prints pipeline steps without review", () => {
+  test("--dry-run prints full pipeline steps", () => {
     const r = bny("spike", "--dry-run", "test spike dry run")
     expect(r.exit).toBe(0)
     expect(r.stderr).toContain("would run")
     expect(r.stderr).toContain("specify")
+    expect(r.stderr).toContain("challenge")
     expect(r.stderr).toContain("plan")
     expect(r.stderr).toContain("tasks")
-    expect(r.stderr).toContain("skip review")
+    expect(r.stderr).toContain("test-gen")
+    expect(r.stderr).toContain("review")
     expect(r.stderr).toContain("implement")
+    expect(r.stderr).toContain("verify")
     expect(r.stderr).toContain("ruminate")
   })
 
@@ -105,5 +111,56 @@ describe("bny spike", () => {
     const parsed = JSON.parse(r.stdout)
     const keys = parsed.commands.map((c: any) => c.key)
     expect(keys).toContain("spike")
+  })
+})
+
+describe("bny challenge", () => {
+  test("--help exits 0 and shows usage", () => {
+    const r = bny("challenge", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+    expect(r.stdout).toContain("challenge")
+  })
+
+  test("challenge appears in bny help --json", () => {
+    const r = bny("help", "--json")
+    expect(r.exit).toBe(0)
+    const parsed = JSON.parse(r.stdout)
+    const keys = parsed.commands.map((c: any) => c.key)
+    expect(keys).toContain("challenge")
+  })
+})
+
+describe("bny test-gen", () => {
+  test("--help exits 0 and shows usage", () => {
+    const r = bny("test-gen", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+    expect(r.stdout).toContain("test-gen")
+  })
+
+  test("test-gen appears in bny help --json", () => {
+    const r = bny("help", "--json")
+    expect(r.exit).toBe(0)
+    const parsed = JSON.parse(r.stdout)
+    const keys = parsed.commands.map((c: any) => c.key)
+    expect(keys).toContain("test-gen")
+  })
+})
+
+describe("bny verify", () => {
+  test("--help exits 0 and shows usage", () => {
+    const r = bny("verify", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+    expect(r.stdout).toContain("verify")
+  })
+
+  test("verify appears in bny help --json", () => {
+    const r = bny("help", "--json")
+    expect(r.exit).toBe(0)
+    const parsed = JSON.parse(r.stdout)
+    const keys = parsed.commands.map((c: any) => c.key)
+    expect(keys).toContain("verify")
   })
 })

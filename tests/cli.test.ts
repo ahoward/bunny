@@ -125,7 +125,7 @@ describe("command registry consistency", () => {
     const groups = new Set(parsed.commands.map((c: any) => c.group))
     const known = new Set(["development", "workflow", "knowledge", "orchestration", "chores", "plumbing"])
     for (const g of groups) {
-      expect(known.has(g)).toBe(true)
+      expect(known.has(g as string)).toBe(true)
     }
   })
 

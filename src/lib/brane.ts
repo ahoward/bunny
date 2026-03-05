@@ -477,7 +477,7 @@ export function confirm_intake(): boolean {
   let fd: number | null = null
   try {
     fd = openSync("/dev/tty", "r")
-    const n = readSync(fd, buf, 0, 64)
+    const n = readSync(fd, buf, 0, 64, null)
     const answer = buf.slice(0, n).toString().trim().toLowerCase()
     return answer === "" || answer === "y" || answer === "yes"
   } catch {

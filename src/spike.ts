@@ -2,9 +2,9 @@
 //
 // bny spike — exploratory build, guardrails off
 //
-// same interface as bny build, but: no gemini review, no locked tests,
-// no spec-first requirement. output is explicitly disposable —
-// but the brane still learns from it.
+// same pipeline as bny build but guardrails off:
+// no human checkpoints, no roadmap required, all failures non-fatal.
+// output is explicitly disposable — but the brane still learns from it.
 //
 // usage:
 //   bny spike "prototype oauth flow"     # full pipeline, no review
@@ -18,30 +18,38 @@ import { resolve } from "node:path"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { ralph } from "./lib/ralph.ts"
 import { main as specify_main } from "./specify.ts"
+import { main as challenge_main } from "./challenge.ts"
 import { main as plan_main } from "./plan.ts"
 import { main as tasks_main } from "./tasks.ts"
+import { main as testgen_main } from "./test-gen.ts"
+import { main as review_main } from "./review.ts"
 import { main as implement_main } from "./implement.ts"
+import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
 
 // -- constants --
 
-const STEPS = ["specify", "plan", "tasks", "implement", "ruminate"] as const
+const STEPS = ["specify", "challenge", "plan", "tasks", "test-gen", "review", "implement", "verify", "ruminate"] as const
 type Step = typeof STEPS[number]
 
 const HELP = `usage: bny spike [step] [--dry-run] [--max-iter N] [description]
 
-exploratory build. same as bny build but guardrails off:
-  - no gemini review
-  - no test-first requirement
-  - no locked specs
+exploratory build. same pipeline as bny build but guardrails off:
+  - no human checkpoints
+  - no roadmap required
+  - all failures non-fatal (keeps going)
   - output is disposable — but the brane still learns
 
 steps:
-  specify "desc"   create feature spec
-  plan             create implementation plan
-  tasks            generate task list
-  implement        claude builds it
-  ruminate         reflect on build, feed brane
+  specify "desc"   create feature spec (claude)
+  challenge        adversary hardens spec (gemini)
+  plan             create implementation plan (claude)
+  tasks            generate task list (claude)
+  test-gen         generate test suite (gemini)
+  review           antagonist review (gemini)
+  implement        make tests pass (claude)
+  verify           post-implementation review (gemini)
+  ruminate         reflect on build, feed brane (claude)
 
 flags:
   --dry-run        show what would run, don't execute
@@ -122,19 +130,27 @@ async function run_step(
       }
       return specify_main([description])
     }
+    case "challenge":
+      return challenge_main(description ? [description] : [])
     case "plan":
       return plan_main(description ? [description] : [])
     case "tasks":
       return tasks_main(description ? [description] : [])
+    case "test-gen":
+      return testgen_main(description ? [description] : [])
+    case "review":
+      return review_main([])
     case "implement":
       return implement_main(description ? [description] : [])
+    case "verify":
+      return verify_main(description ? [description] : [])
     case "ruminate":
       // spikes auto-yes ruminate — knowledge is never disposable
       return ruminate_main(["--yes", ...(description ? [description] : [])])
   }
 }
 
-// -- full pipeline (no review step) --
+// -- full pipeline (all failures non-fatal) --
 
 async function run_pipeline(
   description: string, root: string, opts: Opts
@@ -156,15 +172,18 @@ async function run_pipeline(
   if (opts.dry_run) {
     process.stderr.write(`would run:\n`)
     if (need_specify) {
-      process.stderr.write(`  1. specify "${description}"\n`)
+      process.stderr.write(`  1. specify "${description}" (claude)\n`)
     } else {
       process.stderr.write(`  1. (skip specify — feature exists: ${feature})\n`)
     }
-    process.stderr.write(`  2. plan\n`)
-    process.stderr.write(`  3. tasks\n`)
-    process.stderr.write(`  4. (skip review — spike mode)\n`)
-    process.stderr.write(`  5. implement (ralph, max-iter ${opts.max_iter})\n`)
-    process.stderr.write(`  6. ruminate (auto-yes)\n`)
+    process.stderr.write(`  2. challenge (gemini)\n`)
+    process.stderr.write(`  3. plan (claude)\n`)
+    process.stderr.write(`  4. tasks (claude)\n`)
+    process.stderr.write(`  5. test-gen (gemini)\n`)
+    process.stderr.write(`  6. review (gemini)\n`)
+    process.stderr.write(`  7. implement (claude, ralph, max-iter ${opts.max_iter})\n`)
+    process.stderr.write(`  8. verify (gemini)\n`)
+    process.stderr.write(`  9. ruminate (claude, auto-yes)\n`)
     return 0
   }
 
@@ -180,7 +199,7 @@ async function run_pipeline(
     return true
   }
 
-  // -- 1. specify --
+  // -- 1. specify (claude) --
 
   if (need_specify) {
     if (!await run_fn(() => specify_main([description]), "specify")) {
@@ -190,25 +209,39 @@ async function run_pipeline(
     process.stderr.write(`\n--- skip specify (feature: ${feature}) ---\n`)
   }
 
-  // -- 2. plan --
+  // -- 2. challenge (gemini) --
+
+  if (!await run_fn(() => challenge_main([]), "challenge (gemini)")) {
+    process.stderr.write("warning: challenge failed, continuing...\n")
+  }
+
+  // -- 3. plan (claude) --
 
   if (!await run_fn(() => plan_main([]), "plan")) {
     return 1
   }
 
-  // -- 3. tasks --
+  // -- 4. tasks (claude) --
 
   if (!await run_fn(() => tasks_main([]), "tasks")) {
     return 1
   }
 
-  // -- 4. skip review (spike mode) --
+  // -- 5. test-gen (gemini) --
 
-  process.stderr.write(`\n--- skip review (spike mode) ---\n`)
+  if (!await run_fn(() => testgen_main([]), "test-gen (gemini)")) {
+    process.stderr.write("warning: test-gen failed, continuing...\n")
+  }
 
-  // -- 5. implement --
+  // -- 6. review (gemini) --
 
-  process.stderr.write(`\n--- implement (ralph, max-iter ${opts.max_iter}) ---\n`)
+  if (!await run_fn(() => review_main([]), "review (gemini)")) {
+    process.stderr.write("warning: review failed, continuing...\n")
+  }
+
+  // -- 7. implement (claude) --
+
+  process.stderr.write(`\n--- implement (claude, ralph, max-iter ${opts.max_iter}) ---\n`)
   const impl_result = await ralph({
     fn:         () => implement_main([]),
     max_iter:   opts.max_iter,
@@ -222,7 +255,13 @@ async function run_pipeline(
     // spikes don't stop on implement failure — keep going
   }
 
-  // -- 6. ruminate (always, auto-yes — knowledge is never disposable) --
+  // -- 8. verify (gemini) --
+
+  if (!await run_fn(() => verify_main([]), "verify (gemini)")) {
+    process.stderr.write("warning: verify failed, continuing...\n")
+  }
+
+  // -- 9. ruminate (claude, auto-yes — knowledge is never disposable) --
 
   if (!await run_fn(() => ruminate_main(["--yes"]), "ruminate")) {
     process.stderr.write("warning: ruminate failed\n")

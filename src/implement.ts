@@ -73,12 +73,16 @@ export async function main(argv: string[]): Promise<number> {
   ].filter((s): s is NonNullable<typeof s> => s !== null)
 
   const instructions = [
-    "Work through the unchecked tasks in the task list above, in order.",
+    "Tests already exist in the test directory, written by the antagonist agent.",
+    "Your job: make ALL tests pass by implementing the code.",
+    "Work through the implementation tasks in the task list above, in order.",
     "After each code change, run `./dev/test`.",
-    "Before committing, run `./dev/post_flight`.",
+    "Do NOT modify test files — they are locked by the antagonist.",
+    "If a test seems wrong, note it but implement to make it pass anyway.",
     "Mark tasks as [x] in tasks.md as you complete them.",
     "If you get stuck on a task after 3 attempts, stop and report the blocker.",
     "Do not move to the next task until the current one passes tests.",
+    "Before committing, run `./dev/post_flight`.",
   ].join("\n")
 
   const prompt = build_prompt(sections, instructions)

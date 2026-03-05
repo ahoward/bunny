@@ -14,6 +14,8 @@
 import { existsSync, mkdirSync, writeFileSync, chmodSync, readFileSync, lstatSync, readlinkSync, unlinkSync } from "node:fs"
 import { resolve, dirname } from "node:path"
 import { spawn_sync } from "./lib/spawn.ts"
+import { detect_project_type } from "./lib/project.ts"
+import type { ProjectType } from "./lib/project.ts"
 
 // -- marker block operations --
 
@@ -325,7 +327,8 @@ commands:
 - \`bny proposal "topic"\` — generate proposals from the graph
 
 workflow:
-- run \`./dev/test\` after code changes
+- tests are written by the antagonist agent — do NOT modify test files during implementation
+- run \`./dev/test\` after code changes — all tests must pass
 - run \`./dev/post_flight\` before commits
 - read \`bny/guardrails.json\` for project constraints
 - append to \`bny/decisions.md\` after completing work
@@ -450,35 +453,7 @@ const BRANE_INDEX = `# Brane Index
 (none yet)
 `
 
-// -- project type detection --
-
-interface ProjectType {
-  type:        string
-  install_cmd: string
-  test_cmd:    string
-}
-
-function detect_project_type(root: string): ProjectType {
-  if (existsSync(resolve(root, "bun.lock")) || existsSync(resolve(root, "bunfig.toml"))) {
-    return { type: "bun", install_cmd: "bun install", test_cmd: "bun test" }
-  }
-  if (existsSync(resolve(root, "package.json"))) {
-    return { type: "node", install_cmd: "npm install", test_cmd: "npm test" }
-  }
-  if (existsSync(resolve(root, "Cargo.toml"))) {
-    return { type: "rust", install_cmd: "cargo build", test_cmd: "cargo test" }
-  }
-  if (existsSync(resolve(root, "go.mod"))) {
-    return { type: "go", install_cmd: "go mod download", test_cmd: "go test ./..." }
-  }
-  if (existsSync(resolve(root, "pyproject.toml")) || existsSync(resolve(root, "setup.py"))) {
-    return { type: "python", install_cmd: "pip install -e .", test_cmd: "pytest" }
-  }
-  if (existsSync(resolve(root, "Makefile"))) {
-    return { type: "make", install_cmd: "make setup", test_cmd: "make test" }
-  }
-  return { type: "generic", install_cmd: "echo 'no install step configured'", test_cmd: "echo 'no test step configured'" }
-}
+// -- project type detection (from src/lib/project.ts) --
 
 function dev_setup(p: ProjectType): string {
   return `#!/usr/bin/env bash

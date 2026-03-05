@@ -3,8 +3,8 @@
 // bny next — pick the next roadmap item and run the full pipeline
 //
 // reads bny/roadmap.md, extracts the first unchecked item,
-// and orchestrates: specify → (human reviews spec) → plan → tasks →
-// review → implement → ruminate → post_flight → update roadmap + decisions
+// and orchestrates: specify → challenge → (human reviews spec) → plan → tasks →
+// test-gen → review → implement → verify → ruminate → post_flight → update roadmap + decisions
 //
 // usage:
 //   bny next                    # run the pipeline
@@ -17,10 +17,13 @@ import { resolve } from "node:path"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { ralph } from "./lib/ralph.ts"
 import { main as specify_main } from "./specify.ts"
+import { main as challenge_main } from "./challenge.ts"
 import { main as plan_main } from "./plan.ts"
 import { main as tasks_main } from "./tasks.ts"
+import { main as testgen_main } from "./test-gen.ts"
 import { main as review_main } from "./review.ts"
 import { main as implement_main } from "./implement.ts"
+import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
 import { spawn_sync } from "./lib/spawn.ts"
 
@@ -46,15 +49,18 @@ export async function main(argv: string[]): Promise<number> {
 
 picks the next roadmap item and runs the full pipeline:
   1. pre_flight
-  2. specify (generate spec from brane)
-  3. plan (generate plan from spec)
-  4. tasks (generate task list)
-  5. review (gemini antagonist)
-  6. implement (claude, with ralph)
-  7. ruminate (reflect + feed brane)
-  8. post_flight
-  9. update roadmap + decisions
-  10. report
+  2. specify (claude)
+  3. challenge (gemini — harden spec)
+  4. (human reviews spec, if --interactive)
+  5. plan (claude)
+  6. tasks (claude)
+  7. test-gen (gemini — generate test suite)
+  8. review (gemini — antagonist review)
+  9. implement (claude, with ralph)
+  10. verify (gemini — post-implementation review)
+  11. ruminate (claude — reflect + feed brane)
+  12. post_flight
+  13. update roadmap + decisions
 
 flags:
   --dry-run          show what would run, don't execute
@@ -106,16 +112,18 @@ flags:
   if (dry_run) {
     process.stderr.write(`would run:\n`)
     process.stderr.write(`  1. ./dev/pre_flight\n`)
-    process.stderr.write(`  2. bny specify "${item_name}"\n`)
-    process.stderr.write(`  3. (human reviews spec)\n`)
-    process.stderr.write(`  4. bny plan\n`)
-    process.stderr.write(`  5. bny tasks\n`)
-    process.stderr.write(`  6. bny review\n`)
-    process.stderr.write(`  7. bny --ralph --max-iter ${max_iter} implement\n`)
-    process.stderr.write(`  8. bny ruminate\n`)
-    process.stderr.write(`  9. ./dev/post_flight\n`)
-    process.stderr.write(` 10. update roadmap + decisions\n`)
-    process.stderr.write(` 11. report\n`)
+    process.stderr.write(`  2. bny specify "${item_name}" (claude)\n`)
+    process.stderr.write(`  3. bny challenge (gemini)\n`)
+    process.stderr.write(`  4. (human reviews spec)\n`)
+    process.stderr.write(`  5. bny plan (claude)\n`)
+    process.stderr.write(`  6. bny tasks (claude)\n`)
+    process.stderr.write(`  7. bny test-gen (gemini)\n`)
+    process.stderr.write(`  8. bny review (gemini)\n`)
+    process.stderr.write(`  9. bny --ralph --max-iter ${max_iter} implement (claude)\n`)
+    process.stderr.write(` 10. bny verify (gemini)\n`)
+    process.stderr.write(` 11. bny ruminate (claude)\n`)
+    process.stderr.write(` 12. ./dev/post_flight\n`)
+    process.stderr.write(` 13. update roadmap + decisions\n`)
     return 0
   }
 
@@ -152,7 +160,7 @@ flags:
     let fd: number | null = null
     try {
       fd = openSync("/dev/tty", "r")
-      const n = readSync(fd, buf, 0, 64)
+      const n = readSync(fd, buf, 0, 64, null)
       if (interrupted) {
         process.stderr.write("\naborted\n")
         process.exit(130)
@@ -193,7 +201,13 @@ flags:
 
   const paths = feature_paths(root, feature)
 
-  // -- 3. human reviews spec --
+  // -- 3. challenge (gemini — harden spec) --
+
+  if (!await run_fn(() => challenge_main([]), "challenge (gemini)")) {
+    process.stderr.write("warning: challenge failed, continuing without spec hardening\n")
+  }
+
+  // -- 4. human reviews spec --
 
   if (interactive) {
     process.stderr.write(`\n--- human checkpoint ---\n`)
@@ -206,26 +220,31 @@ flags:
     }
   }
 
-  // -- 4. plan --
+  // -- 5. plan --
 
   if (!await run_fn(() => plan_main([]), "plan")) {
     return 1
   }
 
-  // -- 5. tasks --
+  // -- 6. tasks --
 
   if (!await run_fn(() => tasks_main([]), "tasks")) {
     return 1
   }
 
-  // -- 6. review (gemini) --
+  // -- 7. test-gen (gemini — generate test suite) --
 
-  if (!await run_fn(() => review_main([]), "review")) {
-    // review failure is non-fatal — gemini might not be available
+  if (!await run_fn(() => testgen_main([]), "test-gen (gemini)")) {
+    process.stderr.write("warning: test-gen failed, continuing without generated tests\n")
+  }
+
+  // -- 8. review (gemini) --
+
+  if (!await run_fn(() => review_main([]), "review (gemini)")) {
     process.stderr.write("warning: review failed, continuing without antagonist review\n")
   }
 
-  // -- 7. implement (claude, with ralph) --
+  // -- 9. implement (claude, with ralph) --
 
   process.stderr.write(`\n--- implement (ralph, max-iter ${max_iter}) ---\n`)
   const impl_result = await ralph({
@@ -247,20 +266,26 @@ flags:
     }
   }
 
-  // -- 8. ruminate (reflect + feed brane) --
+  // -- 10. verify (gemini — post-implementation review) --
+
+  if (!await run_fn(() => verify_main([]), "verify (gemini)")) {
+    process.stderr.write("warning: verify failed, continuing...\n")
+  }
+
+  // -- 11. ruminate (reflect + feed brane) --
 
   const ruminate_args = interactive ? [] : ["--yes"]
   if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
     process.stderr.write("warning: ruminate failed, continuing...\n")
   }
 
-  // -- 9. post_flight (external project script) --
+  // -- 12. post_flight (external project script) --
 
   if (!run_ext(["./dev/post_flight"], "post_flight")) {
     process.stderr.write("warning: post_flight failed\n")
   }
 
-  // -- 10. update roadmap + decisions --
+  // -- 13. update roadmap + decisions --
 
   process.stderr.write(`\n--- updating roadmap + decisions ---\n`)
 
@@ -282,7 +307,7 @@ flags:
     process.stderr.write(`decisions: appended '${item_name}'\n`)
   }
 
-  // -- 11. report --
+  // -- 14. report --
 
   process.stderr.write(`\n[bny next] complete: ${item_text}\n`)
   return 0
