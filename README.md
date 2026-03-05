@@ -6,14 +6,16 @@
   <em>"why are you wearing that stupid man suit?"</em>
 </p>
 
-**an autonomous coding pipeline where two AI agents fight each other to produce tested code.**
+**a dark factory for the solo developer.** two AI agents, nine steps, one build at a time — and a knowledge graph that makes every build smarter than the last.
 
-self-testing is self-serving. when one AI writes both code and tests, you get green test suites for broken code. bny fixes this with adversarial separation:
+most AI coding tools scale by throwing more agents at the problem. bunny scales by *learning*. every build, every spike, every brainstorm feeds a persistent knowledge graph. the tenth build knows what the first nine learned. parallel agents are fast and dumb. serial + recursive is slow and wise.
+
+the factory runs a single, observable pipeline — you can watch each step, intervene anywhere, re-run one phase. no orchestrator black box. no 50-agent swarm you can't debug. just two agents with adversarial incentives:
 
 - **gemini** writes tests to *break* things — reads the spec, finds gaps, generates a hostile test suite.
 - **claude** writes code to *survive* — never sees the test-generation prompt, can't weaken the tests.
 
-code only ships when claude beats gemini's tests. every build feeds a persistent knowledge graph that gets smarter over time.
+code ships when claude beats gemini's tests. then both agents feed the brane.
 
 ```
 specify → challenge → plan → tasks → test-gen → review → implement → verify → ruminate
@@ -78,7 +80,7 @@ bny build "add user auth"
 # 5. or prototype without guardrails
 bny spike "prototype oauth flow"
 
-# 6. check what the graph learned
+# 6. check what the graph learned (it compounds)
 bny brane ask "what are the security risks?"
 ```
 
@@ -132,7 +134,7 @@ all gemini steps are non-fatal. no gemini? the factory still runs — claude doe
 
 ### knowledge graph (brane)
 
-a persistent, self-organizing collection of markdown files. provenance-tracked sources, filterable lenses, full-text search. knowledge compounds — even throwaway spikes teach the graph something.
+this is what makes bunny recursive, not just serial. a persistent, self-organizing knowledge graph that accumulates understanding across every build, spike, and brainstorm. `brane loop` is autonomous research — it reflects on gaps, searches the web, fetches sources, absorbs what it finds, and repeats until it converges. the tenth build knows what the first nine learned.
 
 ```bash
 bny digest <file|dir|url>                            # ingest
