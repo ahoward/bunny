@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# bny-generated
+set -e
+cd "$(dirname "$0")/.."
+
+echo "pre_flight: checking..."
+
+# tests pass
+./dev/test 2>/dev/null || { echo "pre_flight: FAIL — tests"; exit 1; }
+
+echo "pre_flight: ok"

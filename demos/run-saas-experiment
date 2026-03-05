@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+#
+# run-saas-experiment — full product discovery flow exercising the brane
+#
+# unlike run-experiment (seed → build), this emulates how a real team
+# would use bny: research → brainstorm → explore → propose → build.
+#
+# usage:
+#   ./demos/run-saas-experiment <name> <seed-description>
+#
+
+set -euo pipefail
+
+NAME="${1:?usage: run-saas-experiment <name> <seed-description>}"
+DESC="${2:?usage: run-saas-experiment <name> <seed-description>}"
+BUNNY_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DEMO_DIR="$BUNNY_ROOT/demos/$NAME"
+LOG="$DEMO_DIR/experiment.log"
+ERRORS="$DEMO_DIR/errors.log"
+
+export PATH="$BUNNY_ROOT/bin:$PATH"
+
+if [ -d "$DEMO_DIR" ]; then
+  echo "error: demos/$NAME already exists" >&2
+  exit 1
+fi
+
+# -- helpers --
+
+step() {
+  local label="$1"
+  shift
+  echo "" >> "$LOG"
+  echo "=== STEP: $label ===" >> "$LOG"
+  echo "--- cmd: $* ---" >> "$LOG"
+  echo "  [$label] $*"
+
+  if "$@" >> "$LOG" 2>&1; then
+    echo "--- exit: 0 ---" >> "$LOG"
+  else
+    local code=$?
+    echo "--- exit: $code ---" >> "$LOG"
+    echo "STEP=$label CMD=$* EXIT=$code" >> "$ERRORS"
+    echo "  !! error (exit $code) — logged"
+  fi
+}
+
+check() {
+  local label="$1" condition="$2"
+  if eval "$condition"; then
+    echo "  [ok] $label" | tee -a "$LOG"
+    return 0
+  else
+    echo "  [FAIL] $label" | tee -a "$LOG"
+    echo "VALIDATION=$label" >> "$ERRORS"
+    return 1
+  fi
+}
+
+# -- setup --
+
+echo "=== saas experiment: $NAME ==="
+echo "=== description: $DESC ==="
+echo ""
+
+mkdir -p "$DEMO_DIR"
+echo "experiment: $NAME (saas flow)" > "$LOG"
+echo "description: $DESC" >> "$LOG"
+echo "started: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$LOG"
+touch "$ERRORS"
+
+cd "$DEMO_DIR"
+
+# -- phase 1: init --
+
+step "init"           bny init
+
+# -- phase 2: seed the idea --
+
+cat > seed.md << SEED_EOF
+# Product Idea
+
+$DESC
+
+## Target Users
+Early-stage SaaS founders who need a launch waitlist before their product is ready.
+
+## Key Questions
+- What referral mechanics drive viral growth?
+- How should queue position be calculated fairly?
+- What anti-gaming measures prevent abuse?
+- What email touchpoints keep users engaged?
+SEED_EOF
+
+step "digest-seed"    bny digest seed.md --yes
+
+# -- phase 3: research phase (exercise the brane) --
+
+echo ""
+echo "--- phase 3: brane exploration ---"
+
+# storm: divergent brainstorming on the core idea
+step "storm-1"        bny brane storm --yes "$DESC"
+
+# storm: targeted brainstorming on specific angles
+step "storm-2"        bny brane storm --yes "referral mechanics and viral growth loops for waitlists"
+
+# autonomous research loop: let the brane search, fetch, and learn
+step "loop-research"  bny brane loop --rounds 2 --yes "waitlist best practices, referral systems, and anti-abuse patterns"
+
+# -- phase 4: query the brane --
+
+echo ""
+echo "--- phase 4: brane queries ---"
+
+step "ask-architecture"   bny brane ask "what architecture should we use for this waitlist system?"
+step "ask-referrals"      bny brane ask "what are the best referral mechanics for a waitlist?"
+step "ask-risks"          bny brane ask "what are the biggest technical and product risks?"
+step "brane-tldr"         bny brane tldr
+
+# -- phase 5: generate proposals --
+
+echo ""
+echo "--- phase 5: proposals ---"
+
+step "proposal"       bny proposal --count 2 --yes "waitlist API design"
+
+# accept the first proposal
+PROPOSAL=$(ls bny/proposals/*.md 2>/dev/null | head -1)
+if [ -n "$PROPOSAL" ]; then
+  SLUG=$(basename "$PROPOSAL" .md)
+  step "accept"       bny proposal accept --yes "$SLUG"
+fi
+
+# -- phase 6: build --
+
+echo ""
+echo "--- phase 6: build ---"
+
+step "build"          bny build --yes "$DESC"
+
+# -- phase 7: test --
+
+step "dev-test"       ./dev/test
+
+# -- phase 8: validate --
+
+echo "" >> "$LOG"
+echo "=== VALIDATION ===" >> "$LOG"
+echo ""
+echo "--- validation ---"
+
+V_PASS=0
+V_FAIL=0
+
+run_check() {
+  if check "$@"; then
+    V_PASS=$((V_PASS + 1))
+  else
+    V_FAIL=$((V_FAIL + 1))
+  fi
+}
+
+run_check "spec exists"           "ls specs/[0-9][0-9][0-9]-*/spec.md >/dev/null 2>&1"
+run_check "plan exists"           "ls specs/[0-9][0-9][0-9]-*/plan.md >/dev/null 2>&1"
+run_check "tasks exist"           "ls specs/[0-9][0-9][0-9]-*/tasks.md >/dev/null 2>&1"
+run_check "challenge exists"      "ls specs/[0-9][0-9][0-9]-*/challenge.md >/dev/null 2>&1"
+run_check "src/ has files"        "find src -name '*.ts' | grep -q ."
+run_check "tests/ has test files" "find tests -name '*.test.ts' | grep -q ."
+run_check "worldview has content" "[ -d bny/brane/worldview ] && find bny/brane/worldview -name '*.md' -type f | grep -q ."
+run_check "proposals generated"   "ls bny/proposals/*.md >/dev/null 2>&1"
+run_check "roadmap has items"     "grep -q '\\- \\[' bny/roadmap.md 2>/dev/null"
+
+echo "" >> "$LOG"
+echo "validation: $V_PASS passed, $V_FAIL failed" >> "$LOG"
+
+# -- brane stats --
+
+echo ""
+echo "--- brane stats ---"
+WORLDVIEW_FILES=$(find bny/brane/worldview -name '*.md' -type f 2>/dev/null | wc -l | tr -d ' ')
+SOURCE_COUNT=$(ls bny/brane/sources/*.txt 2>/dev/null | wc -l | tr -d ' ')
+PROPOSAL_COUNT=$(ls bny/proposals/*.md 2>/dev/null | wc -l | tr -d ' ')
+echo "  worldview files: $WORLDVIEW_FILES" | tee -a "$LOG"
+echo "  sources ingested: $SOURCE_COUNT" | tee -a "$LOG"
+echo "  proposals: $PROPOSAL_COUNT" | tee -a "$LOG"
+
+# -- summary --
+
+echo "" >> "$LOG"
+echo "finished: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$LOG"
+
+# clean up nested .git
+rm -rf "$DEMO_DIR/.git"
+
+ERROR_COUNT=$(wc -l < "$ERRORS" | tr -d ' ')
+echo ""
+echo "=== done: $NAME ==="
+echo "  log:         demos/$NAME/experiment.log"
+echo "  errors:      $ERROR_COUNT"
+echo "  validations: $V_PASS passed, $V_FAIL failed"
+if [ "$ERROR_COUNT" -gt 0 ]; then
+  echo ""
+  cat "$ERRORS" | sed 's/^/  !! /'
+fi

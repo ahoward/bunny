@@ -1,0 +1,1 @@
+STEP=accept CMD=bny proposal accept --yes core-api-endpoints-and-data-model EXIT=1

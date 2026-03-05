@@ -1,0 +1,12 @@
+{
+  "name": "waitlist-api",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/server.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "hono": "^4.7.0"
+  }
+}

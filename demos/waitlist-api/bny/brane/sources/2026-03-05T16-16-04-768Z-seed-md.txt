@@ -1,0 +1,12 @@
+# Product Idea
+
+a waitlist API for product launches — manage signups with email and name, referral tracking with unique codes, queue position estimation, and webhook notifications when users are promoted
+
+## Target Users
+Early-stage SaaS founders who need a launch waitlist before their product is ready.
+
+## Key Questions
+- What referral mechanics drive viral growth?
+- How should queue position be calculated fairly?
+- What anti-gaming measures prevent abuse?
+- What email touchpoints keep users engaged?
