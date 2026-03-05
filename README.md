@@ -16,7 +16,12 @@ bny combines three things:
 
 2. **code graph (map)** — structural awareness of your codebase via tree-sitter. functions, classes, imports, exports — parsed, not guessed. agents see the shape of the code, not just the text.
 
-3. **dark factory (build)** — a multi-agent pipeline that turns knowledge into working code. claude designs tests and implements. gemini reviews for blind spots and security holes. the pipeline runs end-to-end: specify → plan → tasks → review → implement → ruminate. output feeds back into the knowledge graph.
+3. **dark factory (build)** — a multi-agent pipeline that turns knowledge into working, *tested* code. claude designs and implements. gemini challenges, writes tests, and verifies. two agents, opposed incentives, no self-serving tests. the pipeline runs end-to-end:
+
+```
+specify → challenge → plan → tasks → test-gen → review → implement → verify → ruminate
+claude    gemini      claude  claude   gemini     gemini   claude      gemini   claude
+```
 
 ```
 digest → think → propose → build → ruminate
@@ -25,6 +30,73 @@ digest → think → propose → build → ruminate
 ```
 
 code is a side effect of the graph getting smarter.
+
+## antagonistic testing
+
+**we don't do TDD.** here's why.
+
+TDD assumes the test-writer wants to find bugs. that's true for a disciplined human developer. it's catastrophically false for AI agents. when the same agent writes tests and code, it writes tests that *confirm its own implementation* — tests optimized to pass, not tests optimized to catch failures. self-testing is self-serving. we watched claude write green test suites for code that was quietly broken. every time.
+
+the fix is adversarial separation. two agents with opposed incentives:
+
+- **gemini** writes tests to *break* things. it reads the spec, finds gaps, generates edge cases, and produces a test suite that the implementation must survive.
+- **claude** writes code to *pass* gemini's tests. it never sees the test-generation prompt. it can't weaken the tests. it can only make them green.
+
+neither agent can game the other's output. the tests are locked once written — the implementer is forbidden from modifying them.
+
+### the pipeline
+
+| step | agent | what |
+|------|-------|------|
+| **specify** | claude | write spec with acceptance scenarios |
+| **challenge** | gemini | harden spec — find gaps, edge cases, ambiguities |
+| plan | claude | implementation plan |
+| tasks | claude | implementation tasks only (no test tasks) |
+| **test-gen** | gemini | generate 4-layer test suite from hardened spec |
+| review | gemini | antagonist code review |
+| **implement** | claude | make gemini's tests pass |
+| **verify** | gemini | post-implementation — are the tests real? anything missed? |
+| ruminate | claude | reflect on build, feed knowledge graph |
+
+gemini touches the code at 4 points: challenge, test-gen, review, verify. claude never writes tests. this is not a rule — it's architecture. the system makes the wrong thing hard.
+
+### 4-layer test strategy
+
+gemini generates four kinds of tests from the spec:
+
+1. **contract tests** — one test per acceptance scenario. Given/When/Then from the spec becomes a test case. these are the specification as code. if a contract test fails, the feature is broken.
+
+2. **property tests** — invariants that hold for all inputs. roundtrip (parse then format equals identity), idempotency, monotonicity. uses the project's property testing library (fast-check, hypothesis, proptest, rapid).
+
+3. **golden file tests** — capture known-good output for key operations. store expected output as fixtures. diff on regression. catches the bugs that unit tests miss — the ones where the output is *almost* right.
+
+4. **boundary tests** — from edge cases surfaced in the challenge step. empty input, max size, malformed data, unicode, null fields, off-by-one. the adversary finds these during challenge; test-gen turns them into executable tests.
+
+### why this beats TDD
+
+TDD is designed for a single developer iterating in a tight loop. it works well there. but in multi-agent systems:
+
+- **TDD has aligned incentives** — the same mind writes tests and code. it's easy to unconsciously write tests that match the implementation you're already planning.
+- **adversarial testing has opposed incentives** — the test-writer has zero knowledge of the implementation strategy. the implementer has zero ability to modify the tests. this is a stronger guarantee than discipline.
+- **TDD catches regressions. adversarial testing catches design flaws.** the challenge step finds problems *before* any code exists. the verify step finds problems *after* code passes all tests. TDD can't do either.
+- **token savings** — gemini is cheaper than claude. offloading all test generation to gemini cuts the primary agent's token usage significantly.
+
+### graceful degradation
+
+all gemini steps are non-fatal. no gemini API key? no gemini CLI? the factory still runs — it just skips challenge, test-gen, review, and verify. you get the old pipeline (claude does everything) with a warning. adversarial testing is the best path, but the factory never stops.
+
+### language portable
+
+project type detection (`detect_project_type()`) identifies your stack and tells gemini which test framework and patterns to use:
+
+| project | test framework | property lib | test dir |
+|---------|---------------|-------------|----------|
+| bun | `bun:test` | `fast-check` | `tests/` |
+| node | `jest` | `fast-check` | `tests/` |
+| rust | `cargo test` | `proptest` | `tests/` |
+| go | `testing` | `rapid` | `*_test.go` |
+| python | `pytest` | `hypothesis` | `tests/` |
+| ruby | `rspec` | `rantly` | `spec/` |
 
 ## quick start
 
@@ -39,7 +111,7 @@ git clone https://github.com/ahoward/bunny.git && cd bunny
 ./dev/setup && export PATH="./bin:$PATH"
 ```
 
-`bny init` detects your project type (bun, node, rust, go, python, make) and generates appropriate dev scripts. it drops in as a guest — marker-delimited blocks in existing files, never clobbers. `bny uninit --force` removes all traces cleanly.
+`bny init` detects your project type (bun, node, rust, go, python, ruby, make) and generates appropriate dev scripts. it drops in as a guest — marker-delimited blocks in existing files, never clobbers. `bny uninit --force` removes all traces cleanly.
 
 ## the happy path
 
@@ -62,12 +134,12 @@ bny proposal "auth system"                          # graph generates a proposal
 bny proposal accept auth-system                     # accepted → roadmap item
 
 # --- 4. build — the dark factory ---
-bny build                                           # full pipeline: specify → plan → review → implement → ruminate
+bny build "add user auth"                           # full pipeline (9 steps, 2 agents)
 bny --effort full build                             # 10 retries, $5 budget
 bny spin                                            # run detached in tmux
 
 # --- 5. spike — build without guardrails ---
-bny spike "prototype oauth flow"                    # no review, exploratory
+bny spike "prototype oauth flow"                    # same pipeline, all failures non-fatal
 
 # --- 6. check the graph ---
 bny brane tldr                                      # see what the graph knows now
@@ -134,26 +206,29 @@ bny map                                             # generate structural codeba
 
 ### dark factory (build)
 
-the build pipeline runs all steps by default, or one step at a time.
+the build pipeline runs all 9 steps by default, or one step at a time.
 
 ```bash
-bny build                                           # full pipeline
+bny build                                           # full pipeline (resume current feature)
 bny build "add user auth"                           # full pipeline with description
-bny build specify "add user auth"                   # create spec
-bny build plan                                      # create implementation plan
-bny build tasks                                     # generate task list
-bny build review                                    # gemini antagonist review
-bny build implement                                 # claude builds it
-bny build ruminate                                  # reflect, feed graph
+bny build specify "add user auth"                   # create spec (claude)
+bny build challenge                                 # harden spec (gemini)
+bny build plan                                      # create implementation plan (claude)
+bny build tasks                                     # generate task list (claude)
+bny build test-gen                                  # generate test suite (gemini)
+bny build review                                    # antagonist review (gemini)
+bny build implement                                 # make tests pass (claude)
+bny build verify                                    # post-implementation review (gemini)
+bny build ruminate                                  # reflect, feed graph (claude)
 ```
 
 ### spike (exploratory)
 
-same interface as build, guardrails off. no gemini review.
+same pipeline as build, guardrails off. all failures non-fatal — the factory keeps going.
 output is disposable — but the graph still learns from it.
 
 ```bash
-bny spike "prototype websocket layer"               # full pipeline, no review
+bny spike "prototype websocket layer"               # full pipeline, no stops
 bny spike implement                                 # just implement, fast
 ```
 
@@ -221,13 +296,23 @@ bny drops into your project as a guest, not a landlord.
 ```
 bin/bny           compiled binary — single entry point
 src/              CLI source code (the dark factory)
-  lib/            assassin, ralph, feature, prompt, brane, map, spinner, log, result, types
+  lib/            assassin, ralph, feature, prompt, brane, map, project, spinner, log, result
   brane/          eat, ask, lens, rebuild, storm, enhance, tldr, loop
   dev/            wrappers for ./dev/* scripts
   templates/      spec, plan, tasks templates
   init.ts         scaffold a project (guest mode)
   build.ts        the dark factory (full pipeline or per-step)
-  ...             specify, plan, tasks, implement, review, ruminate, etc.
+  specify.ts      create feature spec (claude)
+  challenge.ts    harden spec — adversary finds gaps (gemini)
+  plan.ts         create implementation plan (claude)
+  tasks.ts        generate implementation task list (claude)
+  test-gen.ts     generate 4-layer test suite from spec (gemini)
+  review.ts       antagonist code review (gemini)
+  implement.ts    make tests pass (claude)
+  verify.ts       post-implementation adversary review (gemini)
+  ruminate.ts     reflect on build, feed brane (claude)
+  spike.ts        exploratory build (guardrails off)
+  next.ts         full pipeline for next roadmap item
 bny/              project state (tracked: decisions, guardrails; runtime: brane, proposals)
 dev/              per-project dev scripts (auto-generated by init)
 tests/            tests + fixtures

@@ -2,12 +2,12 @@
 
 ## Next
 
-- [ ] P1: Generated code has no tests — AGENTS.md/CLAUDE.md need TDD enforcement, `bny init` should scaffold working `dev/test` that runs `bun test`, agent protocol must say "tests MUST exist before implementation"
 - [ ] P1: `bny next` output is a wall of text — should be quiet progress lines on stderr, full JSON to a log file
 - [ ] P1: Roadmap item parsing is fragile — `## Next` section format must match what `bny proposal accept` writes
 
 ## Done
 
+- [x] P1: Dark testing stack — antagonistic agents own testing (challenge, test-gen, verify)
 - [x] `bny build` without roadmap errors — use `bny spike` for ad-hoc builds
 - [x] `bny proposal` derives topic from worldview when none given
 - [x] `bny proposal accept` auto-accepts when only one proposal exists
