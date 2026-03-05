@@ -1,0 +1,1 @@
+STEP=dev-test CMD=./dev/test EXIT=1

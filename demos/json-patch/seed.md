@@ -1,0 +1,1 @@
+a TypeScript library implementing RFC 6902 JSON Patch — apply a sequence of add, remove, replace, move, copy, and test operations to a JSON document with atomic rollback on failure

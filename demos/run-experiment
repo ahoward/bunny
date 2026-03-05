@@ -120,12 +120,12 @@ run_check() {
 run_check "spec exists"           "ls specs/*/spec.md >/dev/null 2>&1"
 run_check "plan exists"           "ls specs/*/plan.md >/dev/null 2>&1"
 run_check "tasks exist"           "ls specs/*/tasks.md >/dev/null 2>&1"
-run_check "current-feature set"   "[ -s bny/current-feature ]"
-run_check "current-feature valid" "[ -d \"specs/\$(cat bny/current-feature 2>/dev/null | tr -d '\\n')\" ]"
+FEATURE_DIR=$(ls -d specs/[0-9][0-9][0-9]-* 2>/dev/null | tail -1)
+run_check "feature dir exists"   "[ -n \"$FEATURE_DIR\" ]"
+run_check "feature has spec"     "[ -s \"$FEATURE_DIR/spec.md\" ]"
 run_check "src/ has .ts files"    "ls src/*.ts >/dev/null 2>&1 || ls src/**/*.ts >/dev/null 2>&1"
-run_check "tests/ has test files" "ls tests/*.test.ts >/dev/null 2>&1"
-run_check "worldview has content" "find bny/brane/worldview -name '*.md' -size +0 2>/dev/null | head -1 | grep -q ."
-run_check "brane index exists"    "[ -s bny/brane/worldview/index.md ]"
+run_check "tests/ has test files" "find tests -name '*.test.ts' | grep -q ."
+run_check "worldview has content" "[ -d bny/brane/worldview ] && find bny/brane/worldview -name '*.md' -type f | grep -q ."
 
 echo "" >> "$LOG"
 echo "validation: $V_PASS passed, $V_FAIL failed" >> "$LOG"

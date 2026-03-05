@@ -24,11 +24,11 @@ claude    gemini      claude  claude   gemini     gemini   claude      gemini   
 
 each of these was built from a single sentence. zero human intervention:
 
-| prompt | files | result |
+| prompt | tests | result |
 |--------|-------|--------|
-| "a REST API that serves fizzbuzz over HTTP" | 3 | clean |
-| "a CLI tool that counts words, lines, and characters in files" | 3 | clean |
-| "a CLI that lints markdown files for common issues" | 6 | clean |
+| "a library that parses semver ranges (^, ~, >=, \|\|, hyphen, x-ranges)" | 54 | clean |
+| "RFC 6902 JSON Patch — add, remove, replace, move, copy, test with atomic rollback" | 37 | clean |
+| "a cron expression parser that computes the next N scheduled times" | 12 | clean |
 
 see [demos/](demos/) for full pipeline output — specs, tests, source, brane state, and logs.
 

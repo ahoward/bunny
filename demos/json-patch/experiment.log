@@ -1,0 +1,518 @@
+experiment: json-patch
+description: a TypeScript library implementing RFC 6902 JSON Patch — apply a sequence of add, remove, replace, move, copy, and test operations to a JSON document with atomic rollback on failure
+started: 2026-03-05T07:52:44Z
+
+=== STEP: bny-init ===
+--- cmd: bny init ---
+initialized git repo
+[bny init] 
+
+  create   bny/constitution.md
+  create   bny/guardrails.json
+  create   bny/roadmap.md
+  create   bny/decisions.md
+  create   bny/todos.md
+  create   bny/brane/worldview.md
+  create   bny/brane/index.md
+  detected generic project
+  create   dev/setup
+  create   dev/test
+  create   dev/health
+  create   dev/pre_flight
+  create   dev/post_flight
+  create   .githooks/pre-commit
+  create   .githooks/pre-push
+  create   .gitignore
+  create   CLAUDE.md
+  create   GEMINI.md
+  create   AGENTS.md
+  config   git core.hooksPath → .githooks
+
+  18 created
+
+  next: edit bny/roadmap.md, then run 'bny ipm' to plan
+--- exit: 0 ---
+
+=== STEP: digest-seed ===
+--- cmd: bny digest seed.md ---
+stashed: 2026-03-05T07-52-44-415Z-seed-md.txt (180 bytes)
+eating: seed.md...
+
+[intake]
+  + json-patch/overview.md  (31 lines)
+
+reasoning: Absorbed the core concept: a TypeScript RFC 6902 JSON Patch library with six operations and atomic rollback semantics. Captured the operation taxonomy, key design properties (atomicity, sequential application), and noted tensions around rollback strategy, path resolution via JSON Pointer, and the compositional nature of move/copy. Filtered out nothing — this is the foundational seed for the project.
+
+1 operation(s) (1 new)
+applied 1 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "source": "seed.md",
+    "operations": [
+      {
+        "action": "create",
+        "path": "json-patch/overview.md"
+      }
+    ],
+    "reasoning": "Absorbed the core concept: a TypeScript RFC 6902 JSON Patch library with six operations and atomic rollback semantics. Captured the operation taxonomy, key design properties (atomicity, sequential application), and noted tensions around rollback strategy, path resolution via JSON Pointer, and the compositional nature of move/copy. Filtered out nothing — this is the foundational seed for the project."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/eat",
+    "timestamp": "2026-03-05T07:53:24.918Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: brane-storm ===
+--- cmd: bny brane storm a TypeScript library implementing RFC 6902 JSON Patch — apply a sequence of add, remove, replace, move, copy, and test operations to a JSON document with atomic rollback on failure ---
+storming: inline...
+
+[intake]
+  + json-patch/pointer-edge-cases.md  (27 lines)
+  + json-patch/rollback-strategies.md  (32 lines)
+  + json-patch/test-operation-patterns.md  (31 lines)
+  + json-patch/move-copy-semantics.md  (25 lines)
+  + json-patch/error-model.md  (26 lines)
+  + json-patch/diff-generation.md  (26 lines)
+  + json-patch/performance-considerations.md  (22 lines)
+
+reasoning: Expanded from the core overview into the practical implementation concerns that a library author must resolve: pointer resolution edge cases (the most bug-prone area), rollback strategy tradeoffs (central architectural decision), test operation as a concurrency primitive (often overlooked), move/copy subtleties (array index shifting, prefix restriction), error model design (RFC leaves this open), diff generation as the inverse problem (adjacent capability), and performance considerations (where naive choices become bottlenecks). Each file explores an angle the overview mentions in passing but doesn't unpack.
+
+7 operation(s) (7 new)
+applied 7 operation(s)
+regenerating index...
+
+[suggestions]
+  LENS     adversarial-inputs
+           The worldview assumes well-formed patches. An adversarial lens would explore: deeply nested paths as DoS vectors, circular move attempts, patches with thousands of operations, integer overflow in array indices, and prototype pollution risks in JavaScript/TypeScript.
+  LENS     real-world-usage
+           How is JSON Patch actually used in production? HTTP PATCH methods, CRDT-like collaborative editing, configuration management (Kubernetes strategic merge patch vs JSON Patch), database change streams. Grounds the library design in actual use cases.
+  QUESTION Should the library also implement RFC 7396 JSON Merge Patch?
+           JSON Merge Patch is the simpler alternative (just send the partial object to merge). Many users confuse the two RFCs. Supporting both — or explicitly choosing not to — is a design decision worth documenting.
+  QUESTION What is the deep equality semantics for test — and should NaN, -0, or undefined be handled?
+           JSON doesn't have NaN or undefined, but TypeScript runtime values might. The boundary between JSON-the-spec and JavaScript-the-runtime creates subtle test operation bugs.
+  SOURCE   RFC 6901 (JSON Pointer)
+           The pointer spec is the foundation of path resolution. Reading it directly reveals edge cases (empty string segments, numeric index rules) that secondary sources often miss.
+  SOURCE   RFC 7396 (JSON Merge Patch)
+           Understanding the alternative helps justify RFC 6902's complexity — Merge Patch can't express null-setting, array manipulation, or conditional updates.
+
+6 suggestion(s)
+{
+  "status": "success",
+  "result": {
+    "seed": "inline",
+    "rounds": 1,
+    "operations": 7,
+    "suggestions": [
+      {
+        "kind": "lens",
+        "value": "adversarial-inputs",
+        "reason": "The worldview assumes well-formed patches. An adversarial lens would explore: deeply nested paths as DoS vectors, circular move attempts, patches with thousands of operations, integer overflow in array indices, and prototype pollution risks in JavaScript/TypeScript."
+      },
+      {
+        "kind": "lens",
+        "value": "real-world-usage",
+        "reason": "How is JSON Patch actually used in production? HTTP PATCH methods, CRDT-like collaborative editing, configuration management (Kubernetes strategic merge patch vs JSON Patch), database change streams. Grounds the library design in actual use cases."
+      },
+      {
+        "kind": "question",
+        "value": "Should the library also implement RFC 7396 JSON Merge Patch?",
+        "reason": "JSON Merge Patch is the simpler alternative (just send the partial object to merge). Many users confuse the two RFCs. Supporting both — or explicitly choosing not to — is a design decision worth documenting."
+      },
+      {
+        "kind": "question",
+        "value": "What is the deep equality semantics for test — and should NaN, -0, or undefined be handled?",
+        "reason": "JSON doesn't have NaN or undefined, but TypeScript runtime values might. The boundary between JSON-the-spec and JavaScript-the-runtime creates subtle test operation bugs."
+      },
+      {
+        "kind": "source",
+        "value": "RFC 6901 (JSON Pointer)",
+        "reason": "The pointer spec is the foundation of path resolution. Reading it directly reveals edge cases (empty string segments, numeric index rules) that secondary sources often miss."
+      },
+      {
+        "kind": "source",
+        "value": "RFC 7396 (JSON Merge Patch)",
+        "reason": "Understanding the alternative helps justify RFC 6902's complexity — Merge Patch can't express null-setting, array manipulation, or conditional updates."
+      }
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/storm",
+    "timestamp": "2026-03-05T07:55:02.916Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: brane-tldr ===
+--- cmd: bny brane tldr ---
+
+🐰 brane  8 files, 1 dirs
+
+json-patch/
+  diff-generation.md             Generating a patch from two documents is the inverse problem — not covered by RFC 6902 but essential in practice.
+  error-model.md                 The RFC defines failure conditions but not error reporting — leaving implementations to choose their own approach.
+  overview.md                    A TypeScript library for applying structured mutations to JSON documents.
+  move-copy-semantics.md         Move and copy are composite operations with subtle ordering and validation requirements.
+  rollback-strategies.md         Atomicity can be achieved through snapshots, reverse patches, or copy-on-write — each with different tradeoffs.
+  test-operation-patterns.md     The `test` op transforms JSON Patch from a blind mutation tool into a conditional update mechanism.
+  performance-considerations.md  JSON Patch performance matters most at scale — large documents, long patch sequences, or high-frequency application.
+  pointer-edge-cases.md          RFC 6901 pointer resolution hides surprising complexity that breaks naive implementations.
+
+lenses: all (on)
+sources: 1 stashed (last: 2026-03-05)
+--- exit: 0 ---
+
+=== STEP: brane-ask ===
+--- cmd: bny brane ask what are the key design decisions for this project? ---
+asking brane...
+# Key Design Decisions
+
+**1. Result envelopes over exceptions** — Errors return structured `Result` objects, not thrown exceptions. Aligns with the POD-only constraint and makes failure handling explicit and composable.
+
+**2. Deep clone for atomicity** — Strategy 1 (clone the full document before applying) is the chosen rollback approach. Simplest to implement correctly, and acceptable given POD-only data. Reverse-patch generation is a future optimization path only if benchmarks demand it.
+
+**3. POD only** — No classes for data, no immutable infrastructure. Plain objects and arrays in, plain objects and arrays out. This rules out copy-on-write/structural-sharing rollback strategies but keeps the API surface minimal.
+
+**4. Strict RFC 6902 compliance** — No partial matching in `test`, no auto-creation of intermediate paths, no fuzzy behavior. Patches are precise. The `-` token, escape sequences, prefix restrictions on `move`, and deep equality rules are all honored exactly as specified.
+
+**5. Sequential + atomic application** — Operations apply in order, each seeing the result of the previous. If any operation fails, the entire patch rolls back to the pre-clone state. No partial application.
+
+**6. Validation before application** — Pre-validate patch syntax and structure before mutating anything. Catches malformed patches cheaply before the clone/apply cycle begins.
+
+**7. Strictness on unknowns** — The RFC says implementations SHOULD ignore unknown fields, but the project sits on a spectrum here. The error model design explicitly calls this out as a decision point.
+
+**8. Diff generation deferred** — Generating patches from two documents is acknowledged as valuable but out of scope for v1. The core is designed to keep the door open (e.g., exposing pointer resolution utilities).
+
+**9. `test` as conditional guard** — The test operation is first-class, enabling optimistic concurrency patterns and guard clauses rather than being an afterthought.
+
+Sources:
+- json-patch/error-model.md (from: seed.md)
+- json-patch/rollback-strategies.md (from: seed.md)
+- json-patch/overview.md (from: seed.md)
+- json-patch/pointer-edge-cases.md (from: seed.md)
+- json-patch/move-copy-semantics.md (from: seed.md)
+- json-patch/test-operation-patterns.md (from: seed.md)
+- json-patch/performance-considerations.md (from: seed.md)
+- json-patch/diff-generation.md (from: seed.md)
+--- exit: 0 ---
+
+=== STEP: build ===
+--- cmd: bny build --yes a TypeScript library implementing RFC 6902 JSON Patch — apply a sequence of add, remove, replace, move, copy, and test operations to a JSON document with atomic rollback on failure ---
+
+[bny build] a TypeScript library implementing RFC 6902 JSON Patch — apply a sequence of add, remove, replace, move, copy, and test operations to a JSON document with atomic rollback on failure
+  max-iter: 5
+
+
+--- specify ---
+[specify] generating spec for: a TypeScript library implementing RFC 6902 JSON Patch — apply a sequence of add, remove, replace, move, copy, and test operations to a JSON document with atomic rollback on failure
+{
+  "status": "success",
+  "result": {
+    "feature_name": "001-typescript-library-implementing",
+    "feature_num": "001",
+    "spec_file": "/Users/ahoward/gh/ahoward/bunny/demos/json-patch/specs/001-typescript-library-implementing/spec.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/specify",
+    "timestamp": "2026-03-05T07:56:42.970Z",
+    "duration_ms": 0
+  }
+}
+
+--- challenge (gemini) ---
+[challenge] hardening spec for: 001-typescript-library-implementing
+[challenge] wrote /Users/ahoward/gh/ahoward/bunny/demos/json-patch/specs/001-typescript-library-implementing/challenge.md
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-implementing",
+    "challenge_file": "/Users/ahoward/gh/ahoward/bunny/demos/json-patch/specs/001-typescript-library-implementing/challenge.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/challenge",
+    "timestamp": "2026-03-05T07:57:59.404Z",
+    "duration_ms": 0
+  }
+}
+
+--- plan ---
+[plan] generating plan for: 001-typescript-library-implementing
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-implementing",
+    "plan_file": "/Users/ahoward/gh/ahoward/bunny/demos/json-patch/specs/001-typescript-library-implementing/plan.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/plan",
+    "timestamp": "2026-03-05T07:59:20.260Z",
+    "duration_ms": 0
+  }
+}
+
+--- tasks ---
+[tasks] generating tasks for: 001-typescript-library-implementing
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-implementing",
+    "tasks_file": "/Users/ahoward/gh/ahoward/bunny/demos/json-patch/specs/001-typescript-library-implementing/tasks.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/tasks",
+    "timestamp": "2026-03-05T07:59:47.975Z",
+    "duration_ms": 0
+  }
+}
+
+--- test-gen (gemini) ---
+[test-gen] generating tests for: 001-typescript-library-implementing (generic/unknown)
+  + tests/contracts.test.ts
+  + tests/properties.test.ts
+  + tests/golden.test.ts
+  + tests/boundaries.test.ts
+  + tests/fixtures/golden.json (fixture)
+
+suggested dependencies: fast-check
+  install with: echo add -d fast-check
+
+[test-gen] wrote 5 file(s)
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-implementing",
+    "files": [
+      "tests/contracts.test.ts",
+      "tests/properties.test.ts",
+      "tests/golden.test.ts",
+      "tests/boundaries.test.ts"
+    ],
+    "fixtures": [
+      "tests/fixtures/golden.json"
+    ],
+    "dependencies": [
+      "fast-check"
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/test-gen",
+    "timestamp": "2026-03-05T08:01:42.989Z",
+    "duration_ms": 0
+  }
+}
+
+--- review (gemini) ---
+Here is the ANTAGONIST review of the RFC 6902 JSON Patch Library specification and implementation plan. 
+
+### 1. Security Vulnerabilities & Attack Vectors
+
+**Problem:** Prototype Pollution via JSON Pointer
+- **Impact:** CRITICAL
+- **Context:** The library operates on generic JS objects. If an attacker provides a patch like `{"op": "add", "path": "/__proto__/polluted", "value": true}` or `{"op": "replace", "path": "/constructor/prototype/admin", "value": true}`, it could globally poison the JavaScript runtime environment if the object traversal doesn't explicitly block these keys.
+- **Fix:** In `src/pointer.ts`, explicitly reject any pointer segments evaluating to `__proto__`, `constructor`, or `prototype` when the current traversed node is an object. Add this as a MUST requirement and add a specific test file (`tests/security.test.ts`).
+
+**Problem:** Exponential Memory Exhaustion (Billion Laughs style DoS)
+- **Impact:** HIGH
+- **Context:** An attacker can provide a patch containing a series of `copy` operations that repeatedly duplicate the largest node in the document, doubling memory usage with every operation. (e.g., `copy /a to /b`, `copy / to /c`, `copy / to /d`). 
+- **Fix:** Document this explicitly as an assumption/known limitation OR implement a circuit breaker (e.g., a `max_operations` limit or a `max_document_size` check after each operation).
+
+### 2. Missing Edge Cases & Boundary Conditions
+
+**Problem:** The `-` Token Semantics on Objects
+- **Impact:** MEDIUM
+- **Context:** EC-001/002/003 and FR-024 address `-` being invalid for `remove`, `replace`, and `test`. The spec states `-` is for appending to arrays. However, it fails to specify what happens if you `add` to an *Object* using the `-` token (e.g., `{"op": "add", "path": "/object/-", "value": 1}`). 
+- **Fix:** Explicitly state that for Objects, `-` is NOT a special token; it must be treated as a literal string key `"-"`. Add a test scenario verifying `{"a": 1}` becomes `{"a": 1, "-": 1}`.
+
+**Problem:** Naive Path Prefix Matching in `move` Operations
+- **Impact:** HIGH
+- **Context:** FR-010 and EC-011 dictate that `move` must reject if `from` is a proper prefix of `path`. If implemented via naive string matching (`path.startsWith(from)`), moving `/a` to `/ab` will incorrectly fail.
+- **Fix:** Explicitly specify in Phase 3 (`op_move`) that prefix checking MUST operate on the parsed array of JSON Pointer segments (e.g., `["a"]` is not a prefix of `["a", "b"]`), not the raw string paths.
+
+**Problem:** Array Index Validation is Too Loose
+- **Impact:** MEDIUM
+- **Context:** The spec rejects "leading zeros". However, JavaScript allows many string formats to parse as numbers (e.g., `"-1"`, `"1.5"`, `"1e2"`, `"0x10"`). 
+- **Fix:** Explicitly mandate that array indices MUST be valid Base-10 integers `>= 0`. Reject decimals, negatives, scientific notation, and hexadecimals.
+
+**Problem:** Removing the Root Document (`path: ""`)
+- **Impact:** MEDIUM
+- **Context:** Phase 3 `op_remove` mentions "cannot remove root? RFC is ambiguous — we'll error". The RFC implies the document just becomes empty/undefined. However, the library's `Result<JsonValue>` signature literally cannot represent "no document". 
+- **Fix:** Formalize this into an explicit Functional Requirement (e.g., `FR-025: The library MUST reject remove operations targeting the root path "" as it violates the return type constraints`).
+
+**Problem:** Same-Path `move` When Path Doesn't Exist
+- **Impact:** LOW
+- **Context:** EC-012 states moving a path to itself (`from` === `path`) is a no-op. But what if that path *doesn't exist* in the document? RFC 6902 mandates that the `from` location MUST exist.
+- **Fix:** Clarify EC-012: The `move` operation MUST still validate that the `from` path exists before returning the no-op success. If it doesn't exist, it must return an `ErrResult`.
+
+### 3. Error Handling Gaps
+
+**Problem:** `apply` input validation is insufficient
+- **Impact:** LOW
+- **Context:** Phase 4 states `validate(patch: unknown)`. If a user passes a JSON-encoded string instead of a parsed array (e.g., `'[{"op":"add"}]'`), runtime type errors might cascade if validation only checks properties.
+- **Fix:** Ensure `src/validate.ts` strictly enforces `Array.isArray(patch)` as its very first step before attempting to iterate or validate operations.
+
+### 4. Ambiguous or Contradictory Requirements
+
+**Problem:** "POD-only data flow" vs `structuredClone`
+- **Impact:** LOW
+- **Context:** The spec demands POD (Plain Old Data) flow and uses `structuredClone`. If a user passes a document instantiated via a class or with custom prototypes (e.g., `new MyDataModel()`), `structuredClone` might throw an error or strip prototypes depending on the runtime, violating the "accepts any valid JSON value" requirement.
+- **Fix:** State an explicit assumption: The input `document` must be structurally compatible with standard JSON parsing (`JSON.parse`). Objects with functions, symbols, or custom prototype chains are explicitly out of scope and behavior is undefined.
+
+### Summary of Actionable Changes Needed for the Implementer:
+1. Add Prototype Pollution guards in `resolve` and `resolve_parent`.
+2. Add a `tests/security.test.ts` file.
+3. Update `move` validation to use array-segment prefix checking.
+4. Tighten regex/validation for array indices (Base-10 integers only).
+5. Specify the Object literal `"-"` key behavior.
+6. Formalize the root `remove` error constraint.
+
+--- implement (claude, ralph, max-iter 5) ---
+## Summary
+
+**36/37 tests pass.** All implementation is complete.
+
+### Files created (8 source files):
+- `src/types.ts` — JsonValue, Operation union, Patch, Result types
+- `src/pointer.ts` — RFC 6901 JSON Pointer (parse, resolve, resolve_parent) with prototype pollution protection
+- `src/deep_clone.ts` — structuredClone wrapper
+- `src/deep_equal.ts` — Type-strict, key-order-independent deep equality
+- `src/validate.ts` — Pre-flight patch validation (structure, ops whitelist, NaN rejection)
+- `src/ops.ts` — All 6 operations (add, remove, replace, move, copy, test)
+- `src/apply.ts` — Orchestrator with atomic rollback via deep clone
+- `src/index.ts` — Public API barrel exports
+
+### Config files:
+- `package.json` — zero runtime deps, fast-check v3 + typescript as dev deps
+- `tsconfig.json` — strict, ES2022, ESM
+- `dev/test` — updated to run `bun test`
+
+### 1 known test bug:
+`properties.test.ts` line 8 uses `fc.jsonObject()` which doesn't exist in any version of fast-check. This is a test authoring error — cannot fix without modifying the locked test file.
+
+--- verify (gemini) ---
+[verify] post-implementation review for: 001-typescript-library-implementing
+[verify] wrote /Users/ahoward/gh/ahoward/bunny/demos/json-patch/specs/001-typescript-library-implementing/verify.md
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-implementing",
+    "verify_file": "/Users/ahoward/gh/ahoward/bunny/demos/json-patch/specs/001-typescript-library-implementing/verify.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/verify",
+    "timestamp": "2026-03-05T08:09:18.961Z",
+    "duration_ms": 0
+  }
+}
+
+--- ruminate ---
+[ruminate] feature: 001-typescript-library-implementing
+ruminating on: 001-typescript-library-implementing...
+
+[intake]
+  + json-patch/index.md  (24 lines)
+  ~ json-patch/pointer-edge-cases.md  (+6, -4)
+  ~ json-patch/error-model.md  (+16, -10)
+  ~ json-patch/rollback-strategies.md  (+12, -19)
+  + json-patch/implementation-patterns.md  (40 lines)
+  ~ json-patch/move-copy-semantics.md  (+16, -7)
+  ~ json-patch/overview.md  (+23, -15)
+
+reasoning: Extracted durable patterns from the completed implementation: (1) Updated pointer-edge-cases.md to correct the decode order explanation (implementation confirms ~1 first, then ~0) and added prototype pollution as a critical edge case not in original worldview. (2) Updated error-model.md with concrete Result envelope structure and two-phase error detection pattern. (3) Updated rollback-strategies.md to confirm deep clone via structuredClone was chosen and document the root-replacement subtlety. (4) Created implementation-patterns.md capturing module decomposition, resolve-parent pattern, root replacement pattern, move decomposition order, validate-before-mutate, and security guards — all reusable patterns for similar libraries. (5) Updated move-copy-semantics.md with implementation-confirmed ordering details and same-location verification behavior. (6) Updated overview.md with actual public API surface and architecture summary. Skipped: session-specific details (branch names, test counts), build state, information already in spec/plan.
+
+7 operation(s) (2 new, 5 updated)
+applied 7 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-implementing",
+    "operations": [
+      {
+        "action": "update",
+        "path": "json-patch/index.md"
+      },
+      {
+        "action": "update",
+        "path": "json-patch/pointer-edge-cases.md"
+      },
+      {
+        "action": "update",
+        "path": "json-patch/error-model.md"
+      },
+      {
+        "action": "update",
+        "path": "json-patch/rollback-strategies.md"
+      },
+      {
+        "action": "create",
+        "path": "json-patch/implementation-patterns.md"
+      },
+      {
+        "action": "update",
+        "path": "json-patch/move-copy-semantics.md"
+      },
+      {
+        "action": "update",
+        "path": "json-patch/overview.md"
+      }
+    ],
+    "reasoning": "Extracted durable patterns from the completed implementation: (1) Updated pointer-edge-cases.md to correct the decode order explanation (implementation confirms ~1 first, then ~0) and added prototype pollution as a critical edge case not in original worldview. (2) Updated error-model.md with concrete Result envelope structure and two-phase error detection pattern. (3) Updated rollback-strategies.md to confirm deep clone via structuredClone was chosen and document the root-replacement subtlety. (4) Created implementation-patterns.md capturing module decomposition, resolve-parent pattern, root replacement pattern, move decomposition order, validate-before-mutate, and security guards — all reusable patterns for similar libraries. (5) Updated move-copy-semantics.md with implementation-confirmed ordering details and same-location verification behavior. (6) Updated overview.md with actual public API surface and architecture summary. Skipped: session-specific details (branch names, test counts), build state, information already in spec/plan."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/ruminate",
+    "timestamp": "2026-03-05T08:11:14.620Z",
+    "duration_ms": 0
+  }
+}
+
+[bny build] complete: a TypeScript library implementing RFC 6902 JSON Patch — apply a sequence of add, remove, replace, move, copy, and test operations to a JSON document with atomic rollback on failure
+--- exit: 0 ---
+
+=== STEP: dev-test ===
+--- cmd: ./dev/test ---
+bun test v1.3.9 (cf6cdbbb)
+
+tests/properties.test.ts:
+3 | import { apply } from '../src/index.ts';
+4 | 
+5 | describe('Property Tests', () => {
+6 |   test('Adding and removing the same field is idempotent for objects', () => {
+7 |     fc.assert(
+8 |       fc.property(fc.jsonObject(), fc.string(), fc.jsonValue(), (doc, key, value) => {
+                         ^
+TypeError: fc.jsonObject is not a function. (In 'fc.jsonObject()', 'fc.jsonObject' is undefined)
+      at <anonymous> (/Users/ahoward/gh/ahoward/bunny/demos/json-patch/tests/properties.test.ts:8:22)
+(fail) Property Tests > Adding and removing the same field is idempotent for objects
+
+ 36 pass
+ 1 fail
+ 463 expect() calls
+Ran 37 tests across 4 files. [48.00ms]
+--- exit: 1 ---
+
+=== VALIDATION ===
+  [ok] spec exists
+  [ok] plan exists
+  [ok] tasks exist
+  [ok] feature dir exists
+  [ok] feature has spec
+  [ok] src/ has .ts files
+  [ok] tests/ has test files
+  [ok] worldview has content
+
+validation: 8 passed, 0 failed
+
+finished: 2026-03-05T08:11:14Z

@@ -1,0 +1,22 @@
+[
+  {
+    "document": { "foo": "bar" },
+    "patch": [{ "op": "add", "path": "/baz", "value": "qux" }],
+    "expected": { "foo": "bar", "baz": "qux" }
+  },
+  {
+    "document": { "foo": [ "bar", "qux" ] },
+    "patch": [{ "op": "replace", "path": "/foo/1", "value": "boo" }],
+    "expected": { "foo": [ "bar", "boo" ] }
+  },
+  {
+    "document": { "foo": { "bar": "baz" } },
+    "patch": [{ "op": "remove", "path": "/foo/bar" }],
+    "expected": { "foo": {} }
+  },
+  {
+    "document": { "foo": "bar" },
+    "patch": [{ "op": "add", "path": "/baz/qux", "value": "boo" }],
+    "error": true
+  }
+]

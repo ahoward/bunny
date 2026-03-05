@@ -1,0 +1,454 @@
+experiment: cron-parser
+description: a cron expression parser that validates standard 5-field cron expressions and computes the next N scheduled times from a given start time
+started: 2026-03-05T07:34:42Z
+
+=== STEP: bny-init ===
+--- cmd: bny init ---
+initialized git repo
+[bny init] 
+
+  create   bny/constitution.md
+  create   bny/guardrails.json
+  create   bny/roadmap.md
+  create   bny/decisions.md
+  create   bny/todos.md
+  create   bny/brane/worldview.md
+  create   bny/brane/index.md
+  detected generic project
+  create   dev/setup
+  create   dev/test
+  create   dev/health
+  create   dev/pre_flight
+  create   dev/post_flight
+  create   .githooks/pre-commit
+  create   .githooks/pre-push
+  create   .gitignore
+  create   CLAUDE.md
+  create   GEMINI.md
+  create   AGENTS.md
+  config   git core.hooksPath → .githooks
+
+  18 created
+
+  next: edit bny/roadmap.md, then run 'bny ipm' to plan
+--- exit: 0 ---
+
+=== STEP: digest-seed ===
+--- cmd: bny digest seed.md ---
+stashed: 2026-03-05T07-34-43-208Z-seed-md.txt (137 bytes)
+eating: seed.md...
+
+[intake]
+  + cron-parser/overview.md  (45 lines)
+
+reasoning: Absorbed the core project definition: a cron expression parser with validation and next-fire-time computation. Expanded with standard cron knowledge (field format, syntax elements, known edge cases) since these are essential to the domain. Filtered out nothing — this is the foundational seed for the knowledge graph.
+
+1 operation(s) (1 new)
+applied 1 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "source": "seed.md",
+    "operations": [
+      {
+        "action": "create",
+        "path": "cron-parser/overview.md"
+      }
+    ],
+    "reasoning": "Absorbed the core project definition: a cron expression parser with validation and next-fire-time computation. Expanded with standard cron knowledge (field format, syntax elements, known edge cases) since these are essential to the domain. Filtered out nothing — this is the foundational seed for the knowledge graph."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/eat",
+    "timestamp": "2026-03-05T07:35:23.870Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: brane-storm ===
+--- cmd: bny brane storm a cron expression parser that validates standard 5-field cron expressions and computes the next N scheduled times from a given start time ---
+storming: inline...
+
+[intake]
+  + cron-parser/edge-cases.md  (38 lines)
+  + cron-parser/algorithm-strategies.md  (37 lines)
+  + cron-parser/testing-dimensions.md  (41 lines)
+  + cron-parser/prior-art.md  (37 lines)
+  + cron-parser/data-model.md  (38 lines)
+
+reasoning: Expanded from the seed in five directions: (1) edge cases that break naive implementations — the hardest part of cron parsing isn't parsing, it's the temporal math; (2) algorithm strategies, because the choice of next-time computation approach is the most consequential design decision; (3) testing dimensions for the antagonistic testing workflow — giving Gemini specific axes to probe; (4) prior art to contextualize the project against existing implementations; (5) data model options since the internal representation drives everything else. Each file challenges assumptions in the current worldview (e.g., 'what if the schedule can never fire?' and 'what semantics for start-time inclusion?').
+
+5 operation(s) (5 new)
+applied 5 operation(s)
+regenerating index...
+
+[suggestions]
+  QUESTION Should the parser include or exclude the start time itself when computing next fire times?
+           This is an ambiguous edge in the spec that different cron libraries handle differently — it needs an explicit decision
+  QUESTION What should happen when an expression can never fire (e.g., Feb 30)?
+           The worldview mentions month-length edge cases but doesn't specify the expected behavior — error vs empty result
+  LENS     adversarial-input
+           A lens focused on malformed, malicious, and degenerate inputs would surface validation gaps early — think fuzzing mindset
+  QUESTION Is there a maximum N or maximum time horizon for the 'next N times' computation?
+           Without bounds, sparse schedules like leap-year-only could cause the algorithm to scan indefinitely
+  SOURCE   man 5 crontab (POSIX specification)
+           The authoritative source for OR semantics between day-of-month and day-of-week, and the canonical field ranges
+  LENS     api-consumer
+           Viewing the parser from the caller's perspective — what return types, error shapes, and defaults make it pleasant to use as a library
+
+6 suggestion(s)
+{
+  "status": "success",
+  "result": {
+    "seed": "inline",
+    "rounds": 1,
+    "operations": 5,
+    "suggestions": [
+      {
+        "kind": "question",
+        "value": "Should the parser include or exclude the start time itself when computing next fire times?",
+        "reason": "This is an ambiguous edge in the spec that different cron libraries handle differently — it needs an explicit decision"
+      },
+      {
+        "kind": "question",
+        "value": "What should happen when an expression can never fire (e.g., Feb 30)?",
+        "reason": "The worldview mentions month-length edge cases but doesn't specify the expected behavior — error vs empty result"
+      },
+      {
+        "kind": "lens",
+        "value": "adversarial-input",
+        "reason": "A lens focused on malformed, malicious, and degenerate inputs would surface validation gaps early — think fuzzing mindset"
+      },
+      {
+        "kind": "question",
+        "value": "Is there a maximum N or maximum time horizon for the 'next N times' computation?",
+        "reason": "Without bounds, sparse schedules like leap-year-only could cause the algorithm to scan indefinitely"
+      },
+      {
+        "kind": "source",
+        "value": "man 5 crontab (POSIX specification)",
+        "reason": "The authoritative source for OR semantics between day-of-month and day-of-week, and the canonical field ranges"
+      },
+      {
+        "kind": "lens",
+        "value": "api-consumer",
+        "reason": "Viewing the parser from the caller's perspective — what return types, error shapes, and defaults make it pleasant to use as a library"
+      }
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/storm",
+    "timestamp": "2026-03-05T07:36:53.397Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: brane-tldr ===
+--- cmd: bny brane tldr ---
+
+🐰 brane  6 files, 1 dirs
+
+cron-parser/
+  overview.md              A tool that validates standard 5-field cron expressions and computes the next N scheduled times from a given start time.
+  edge-cases.md            A catalog of tricky inputs and temporal boundaries that break naive cron implementations.
+  data-model.md            How you represent a parsed cron expression internally determines the complexity of everything downstream.
+  algorithm-strategies.md  There are fundamentally different approaches to computing the next cron fire time, each with distinct tradeoffs.
+  prior-art.md             The 5-field cron format is just one dialect in a family of scheduling syntaxes worth understanding.
+  testing-dimensions.md    A cron parser has a surprisingly large test surface; here are the axes an antagonist reviewer should probe.
+
+lenses: all (on)
+sources: 1 stashed (last: 2026-03-05)
+--- exit: 0 ---
+
+=== STEP: brane-ask ===
+--- cmd: bny brane ask what are the key design decisions for this project? ---
+asking brane...
+# Key Design Decisions
+
+**1. Standard 5-field cron only.** No seconds, no years, no named values (`JAN`, `MON`), no extended syntax (`L`, `W`, `#`). This constrains scope and keeps validation straightforward.
+
+**2. Expanded sorted sets as the data model.** Each field is parsed into a `number[]` of valid values. This is POD-friendly, trivial to query (`includes()`), and makes validation implicit — an empty set means invalid input. Classes and AST nodes are avoided per the POD-only convention.
+
+**3. Precomputed sets with dynamic day-of-month.** Minute, hour, month, and day-of-week are expanded at parse time. Day-of-month is resolved dynamically per month/year context to handle varying month lengths and leap years. This avoids the pathological slowness of minute-by-minute walking while staying simpler than full field-by-field forward search with backtracking.
+
+**4. OR semantics for day-of-month / day-of-week.** When both fields are non-wildcard, a date matches if *either* condition is true. This follows Vixie cron behavior.
+
+**5. UTC only (v1).** No timezone handling. Sidesteps all DST ambiguity (spring-forward gaps, fall-back duplicates).
+
+**6. Guard-early, result-envelope error handling.** No throwing for control flow. Validation errors return early as structured results rather than exceptions.
+
+**7. Degenerate expressions are allowed but may produce empty results.** Expressions like `0 0 30 2 *` (Feb 30) are syntactically valid but never fire — the system returns an empty array rather than rejecting at parse time. This is a design choice worth confirming, as it has testing implications.
+
+**8. Antagonistic test-first development.** Tests are designed before implementation, reviewed by a second agent, then locked. Implementation must satisfy tests without modifying them.
+
+**Open decisions to watch:**
+- Whether the start time itself is included or excluded when it matches the expression
+- Maximum iteration guard for sparse schedules (e.g., `0 0 29 2 *` with large N)
+- Whether `0/0` (step of zero) is a validation error or silently handled
+- Day-of-week normalization strategy (0 and 7 both mean Sunday — normalize to 0 internally?)
+
+---
+
+Sources:
+- cron-parser/data-model.md (from: seed.md)
+- cron-parser/algorithm-strategies.md (from: seed.md)
+- cron-parser/overview.md (from: seed.md)
+- cron-parser/edge-cases.md (from: seed.md)
+- cron-parser/testing-dimensions.md (from: seed.md)
+- cron-parser/prior-art.md (from: seed.md)
+--- exit: 0 ---
+
+=== STEP: build ===
+--- cmd: bny build --yes a cron expression parser that validates standard 5-field cron expressions and computes the next N scheduled times from a given start time ---
+
+[bny build] a cron expression parser that validates standard 5-field cron expressions and computes the next N scheduled times from a given start time
+  max-iter: 5
+
+
+--- specify ---
+[specify] generating spec for: a cron expression parser that validates standard 5-field cron expressions and computes the next N scheduled times from a given start time
+{
+  "status": "success",
+  "result": {
+    "feature_name": "001-cron-expression-parser",
+    "feature_num": "001",
+    "spec_file": "/Users/ahoward/gh/ahoward/bunny/demos/cron-parser/specs/001-cron-expression-parser/spec.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/specify",
+    "timestamp": "2026-03-05T07:38:08.694Z",
+    "duration_ms": 0
+  }
+}
+
+--- challenge (gemini) ---
+[challenge] hardening spec for: 001-cron-expression-parser
+[challenge] wrote /Users/ahoward/gh/ahoward/bunny/demos/cron-parser/specs/001-cron-expression-parser/challenge.md
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cron-expression-parser",
+    "challenge_file": "/Users/ahoward/gh/ahoward/bunny/demos/cron-parser/specs/001-cron-expression-parser/challenge.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/challenge",
+    "timestamp": "2026-03-05T07:38:50.886Z",
+    "duration_ms": 0
+  }
+}
+
+--- plan ---
+[plan] generating plan for: 001-cron-expression-parser
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cron-expression-parser",
+    "plan_file": "/Users/ahoward/gh/ahoward/bunny/demos/cron-parser/specs/001-cron-expression-parser/plan.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/plan",
+    "timestamp": "2026-03-05T07:39:39.364Z",
+    "duration_ms": 0
+  }
+}
+
+--- tasks ---
+[tasks] generating tasks for: 001-cron-expression-parser
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cron-expression-parser",
+    "tasks_file": "/Users/ahoward/gh/ahoward/bunny/demos/cron-parser/specs/001-cron-expression-parser/tasks.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/tasks",
+    "timestamp": "2026-03-05T07:40:06.495Z",
+    "duration_ms": 0
+  }
+}
+
+--- test-gen (gemini) ---
+[test-gen] generating tests for: 001-cron-expression-parser (generic/unknown)
+  + tests/contracts/parse.test.ts
+  + tests/contracts/next_times.test.ts
+  + tests/property/parse_property.test.ts
+  + tests/golden/next_times_golden.test.ts
+  + tests/boundary/edge_cases.test.ts
+  + tests/fixtures/golden_next_times.json (fixture)
+
+[test-gen] wrote 6 file(s)
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cron-expression-parser",
+    "files": [
+      "tests/contracts/parse.test.ts",
+      "tests/contracts/next_times.test.ts",
+      "tests/property/parse_property.test.ts",
+      "tests/golden/next_times_golden.test.ts",
+      "tests/boundary/edge_cases.test.ts"
+    ],
+    "fixtures": [
+      "tests/fixtures/golden_next_times.json"
+    ],
+    "dependencies": []
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/test-gen",
+    "timestamp": "2026-03-05T07:41:11.502Z",
+    "duration_ms": 0
+  }
+}
+
+--- review (gemini) ---
+Error executing tool read_file: File not found.
+Here is the ANTAGONIST review of the specification and implementation plan. I have identified several critical gaps, contradictions with the test suite, and unhandled edge cases that will cause failures if implemented exactly as planned.
+
+### 1. Iteration Guard Return State Contradicts Tests
+- **Problem**: The implementation plan for Phase 4 states: *"If loop exhausts max iterations → return `ok(results)` (partial results for degenerate expressions...)"*. However, the test file `tests/contracts/next_times.test.ts` (specifically `Challenge 2: Iteration Guard Return State`) explicitly asserts that hitting the iteration guard MUST result in `res.ok === false` with an error message matching `/limit|iteration|max/i`. 
+- **Impact**: **High**. The implementation will directly fail the contract tests. Furthermore, returning partial results silently hides the fact that the generator abandoned the search, which violates the strict POD/error contract.
+- **Fix**: Update the Phase 4 algorithm so that exhausting the maximum iterations returns `err("Iteration limit exceeded")` rather than `ok(results)`. 
+
+### 2. Missing Wrap-around Carry Logic (Infinite Loop Risk)
+- **Problem**: The algorithm logic says *"advance to next valid hour, reset min, continue"* or *"advance to 1st day of next valid month"*. It does not specify how to advance safely. If the current month is November (11) and the next valid month in the array is February (2), simply doing `cursor.setUTCMonth(1)` moves time **backwards** to February of the *current* year. The loop will evaluate the same period endlessly. 
+- **Impact**: **Critical**. Will cause infinite loops for almost any standard schedule that wraps around the end of a day, month, or year.
+- **Fix**: Explicitly specify that when advancing to the "next valid" unit (month, day, hour, minute), if the next valid value is smaller than or equal to the current value within the current cycle, the code **must increment the next higher time unit** (e.g., year for month, month for day, day for hour, hour for minute) before setting the new value to prevent time regression.
+
+### 3. JavaScript Date Month Indexing Mismatch
+- **Problem**: The plan creates a `ParsedCron.months` array containing values `1-12`. However, JavaScript's `Date.getUTCMonth()` and `Date.setUTCMonth()` methods use **0-indexed** months (0=Jan, 11=Dec). The Phase 4 pseudo-code says `if cursor.month not in months`, which will fail completely if implemented naively using `getUTCMonth()` directly against the 1-indexed array.
+- **Impact**: **High**. Off-by-one errors will cause the parser to evaluate against the wrong months or miss valid months entirely.
+- **Fix**: Make the assumption explicit in the Phase 4 plan: "Implementers must adjust for `Date`'s 0-indexed months by using `cursor.getUTCMonth() + 1` when comparing against `ParsedCron.months`, and `month_value - 1` when setting the month."
+
+### 4. Missing Guard for `Invalid Date` Coercion
+- **Problem**: `next_times` accepts `start: Date | string`. The plan says *"Coerce `start` to `Date`"* but does not define what happens if the user passes an invalid date string (e.g., `"not-a-date"`). In JS, `new Date("not-a-date")` returns an `Invalid Date` object where `getTime()` returns `NaN`. The iteration loop will silently process `NaN` computations.
+- **Impact**: **Medium**. Unhandled runtime failure resulting in undefined behavior or silent lockups.
+- **Fix**: Add a validation step immediately after coercing `start` to `Date`: "If `isNaN(cursor.getTime())`, return `err('Invalid start time')`."
+
+### 5. Memory Exhaustion / ReDoS Vector in Field Expansion
+- **Problem**: In Phase 2, `expand_field` splits tokens on `,` and processes them. There is no maximum length constraint on the input string. A malicious user could submit a string containing millions of commas or repeated step payloads (e.g., `0-59/1,0-59/1...`). This synchronous processing will block the single-threaded Node.js/Bun event loop and cause memory exhaustion.
+- **Impact**: **Medium (Denial of Service)**. The parser is vulnerable to an application crash via malicious inputs.
+- **Fix**: Add a maximum length constraint to `parse.ts` (e.g., reject any expression string longer than 255 characters) before performing any regex, splitting, or expansion operations. 
+
+### 6. Timezone Leakage on Ambiguous String Inputs
+- **Problem**: The spec states `next_times` computes *UTC fire times*. If the `start` parameter is a string without a specific timezone designator (like `"2026-03-05T10:00:00"`), standard ECMAScript parses it as **local time**. This means the exact same input string will evaluate differently depending on the server's local timezone configuration, leaking local time into the UTC calculation.
+- **Impact**: **Medium**. Flaky behavior depending on the runtime environment.
+- **Fix**: Specify that if `start` is provided as a string and lacks a `Z` or timezone offset, it must either be rejected outright with an error or explicitly forced to parse as UTC (e.g., by appending `Z`).
+
+--- implement (claude, ralph, max-iter 5) ---
+All done. **12/12 tests pass**, post_flight clean.
+
+Summary of files created:
+- `src/cron/types.ts` — `CronResult<T>`, `ParsedCron`, `FIELD_DEFS`, `ok()`/`err()` helpers
+- `src/cron/expand_field.ts` — field token expansion (wildcard, range, step, list, validation)
+- `src/cron/parse.ts` — 5-field parser with whitespace tolerance, dow 7→0 normalization, dom/dow wildcard tracking
+- `src/cron/next_times.ts` — forward-search algorithm with OR semantics, leap year handling, iteration guard (returns error on exhaustion)
+- `src/cron/index.ts` — public API exports
+
+Key implementation decisions:
+- Iteration guard returns `err()` (not partial results) when exhausted — matching Challenge 2 test expectation
+- Start time excluded by advancing cursor +1 minute from start
+- Sub-minute precision handled by truncating to minute boundary then advancing
+
+--- verify (gemini) ---
+[verify] post-implementation review for: 001-cron-expression-parser
+[verify] wrote /Users/ahoward/gh/ahoward/bunny/demos/cron-parser/specs/001-cron-expression-parser/verify.md
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cron-expression-parser",
+    "verify_file": "/Users/ahoward/gh/ahoward/bunny/demos/cron-parser/specs/001-cron-expression-parser/verify.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/verify",
+    "timestamp": "2026-03-05T07:50:26.521Z",
+    "duration_ms": 0
+  }
+}
+
+--- ruminate ---
+[ruminate] feature: 001-cron-expression-parser
+ruminating on: 001-cron-expression-parser...
+
+[intake]
+  + cron-parser/implementation-patterns.md  (51 lines)
+  ~ cron-parser/data-model.md  (+20, -17)
+  ~ cron-parser/algorithm-strategies.md  (+26, -21)
+  ~ cron-parser/testing-dimensions.md  (+34, -22)
+  + cron-parser/index.md  (18 lines)
+
+reasoning: Extracted three categories of durable knowledge: (1) Implementation patterns — result envelope propagation, wildcard tracking necessity, cursor initialization for exclusive start, iteration guard returning errors not partial results, days_in_month UTC trick, OR semantics four-case dispatch, day-of-week normalization placement. (2) Data model update — the actual chosen design with wild flags, and why they were necessary (expanded arrays lose wildcard intent). (3) Algorithm update — actual implementation details, loop structure, performance characteristics per schedule density. (4) Testing update — actual test organization (contracts/property/golden/boundary), runtime choice (node:test not bun:test), implementation-discovered challenges. Skipped: session-specific details (branch names, task completion status), build output, error messages, anything already in the spec/plan that didn't produce new insight.
+
+5 operation(s) (2 new, 3 updated)
+applied 5 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "feature": "001-cron-expression-parser",
+    "operations": [
+      {
+        "action": "create",
+        "path": "cron-parser/implementation-patterns.md"
+      },
+      {
+        "action": "update",
+        "path": "cron-parser/data-model.md"
+      },
+      {
+        "action": "update",
+        "path": "cron-parser/algorithm-strategies.md"
+      },
+      {
+        "action": "update",
+        "path": "cron-parser/testing-dimensions.md"
+      },
+      {
+        "action": "update",
+        "path": "cron-parser/index.md"
+      }
+    ],
+    "reasoning": "Extracted three categories of durable knowledge: (1) Implementation patterns — result envelope propagation, wildcard tracking necessity, cursor initialization for exclusive start, iteration guard returning errors not partial results, days_in_month UTC trick, OR semantics four-case dispatch, day-of-week normalization placement. (2) Data model update — the actual chosen design with wild flags, and why they were necessary (expanded arrays lose wildcard intent). (3) Algorithm update — actual implementation details, loop structure, performance characteristics per schedule density. (4) Testing update — actual test organization (contracts/property/golden/boundary), runtime choice (node:test not bun:test), implementation-discovered challenges. Skipped: session-specific details (branch names, task completion status), build output, error messages, anything already in the spec/plan that didn't produce new insight."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/ruminate",
+    "timestamp": "2026-03-05T07:52:26.129Z",
+    "duration_ms": 0
+  }
+}
+
+[bny build] complete: a cron expression parser that validates standard 5-field cron expressions and computes the next N scheduled times from a given start time
+--- exit: 0 ---
+
+=== STEP: dev-test ===
+--- cmd: ./dev/test ---
+bun test v1.3.9 (cf6cdbbb)
+
+ 12 pass
+ 0 fail
+Ran 12 tests across 5 files. [31.00ms]
+--- exit: 0 ---
+
+=== VALIDATION ===
+  [ok] spec exists
+  [ok] plan exists
+  [ok] tasks exist
+  [ok] feature dir exists
+  [ok] feature has spec
+  [ok] src/ has .ts files
+  [FAIL] tests/ has test files
+  [ok] worldview has content
+
+validation: 7 passed, 1 failed
+
+finished: 2026-03-05T07:52:26Z

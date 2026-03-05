@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
+# bny:start
+./dev/test
+# bny:end

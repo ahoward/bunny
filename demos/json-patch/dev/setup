@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# bny-generated
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "installing dependencies..."
+echo 'no install step configured'
+
+echo "configuring git hooks..."
+git config core.hooksPath .githooks
+
+echo "done."

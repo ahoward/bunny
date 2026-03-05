@@ -1,0 +1,476 @@
+experiment: semver-resolver
+description: a TypeScript library that parses semver version strings and evaluates npm-style range expressions (^, ~, >=, ||, hyphen ranges, x-ranges) to test whether versions satisfy constraints
+started: 2026-03-05T07:13:36Z
+
+=== STEP: bny-init ===
+--- cmd: bny init ---
+initialized git repo
+[bny init] 
+
+  create   bny/constitution.md
+  create   bny/guardrails.json
+  create   bny/roadmap.md
+  create   bny/decisions.md
+  create   bny/todos.md
+  create   bny/brane/worldview.md
+  create   bny/brane/index.md
+  detected generic project
+  create   dev/setup
+  create   dev/test
+  create   dev/health
+  create   dev/pre_flight
+  create   dev/post_flight
+  create   .githooks/pre-commit
+  create   .githooks/pre-push
+  create   .gitignore
+  create   CLAUDE.md
+  create   GEMINI.md
+  create   AGENTS.md
+  config   git core.hooksPath → .githooks
+
+  18 created
+
+  next: edit bny/roadmap.md, then run 'bny ipm' to plan
+--- exit: 0 ---
+
+=== STEP: digest-seed ===
+--- cmd: bny digest seed.md ---
+stashed: 2026-03-05T07-13-37-068Z-seed-md.txt (182 bytes)
+eating: seed.md...
+
+[intake]
+  + semver-resolver.md  (31 lines)
+
+reasoning: Absorbed the core project definition: a TypeScript semver library supporting full npm range syntax. Expanded the terse seed into structured knowledge covering version parsing, all range operators, key API surface, and known design tensions. Nothing was filtered out — the seed is small and fully relevant.
+
+1 operation(s) (1 new)
+applied 1 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "source": "seed.md",
+    "operations": [
+      {
+        "action": "create",
+        "path": "semver-resolver.md"
+      }
+    ],
+    "reasoning": "Absorbed the core project definition: a TypeScript semver library supporting full npm range syntax. Expanded the terse seed into structured knowledge covering version parsing, all range operators, key API surface, and known design tensions. Nothing was filtered out — the seed is small and fully relevant."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/eat",
+    "timestamp": "2026-03-05T07:14:22.508Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: brane-storm ===
+--- cmd: bny brane storm a TypeScript library that parses semver version strings and evaluates npm-style range expressions (^, ~, >=, ||, hyphen ranges, x-ranges) to test whether versions satisfy constraints ---
+storming: inline...
+
+[intake]
+  + edge-cases-and-gotchas.md  (34 lines)
+  + implementation-strategies.md  (38 lines)
+  + testing-strategy.md  (28 lines)
+  + ecosystem-and-alternatives.md  (28 lines)
+  + semver-spec-tensions.md  (31 lines)
+
+reasoning: Expanded in four directions: (1) edge cases that will drive test design and catch implementation bugs, especially zero-major caret behavior and pre-release exclusion semantics; (2) concrete implementation architectures with a recommendation toward expansion-to-primitives, including a POD-friendly data model; (3) testing strategy covering property-based and fuzz approaches plus high-value specific cases from node-semver; (4) ecosystem analysis showing what exists and where a new library can differentiate; (5) spec-level tensions that force design decisions early rather than discovering them during implementation.
+
+5 operation(s) (5 new)
+applied 5 operation(s)
+regenerating index...
+
+[suggestions]
+  LENS     adversarial-input
+           A semver parser is a string parser — it's a target for malformed input, ReDoS via backtracking regexes, and extremely long version strings. An adversarial lens would surface robustness requirements.
+  QUESTION Should the library support loose/coercion mode or strict-only?
+           This is the single biggest design decision that affects every parsing function. node-semver supports both modes, but loose mode adds significant complexity. The POD/simplicity philosophy suggests strict-only, but real-world package metadata is messy.
+  QUESTION What is the performance budget — how many satisfies() calls per second are needed?
+           A lockfile resolver may call satisfies() millions of times during dependency resolution. This determines whether to pre-compile ranges into a fast evaluator or keep the simple parse-every-time approach.
+  SOURCE   https://github.com/npm/node-semver/blob/main/test/fixtures/range-include.js
+           node-semver's own test fixtures are the canonical truth table for range behavior — invaluable for building a compatible implementation.
+  SOURCE   https://semver.org/spec/v2.0.0.html
+           The authoritative spec. Section 11 (precedence) and the BNF grammar are essential references for the parser.
+  LENS     api-ergonomics
+           The worldview focuses on what the library does but not how it feels to use. A lens on API design would explore: chainable vs. functional, error reporting style, whether Range is opaque or inspectable, and how to handle the common case (satisfies) vs. advanced cases (intersection, sorting).
+
+6 suggestion(s)
+{
+  "status": "success",
+  "result": {
+    "seed": "inline",
+    "rounds": 1,
+    "operations": 5,
+    "suggestions": [
+      {
+        "kind": "lens",
+        "value": "adversarial-input",
+        "reason": "A semver parser is a string parser — it's a target for malformed input, ReDoS via backtracking regexes, and extremely long version strings. An adversarial lens would surface robustness requirements."
+      },
+      {
+        "kind": "question",
+        "value": "Should the library support loose/coercion mode or strict-only?",
+        "reason": "This is the single biggest design decision that affects every parsing function. node-semver supports both modes, but loose mode adds significant complexity. The POD/simplicity philosophy suggests strict-only, but real-world package metadata is messy."
+      },
+      {
+        "kind": "question",
+        "value": "What is the performance budget — how many satisfies() calls per second are needed?",
+        "reason": "A lockfile resolver may call satisfies() millions of times during dependency resolution. This determines whether to pre-compile ranges into a fast evaluator or keep the simple parse-every-time approach."
+      },
+      {
+        "kind": "source",
+        "value": "https://github.com/npm/node-semver/blob/main/test/fixtures/range-include.js",
+        "reason": "node-semver's own test fixtures are the canonical truth table for range behavior — invaluable for building a compatible implementation."
+      },
+      {
+        "kind": "source",
+        "value": "https://semver.org/spec/v2.0.0.html",
+        "reason": "The authoritative spec. Section 11 (precedence) and the BNF grammar are essential references for the parser."
+      },
+      {
+        "kind": "lens",
+        "value": "api-ergonomics",
+        "reason": "The worldview focuses on what the library does but not how it feels to use. A lens on API design would explore: chainable vs. functional, error reporting style, whether Range is opaque or inspectable, and how to handle the common case (satisfies) vs. advanced cases (intersection, sorting)."
+      }
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/storm",
+    "timestamp": "2026-03-05T07:15:46.325Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: brane-tldr ===
+--- cmd: bny brane tldr ---
+
+🐰 brane  6 files, 0 dirs
+
+  edge-cases-and-gotchas.md      Semver range resolution is deceptively complex, with numerous edge cases that break naive implementations.
+  semver-resolver.md             A TypeScript library for parsing semver versions and evaluating npm-style range expressions.
+  implementation-strategies.md   There are fundamentally different architectural approaches to building a semver resolver, each with distinct tradeoffs.
+  semver-spec-tensions.md        The semver 2.0.0 specification leaves several areas ambiguous or contested, creating real implementation dilemmas.
+  ecosystem-and-alternatives.md  Understanding existing implementations reveals both proven patterns and opportunities for differentiation.
+  testing-strategy.md            A semver resolver demands exhaustive combinatorial testing because the interaction between features creates emergent edge cases.
+
+lenses: all (on)
+sources: 1 stashed (last: 2026-03-05)
+--- exit: 0 ---
+
+=== STEP: brane-ask ===
+--- cmd: bny brane ask what are the key design decisions for this project? ---
+asking brane...
+# Key Design Decisions
+
+**Architecture: Expansion to Primitives**
+Desugar all range sugar (`^`, `~`, hyphen, x-range) into primitive comparators (`>=`, `<`, `<=`, `>`, `=`), then evaluate as simple arithmetic. This is the node-semver approach. All complexity lives in one desugaring pass; evaluation becomes trivial.
+
+**Data Model: Immutable POD Types**
+No classes for data. Four types:
+- `SemVer` — `{ major, minor, patch, prerelease, build }`
+- `Comparator` — `{ operator, version }`
+- `ComparatorSet` — `Comparator[]` (AND semantics)
+- `Range` — `ComparatorSet[]` (OR semantics)
+
+**Pre-release Semantics: npm Rules**
+Pre-releases only match ranges that explicitly reference the same `major.minor.patch` tuple. `>=1.0.0` excludes `2.0.0-alpha`. This is counterintuitive but matches ecosystem expectations.
+
+**Critical Edge Case: `^0.x` Caret Behavior**
+- `^0.2.3` → `>=0.2.3 <0.3.0` (not `<1.0.0`)
+- `^0.0.3` → `>=0.0.3 <0.0.4`
+This is the most commonly misunderstood rule and must be correct from day one.
+
+**Parsing Tolerance**
+Tension between strict semver and ecosystem reality. Leading `v`, missing patch (`1.2`), missing minor (`1`) all appear constantly in the wild. The project needs a clear stance — likely tolerant parsing with strict output.
+
+**Differentiation from node-semver**
+- Type-safe POD (no mutable SemVer class)
+- Potential explain mode (why does/doesn't a version satisfy)
+- Range algebra as first-class operations
+- Better error messages pointing to exact failure location
+
+**Testing: Antagonistic, Tests-First**
+Tests written before implementation and reviewed by antagonist agent. High-value cases pulled from node-semver's own suite. Property-based testing for monotonicity and round-trip guarantees.
+
+---
+
+Sources:
+- implementation-strategies.md (from: seed.md)
+- index.md (from: seed.md)
+- semver-resolver.md (from: seed.md)
+- edge-cases-and-gotchas.md (from: seed.md)
+- semver-spec-tensions.md (from: seed.md)
+- ecosystem-and-alternatives.md (from: seed.md)
+- testing-strategy.md (from: seed.md)
+--- exit: 0 ---
+
+=== STEP: build ===
+--- cmd: bny build --yes a TypeScript library that parses semver version strings and evaluates npm-style range expressions (^, ~, >=, ||, hyphen ranges, x-ranges) to test whether versions satisfy constraints ---
+
+[bny build] a TypeScript library that parses semver version strings and evaluates npm-style range expressions (^, ~, >=, ||, hyphen ranges, x-ranges) to test whether versions satisfy constraints
+  max-iter: 5
+
+
+--- specify ---
+[specify] generating spec for: a TypeScript library that parses semver version strings and evaluates npm-style range expressions (^, ~, >=, ||, hyphen ranges, x-ranges) to test whether versions satisfy constraints
+{
+  "status": "success",
+  "result": {
+    "feature_name": "001-typescript-library-parses",
+    "feature_num": "001",
+    "spec_file": "/Users/ahoward/gh/ahoward/bunny/demos/semver-resolver/specs/001-typescript-library-parses/spec.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/specify",
+    "timestamp": "2026-03-05T07:17:31.277Z",
+    "duration_ms": 0
+  }
+}
+
+--- challenge (gemini) ---
+[challenge] hardening spec for: 001-typescript-library-parses
+[challenge] wrote /Users/ahoward/gh/ahoward/bunny/demos/semver-resolver/specs/001-typescript-library-parses/challenge.md
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-parses",
+    "challenge_file": "/Users/ahoward/gh/ahoward/bunny/demos/semver-resolver/specs/001-typescript-library-parses/challenge.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/challenge",
+    "timestamp": "2026-03-05T07:18:17.211Z",
+    "duration_ms": 0
+  }
+}
+
+--- plan ---
+[plan] generating plan for: 001-typescript-library-parses
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-parses",
+    "plan_file": "/Users/ahoward/gh/ahoward/bunny/demos/semver-resolver/specs/001-typescript-library-parses/plan.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/plan",
+    "timestamp": "2026-03-05T07:20:37.300Z",
+    "duration_ms": 0
+  }
+}
+
+--- tasks ---
+[tasks] generating tasks for: 001-typescript-library-parses
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-parses",
+    "tasks_file": "/Users/ahoward/gh/ahoward/bunny/demos/semver-resolver/specs/001-typescript-library-parses/tasks.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/tasks",
+    "timestamp": "2026-03-05T07:21:06.284Z",
+    "duration_ms": 0
+  }
+}
+
+--- test-gen (gemini) ---
+[test-gen] generating tests for: 001-typescript-library-parses (generic/unknown)
+  + tests/contracts/parse.test.ts
+  + tests/contracts/compare.test.ts
+  + tests/contracts/satisfies.test.ts
+  + tests/properties/round_trip.test.ts
+  + tests/boundaries/edge_cases.test.ts
+  + tests/golden/golden.test.ts
+  + tests/golden/satisfies.golden.json (fixture)
+
+suggested dependencies: bun-types
+  install with: echo add -d bun-types
+
+[test-gen] wrote 7 file(s)
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-parses",
+    "files": [
+      "tests/contracts/parse.test.ts",
+      "tests/contracts/compare.test.ts",
+      "tests/contracts/satisfies.test.ts",
+      "tests/properties/round_trip.test.ts",
+      "tests/boundaries/edge_cases.test.ts",
+      "tests/golden/golden.test.ts"
+    ],
+    "fixtures": [
+      "tests/golden/satisfies.golden.json"
+    ],
+    "dependencies": [
+      "bun-types"
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/test-gen",
+    "timestamp": "2026-03-05T07:22:51.499Z",
+    "duration_ms": 0
+  }
+}
+
+--- review (gemini) ---
+Error executing tool run_shell_command: Tool "run_shell_command" not found. Did you mean one of: "grep_search", "cli_help", "read_file"?
+Error executing tool run_shell_command: Tool "run_shell_command" not found. Did you mean one of: "grep_search", "cli_help", "read_file"?
+Here is the antagonist review of the specification and implementation plan.
+
+### 1. CRITICAL: Operator + Partial Version Desugaring (T015)
+- **Problem**: The plan naively passes primitive comparators containing partial versions (e.g., `<=1.x`, `>1.2`) into `parse_partial`, which presumably zero-fills them. This breaks the fundamental logic of npm range resolution. For example, `<=1.x` does **not** expand to `<=1.0.0`; it expands to `<2.0.0-0` (allowing any version in the `1.x` line). Similarly, `>1.x` expands to `>=2.0.0-0`.
+- **Impact**: Critical. Without operator-aware partial expansion, ranges like `<=1.x` will incorrectly reject valid versions (like `1.1.0`), failing node-semver parity for wildcard + operator combinations.
+- **Fix**: Update T015 to include an explicit step for handling operators combined with partial bounds before passing to `parse_partial`. Specifically: `<M.x` → `<M.0.0-0`, `<=M.x` → `<(M+1).0.0-0`, `>M.x` → `>= (M+1).0.0-0`, `>=M.x` → `>=M.0.0-0`.
+
+### 2. HIGH: The Missing `includePrerelease` Escape Hatch (US-010 / T018)
+- **Problem**: The spec perfectly implements the strict same-tuple pre-release gate (FR-011), but entirely omits the widely used `includePrerelease` option. Real-world developers rely on this flag to bypass the tuple gate when evaluating ranges against RC/Beta builds universally (e.g., in CI/CD pipelines).
+- **Impact**: High. The library will be functionally useless for developers needing to opt-in to broad pre-release matching. Testing environments and local tooling will break.
+- **Fix**: Add an `includePrerelease?: boolean` property to `ParseOptions`. Update the signatures of `satisfies` and `parse_range` to accept it, and modify T018 to bypass the pre-release tuple gate if the flag is `true`.
+
+### 3. HIGH: Wildcard `*` Expansion Bug (T012)
+- **Problem**: T012 states that `*`, `x`, or an empty range expands to `>=0.0.0`. If a user evaluates this against `0.0.0-alpha` (perhaps using the aforementioned `includePrerelease` flag), `>=0.0.0` will evaluate `0.0.0-alpha >= 0.0.0`, which is **FALSE** because pre-releases are strictly less than their release counterparts. Thus, `*` will unexpectedly fail to match `0.0.0` pre-releases.
+- **Impact**: High. `*` should match literally everything in the universe, including the absolute lowest pre-releases.
+- **Fix**: Update T012 to expand `*`, `x`, `X`, and empty strings to `>=0.0.0-0` instead of `>=0.0.0`.
+
+### 4. HIGH: Prerelease String Fallback Loophole (T005)
+- **Problem**: The plan states: "validate each identifier: numeric (no leading zeros...) or alphanumeric string". If the implementer encounters `01`, they might realize it fails the numeric validation (due to the leading zero) and mistakenly fall back to accepting it as a valid "alphanumeric string" because it contains characters. This violates the semver 2.0.0 specification.
+- **Impact**: High. Malformed versions like `1.0.0-01` will be accepted as valid by treating `01` as a string, failing strict mode compliance.
+- **Fix**: Update T005 to explicitly state: "If an identifier consists *entirely* of digits (`/^\d+$/`), it MUST be evaluated as numeric and MUST fail the entire parse if it contains leading zeros. It cannot fall back to being treated as a string."
+
+### 5. MEDIUM: Incomplete Loose Mode Propagation (T018)
+- **Problem**: US-012 defines loose mode for `parse`, but Phase 4 `satisfies` hardcodes the instruction: "parse it (strict mode)". If users are processing dirty ecosystem data, they need `satisfies(v, r, { loose: true })` to apply loose mode to BOTH the target version string and the comparator subsets.
+- **Impact**: Medium. Severely limits the utility of loose mode if it cannot be invoked directly in the primary, top-level `satisfies` function.
+- **Fix**: Update the `satisfies` signature to accept an optional `opts?: ParseOptions` object. Pass these options explicitly down into both the `parse(version)` and `parse_range(range)` calls.
+
+### 6. MEDIUM: Range Trimming and `||` Splitting (T016)
+- **Problem**: Normalizing spaces *before* splitting on `||` leaves trailing and leading spaces on the resulting subsets (e.g., `"1.0.0 || 2.0.0"` splits into `"1.0.0 "` and `" 2.0.0"`). If the subsequent subset parsers don't actively trim these segments, the parsing will fail. Furthermore, indiscriminate space collapsing could interfere with detection of hyphen boundaries if not handled carefully.
+- **Impact**: Medium. Causes unforced parser errors on valid, standard npm ranges.
+- **Fix**: Update T016 to require explicitly mapping over the subsets and trimming them (`.map(s => s.trim())`) *after* the `||` split is executed.
+
+### 7. LOW: Hyphens in Prerelease "Alphanumeric" Strings (T005)
+- **Problem**: The semver specification dictates that prerelease/build identifiers comprise `[0-9A-Za-z-]`. The term "alphanumeric string" used in T005 is technically exclusionary and might lead the implementer to reject valid identifiers containing hyphens (e.g., `1.0.0-beta-1` or `-1`).
+- **Impact**: Low, but highly likely to cause frustration and test failures during implementation.
+- **Fix**: Clarify in T005 that "string identifiers" may explicitly include hyphens.
+
+--- implement (claude, ralph, max-iter 5) ---
+All done. Here's the summary:
+
+**54 tests pass, 0 failures** across 6 test files (94 assertions).
+
+### Files created (7 source + 1 config):
+- `src/types.ts` — POD types: `SemVer`, `Comparator`, `ComparatorSet`, `Range`, `ParseResult<T>`, `ParseOptions`
+- `src/parse.ts` — strict/loose semver parsing with all guards (leading zeros, MAX_SAFE_INTEGER, empty identifiers)
+- `src/format.ts` — `SemVer` → string rendering
+- `src/compare.ts` — semver 2.0.0 §11 precedence (numeric/string identifier ordering, prerelease < release)
+- `src/parse_range.ts` — desugars `^`, `~`, hyphen, x-range into primitive comparators (`>=`, `<`, `<=`, `>`, `=`)
+- `src/satisfies.ts` — evaluates version against range with pre-release gate (FR-011)
+- `src/index.ts` — public API re-exports
+- `tsconfig.json` — TypeScript config for Bun
+
+### Modified:
+- `dev/test` — now runs `bun test` instead of echo
+- `bny/decisions.md` — appended decision log entry
+
+--- verify (gemini) ---
+[verify] post-implementation review for: 001-typescript-library-parses
+[verify] wrote /Users/ahoward/gh/ahoward/bunny/demos/semver-resolver/specs/001-typescript-library-parses/verify.md
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-parses",
+    "verify_file": "/Users/ahoward/gh/ahoward/bunny/demos/semver-resolver/specs/001-typescript-library-parses/verify.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/verify",
+    "timestamp": "2026-03-05T07:31:49.642Z",
+    "duration_ms": 0
+  }
+}
+
+--- ruminate ---
+[ruminate] feature: 001-typescript-library-parses
+ruminating on: 001-typescript-library-parses...
+
+[intake]
+  ~ implementation-strategies.md  (+26, -21)
+  ~ edge-cases-and-gotchas.md  (+46, -23)
+  ~ testing-strategy.md  (+31, -22)
+  ~ semver-resolver.md  (+37, -23)
+  ~ index.md  (+12, -12)
+  + patterns-and-lessons.md  (36 lines)
+
+reasoning: Extracted durable patterns from the completed implementation: (1) Updated implementation-strategies.md with validated architecture choice, pipeline dispatch pattern, and PartialVersion as hidden key type. (2) Updated edge-cases-and-gotchas.md with implementation-specific details on the pre-release gate (the hardest 6 lines), hyphen ambiguity regex, and zero-major caret priority chain. (3) Updated testing-strategy.md with the actual test organization that worked (layered: contracts/boundaries/properties/golden). (4) Updated semver-resolver.md with actual file structure, line counts, and confirmed design decisions. (5) Updated index.md with implementation insights. (6) Created patterns-and-lessons.md for reusable patterns: desugaring pipeline, nullable fields for partial data, guard-at-boundary, complexity concentration, and per-comparator-set pre-release scoping. Skipped: session-specific details (branch names, task checkpoints), spec content that was already well-captured, and ecosystem info that didn't change.
+
+6 operation(s) (1 new, 5 updated)
+applied 6 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "feature": "001-typescript-library-parses",
+    "operations": [
+      {
+        "action": "update",
+        "path": "implementation-strategies.md"
+      },
+      {
+        "action": "update",
+        "path": "edge-cases-and-gotchas.md"
+      },
+      {
+        "action": "update",
+        "path": "testing-strategy.md"
+      },
+      {
+        "action": "update",
+        "path": "semver-resolver.md"
+      },
+      {
+        "action": "update",
+        "path": "index.md"
+      },
+      {
+        "action": "create",
+        "path": "patterns-and-lessons.md"
+      }
+    ],
+    "reasoning": "Extracted durable patterns from the completed implementation: (1) Updated implementation-strategies.md with validated architecture choice, pipeline dispatch pattern, and PartialVersion as hidden key type. (2) Updated edge-cases-and-gotchas.md with implementation-specific details on the pre-release gate (the hardest 6 lines), hyphen ambiguity regex, and zero-major caret priority chain. (3) Updated testing-strategy.md with the actual test organization that worked (layered: contracts/boundaries/properties/golden). (4) Updated semver-resolver.md with actual file structure, line counts, and confirmed design decisions. (5) Updated index.md with implementation insights. (6) Created patterns-and-lessons.md for reusable patterns: desugaring pipeline, nullable fields for partial data, guard-at-boundary, complexity concentration, and per-comparator-set pre-release scoping. Skipped: session-specific details (branch names, task checkpoints), spec content that was already well-captured, and ecosystem info that didn't change."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/ruminate",
+    "timestamp": "2026-03-05T07:33:53.016Z",
+    "duration_ms": 0
+  }
+}
+
+[bny build] complete: a TypeScript library that parses semver version strings and evaluates npm-style range expressions (^, ~, >=, ||, hyphen ranges, x-ranges) to test whether versions satisfy constraints
+--- exit: 0 ---
+
+=== STEP: dev-test ===
+--- cmd: ./dev/test ---
+bun test v1.3.9 (cf6cdbbb)
+
+ 54 pass
+ 0 fail
+ 94 expect() calls
+Ran 54 tests across 6 files. [73.00ms]
+--- exit: 0 ---
+
+=== VALIDATION ===
+  [ok] spec exists
+  [ok] plan exists
+  [ok] tasks exist

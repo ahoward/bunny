@@ -1,0 +1,11 @@
+{
+  "name": "json-patch",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/bun": "^1.2.0",
+    "fast-check": "^3.0.0"
+  }
+}

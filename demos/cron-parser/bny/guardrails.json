@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+
+  "protected_files": [
+    "bny/guardrails.json",
+    "bny/decisions.md"
+  ],
+
+  "blast_radius": {
+    "max_files_per_pr": 20,
+    "max_lines_changed_per_pr": 500,
+    "max_new_dependencies": 0,
+    "new_dependency_requires": "human_approval"
+  },
+
+  "forbidden_actions": [
+    "force_push_main",
+    "skip_tests"
+  ],
+
+  "require_human_approval": [
+    "new_runtime_dependency",
+    "schema_migration",
+    "constitution_amendment"
+  ]
+}
