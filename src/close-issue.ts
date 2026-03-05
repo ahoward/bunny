@@ -12,6 +12,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { success, error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
+import { spawn_sync } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -59,14 +60,14 @@ export async function main(argv: string[]): Promise<number> {
 
   const comment = `Completed via bny implement on branch \`${name}\`.`
 
-  const gh = Bun.spawnSync([
-    "gh", "issue", "close", issue_number,
-    "--comment", comment,
-  ], { stdout: "pipe", stderr: "pipe", cwd: root })
+  const gh = spawn_sync({
+    cmd: ["gh", "issue", "close", issue_number, "--comment", comment],
+    cwd: root,
+    label: "gh issue close",
+  })
 
-  if (gh.exitCode !== 0) {
-    const msg = new TextDecoder().decode(gh.stderr).trim()
-    const result = error({ gh: [{ code: "close_failed", message: msg || "gh issue close failed" }] })
+  if (!gh.ok) {
+    const result = error({ gh: [{ code: "close_failed", message: gh.detail }] })
     process.stdout.write(JSON.stringify(result, null, 2) + "\n")
     return 1
   }

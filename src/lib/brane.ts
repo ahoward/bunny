@@ -10,6 +10,7 @@ import { resolve, relative, dirname } from "node:path"
 import type { PromptSection } from "./prompt.ts"
 import { create_spinner } from "./spinner.ts"
 import { check_secrets } from "./secrets.ts"
+import { spawn_sync } from "./spawn.ts"
 
 // -- types --
 
@@ -203,15 +204,6 @@ export function usage_summary(root: string): { calls: number, prompt_chars: numb
 
 const CLAUDE_TIMEOUT_SECS = 300 // 5 minutes default; override with BNY_CLAUDE_TIMEOUT
 
-// macOS has no `timeout` — try `gtimeout` (brew install coreutils), else skip
-const TIMEOUT_CMD: string | null = (() => {
-  for (const cmd of ["timeout", "gtimeout"]) {
-    const r = Bun.spawnSync(["which", cmd], { stdout: "pipe", stderr: "pipe" })
-    if (r.exitCode === 0) return cmd
-  }
-  return null
-})()
-
 export function call_claude(prompt: string, root: string): string | null {
   // secret detection
   if (!check_secrets(prompt, "prompt")) return null
@@ -230,36 +222,30 @@ export function call_claude(prompt: string, root: string): string | null {
   if (model) claude_args.push("--model", model)
   claude_args.push("-")
 
-  // use `timeout` to prevent indefinite blocking (0 or no timeout cmd = skip)
-  const cmd = (timeout_secs > 0 && TIMEOUT_CMD)
-    ? [TIMEOUT_CMD, String(timeout_secs), "claude", ...claude_args]
-    : ["claude", ...claude_args]
-
   const start = Date.now()
-  const proc = Bun.spawnSync(cmd, {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: Buffer.from(prompt),
+  const r = spawn_sync({
+    cmd: ["claude", ...claude_args],
     cwd: root,
     env,
+    stdin: prompt,
+    timeout: timeout_secs,
+    label: "claude",
   })
   const duration_ms = Date.now() - start
 
-  if (proc.exitCode === 124) {
+  if (r.timed_out) {
     process.stderr.write(`error: claude timed out after ${timeout_secs}s\n`)
     log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
     return null
   }
 
-  if (proc.exitCode !== 0) {
-    const err = new TextDecoder().decode(proc.stderr).trim()
-    process.stderr.write(`error: claude failed: ${err}\n`)
+  if (!r.ok) {
+    process.stderr.write(`error: claude failed: ${r.detail}\n`)
     log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
     return null
   }
-  const response = new TextDecoder().decode(proc.stdout).trim()
-  log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: response.length, duration_ms, ok: true })
-  return response
+  log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: r.stdout.length, duration_ms, ok: true })
+  return r.stdout
 }
 
 export function call_claude_with_tools(prompt: string, root: string, allowed_tools: string[], max_turns: number = 3): string | null {
@@ -278,35 +264,30 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
   for (const tool of allowed_tools) claude_args.push("--allowedTools", tool)
   claude_args.push("--max-turns", String(max_turns), "-")
 
-  const cmd = (timeout_secs > 0 && TIMEOUT_CMD)
-    ? [TIMEOUT_CMD, String(timeout_secs), "claude", ...claude_args]
-    : ["claude", ...claude_args]
-
   const start = Date.now()
-  const proc = Bun.spawnSync(cmd, {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: Buffer.from(prompt),
+  const r = spawn_sync({
+    cmd: ["claude", ...claude_args],
     cwd: root,
     env,
+    stdin: prompt,
+    timeout: timeout_secs,
+    label: "claude (with tools)",
   })
   const duration_ms = Date.now() - start
 
-  if (proc.exitCode === 124) {
+  if (r.timed_out) {
     process.stderr.write(`error: claude (with tools) timed out after ${timeout_secs}s\n`)
     log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
     return null
   }
 
-  if (proc.exitCode !== 0) {
-    const err = new TextDecoder().decode(proc.stderr).trim()
-    process.stderr.write(`error: claude failed: ${err}\n`)
+  if (!r.ok) {
+    process.stderr.write(`error: claude failed: ${r.detail}\n`)
     log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
     return null
   }
-  const response = new TextDecoder().decode(proc.stdout).trim()
-  log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: response.length, duration_ms, ok: true })
-  return response
+  log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: r.stdout.length, duration_ms, ok: true })
+  return r.stdout
 }
 
 export function parse_json<T>(raw: string): T | null {
@@ -734,13 +715,13 @@ export function load_source(source: string, root: string): { content: string, la
       return null
     }
 
-    const proc = Bun.spawnSync(["curl", "-sL", "--max-time", "30", "--max-filesize", String(MAX_SOURCE_BYTES), "--proto", "=http,https", "--proto-redir", "=https", "--max-redirs", "5", source], {
-      stdout: "pipe",
-      stderr: "pipe",
+    const curl_r = spawn_sync({
+      cmd: ["curl", "-sL", "--max-time", "30", "--max-filesize", String(MAX_SOURCE_BYTES), "--proto", "=http,https", "--proto-redir", "=https", "--max-redirs", "5", source],
       cwd: root,
+      label: "curl",
     })
-    if (proc.exitCode !== 0) return null
-    const content = new TextDecoder().decode(proc.stdout).trim()
+    if (!curl_r.ok) return null
+    const content = curl_r.stdout
     if (content.length === 0) return null
     if (!check_secrets(content, `source: ${source}`)) return null
     return { content, label: source }

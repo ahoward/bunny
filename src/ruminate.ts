@@ -25,6 +25,7 @@ import {
 } from "./lib/brane.ts"
 import type { EatResponse } from "./lib/brane.ts"
 import { create_spinner } from "./lib/spinner.ts"
+import { spawn_sync, which_check } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -97,13 +98,8 @@ flags:
   }
 
   function git_output(args: string[]): string {
-    const proc = Bun.spawnSync(["git", ...args], {
-      stdout: "pipe",
-      stderr: "pipe",
-      cwd: root,
-    })
-    if (proc.exitCode !== 0) return ""
-    return new TextDecoder().decode(proc.stdout).trim()
+    const r = spawn_sync({ cmd: ["git", ...args], cwd: root, label: "git" })
+    return r.ok ? r.stdout : ""
   }
 
   const sections: string[] = []
@@ -219,8 +215,7 @@ If nothing durable emerged, return empty operations with reasoning explaining wh
 
   // -- check claude --
 
-  const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
-  if (claude_check.exitCode !== 0) {
+  if (!which_check("claude")) {
     process.stdout.write(JSON.stringify(error({
       claude: [{ code: "not_found", message: "claude CLI not found on PATH" }]
     }, meta()), null, 2) + "\n")

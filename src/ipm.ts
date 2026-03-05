@@ -16,6 +16,7 @@ import { createInterface } from "node:readline"
 import { find_root } from "./lib/feature.ts"
 import { read_section } from "./lib/prompt.ts"
 import { parse_json } from "./lib/brane.ts"
+import { spawn_sync, which_check } from "./lib/spawn.ts"
 import type { PromptSection } from "./lib/prompt.ts"
 
 export async function main(argv: string[]): Promise<number> {
@@ -61,15 +62,13 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   // gather recent git history
-  const git_log = Bun.spawnSync(
-    ["git", "log", "--oneline", "--no-decorate", "-50"],
-    { stdout: "pipe", stderr: "pipe", cwd: root },
-  )
-  if (git_log.exitCode === 0) {
-    const log_text = new TextDecoder().decode(git_log.stdout).trim()
-    if (log_text.length > 0) {
-      sections.push({ heading: "Recent Commits (newest first)", content: log_text })
-    }
+  const git_log = spawn_sync({
+    cmd: ["git", "log", "--oneline", "--no-decorate", "-50"],
+    cwd: root,
+    label: "git log",
+  })
+  if (git_log.ok && git_log.stdout.length > 0) {
+    sections.push({ heading: "Recent Commits (newest first)", content: git_log.stdout })
   }
 
   if (sections.length === 0) {
@@ -125,18 +124,17 @@ export async function main(argv: string[]): Promise<number> {
   // -- helpers --
 
   function call_claude(prompt: string): string | null {
-    const proc = Bun.spawnSync(["claude", "-p", "-"], {
-      stdout: "pipe",
-      stderr: "pipe",
-      stdin: Buffer.from(prompt),
+    const r = spawn_sync({
+      cmd: ["claude", "-p", "-"],
+      stdin: prompt,
       cwd: root,
+      label: "claude",
     })
-    if (proc.exitCode !== 0) {
-      const err = new TextDecoder().decode(proc.stderr).trim()
-      process.stderr.write(`error: claude failed: ${err}\n`)
+    if (!r.ok) {
+      process.stderr.write(`error: claude failed: ${r.detail}\n`)
       return null
     }
-    return new TextDecoder().decode(proc.stdout).trim()
+    return r.stdout
   }
 
   interface IpmResponse {
@@ -175,8 +173,7 @@ export async function main(argv: string[]): Promise<number> {
 
   // -- guards --
 
-  const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
-  if (claude_check.exitCode !== 0) {
+  if (!which_check("claude")) {
     process.stderr.write("error: claude CLI not found on PATH\n")
     return 1
   }

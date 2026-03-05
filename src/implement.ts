@@ -16,7 +16,7 @@ import { resolve } from "node:path"
 import { error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { read_section, build_prompt } from "./lib/prompt.ts"
-import * as assassin from "./lib/assassin.ts"
+import { spawn_async, which_check } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -55,8 +55,7 @@ export async function main(argv: string[]): Promise<number> {
     return 1
   }
 
-  const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
-  if (claude_check.exitCode !== 0) {
+  if (!which_check("claude")) {
     const result = error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] })
     process.stdout.write(JSON.stringify(result, null, 2) + "\n")
     return 1
@@ -84,9 +83,7 @@ export async function main(argv: string[]): Promise<number> {
 
   const prompt = build_prompt(sections, instructions)
 
-  // -- shell out to claude via bash (Bun.spawn hangs calling claude directly) --
-
-  assassin.install(resolve(root, "bny"))
+  // -- shell out to claude --
 
   const prompt_tmp = resolve(root, `bny/implement-prompt-${process.pid}.tmp`)
   await Bun.write(prompt_tmp, prompt)
@@ -100,22 +97,20 @@ export async function main(argv: string[]): Promise<number> {
   const cmd: string[] = ["claude", "-p", "--continue", "--dangerously-skip-permissions"]
   if (model) cmd.push("--model", model)
 
-  const prompt_file = Bun.file(prompt_tmp)
-  const proc = Bun.spawn(cmd, {
+  const r = await spawn_async({
+    cmd,
+    cwd: root,
+    env: spawn_env,
+    stdin: Bun.file(prompt_tmp),
     stdout: "inherit",
     stderr: "inherit",
-    stdin:  prompt_file,
-    cwd:    root,
-    env:    spawn_env,
+    assassin_dir: resolve(root, "bny"),
+    label: "claude implement",
   })
-
-  assassin.track(proc.pid, proc.pid)
-  const exit_code = await proc.exited
-  assassin.untrack(proc.pid)
 
   try { unlinkSync(prompt_tmp) } catch {}
 
-  return exit_code
+  return r.exit_code
 }
 
 if (import.meta.main) process.exit(await main(process.argv.slice(2)))

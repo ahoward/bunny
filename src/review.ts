@@ -16,7 +16,7 @@ import { resolve } from "node:path"
 import { success, error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { read_section, build_prompt } from "./lib/prompt.ts"
-import * as assassin from "./lib/assassin.ts"
+import { spawn_async, which_check } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -106,34 +106,29 @@ export async function main(argv: string[]): Promise<number> {
     return 0
   }
 
-  // -- shell out to gemini via bash (Bun.spawn hangs calling CLIs directly) --
+  // -- shell out to gemini --
 
-  const gemini_check = Bun.spawnSync(["which", "gemini"], { stdout: "pipe", stderr: "pipe" })
-  if (gemini_check.exitCode !== 0) {
+  if (!which_check("gemini")) {
     const result = error({ gemini: [{ code: "not_found", message: "gemini CLI not found on PATH — use --prompt-only to generate the prompt file instead" }] })
     process.stdout.write(JSON.stringify(result, null, 2) + "\n")
     return 1
   }
-
-  assassin.install(resolve(root, "bny"))
 
   // model version pinning — array spawn, no shell interpolation
   const model = process.env.BNY_MODEL || null
   const cmd: string[] = ["gemini", "-p", prompt]
   if (model) cmd.push("--model", model)
 
-  const proc = Bun.spawn(cmd, {
+  const r = await spawn_async({
+    cmd,
+    cwd: root,
     stdout: "inherit",
     stderr: "inherit",
-    stdin:  "ignore",
-    cwd:    root,
+    assassin_dir: resolve(root, "bny"),
+    label: "gemini review",
   })
 
-  assassin.track(proc.pid, proc.pid)
-  const exit_code = await proc.exited
-  assassin.untrack(proc.pid)
-
-  return exit_code
+  return r.exit_code
 }
 
 if (import.meta.main) process.exit(await main(process.argv.slice(2)))

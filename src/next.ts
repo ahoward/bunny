@@ -22,6 +22,7 @@ import { main as tasks_main } from "./tasks.ts"
 import { main as review_main } from "./review.ts"
 import { main as implement_main } from "./implement.ts"
 import { main as ruminate_main } from "./ruminate.ts"
+import { spawn_sync } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -123,14 +124,9 @@ flags:
 
   function run_ext(cmd: string[], label: string): boolean {
     process.stderr.write(`\n--- ${label} ---\n`)
-    const proc = Bun.spawnSync(cmd, {
-      stdout: "inherit",
-      stderr: "inherit",
-      stdin: "inherit",
-      cwd: root,
-    })
-    if (proc.exitCode !== 0) {
-      process.stderr.write(`\nerror: ${label} failed (exit ${proc.exitCode})\n`)
+    const r = spawn_sync({ cmd, cwd: root, label })
+    if (!r.ok) {
+      process.stderr.write(`\nerror: ${label} failed (exit ${r.exit_code})\n`)
       return false
     }
     return true

@@ -16,6 +16,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync, unlinkSync } from "node:fs"
 import { resolve, basename } from "node:path"
 import { find_root } from "./lib/feature.ts"
+import { spawn_sync, spawn_async, which_check } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -75,18 +76,17 @@ workflow:
       process.stderr.write("no spin logs yet\n")
       return 0
     }
-    const proc = Bun.spawn(["tail", "-f", latest], {
-      stdout: "inherit",
-      stderr: "inherit",
-      stdin: "inherit",
+    const r = await spawn_async({
+      cmd: ["tail", "-f", latest],
+      stdout: "inherit", stderr: "inherit", stdin: "inherit",
+      label: "tail log",
     })
-    return await proc.exited
+    return r.exit_code
   }
 
   // -- check tmux --
 
-  const tmux_check = Bun.spawnSync(["which", "tmux"], { stdout: "pipe", stderr: "pipe" })
-  if (tmux_check.exitCode !== 0) {
+  if (!which_check("tmux")) {
     process.stderr.write("error: tmux not found — install with: brew install tmux\n")
     return 1
   }
@@ -128,10 +128,8 @@ workflow:
   const session_name = `bny-spin-${session_slug}`
 
   // check if already running
-  const session_check = Bun.spawnSync(["tmux", "has-session", "-t", session_name], {
-    stdout: "pipe", stderr: "pipe"
-  })
-  if (session_check.exitCode === 0) {
+  const session_check = spawn_sync({ cmd: ["tmux", "has-session", "-t", session_name], label: "tmux" })
+  if (session_check.ok) {
     process.stderr.write(`already running: ${session_name}\n`)
     process.stderr.write(`  attach: tmux attach -t ${session_name}\n`)
     process.stderr.write(`  log:    bny spin --log\n`)
@@ -190,15 +188,10 @@ workflow:
     "bash", "-c", shell_cmd,
   ]
 
-  const tmux_proc = Bun.spawnSync(tmux_cmd, {
-    stdout: "inherit",
-    stderr: "inherit",
-    cwd: root,
-    env: clean_env,
-  })
+  const tmux_result = spawn_sync({ cmd: tmux_cmd, cwd: root, env: clean_env, label: "tmux new-session" })
 
-  if (tmux_proc.exitCode !== 0) {
-    process.stderr.write("error: failed to create tmux session\n")
+  if (!tmux_result.ok) {
+    process.stderr.write(`error: failed to create tmux session: ${tmux_result.detail}\n`)
     return 1
   }
 
@@ -211,12 +204,11 @@ workflow:
 
   if (attach) {
     process.stderr.write(`\nattaching...\n`)
-    const attach_proc = Bun.spawnSync(["tmux", "attach", "-t", session_name], {
-      stdout: "inherit",
-      stderr: "inherit",
-      stdin: "inherit",
+    const attach_r = spawn_sync({
+      cmd: ["tmux", "attach", "-t", session_name],
+      label: "tmux attach",
     })
-    return attach_proc.exitCode ?? 0
+    return attach_r.exit_code
   }
 
   return 0

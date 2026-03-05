@@ -13,6 +13,7 @@
 
 import { existsSync, mkdirSync, writeFileSync, chmodSync, readFileSync, lstatSync, readlinkSync, unlinkSync } from "node:fs"
 import { resolve, dirname } from "node:path"
+import { spawn_sync } from "./lib/spawn.ts"
 
 // -- marker block operations --
 
@@ -151,9 +152,9 @@ flags:
   // -- check git repo --
 
   if (!existsSync(resolve(root, ".git"))) {
-    const proc = Bun.spawnSync(["git", "init"], { cwd: root, stderr: "pipe" })
-    if (proc.exitCode !== 0) {
-      process.stderr.write("error: git init failed\n")
+    const r = spawn_sync({ cmd: ["git", "init"], cwd: root, label: "git init" })
+    if (!r.ok) {
+      process.stderr.write(`error: git init failed: ${r.detail}\n`)
       return 1
     }
     process.stderr.write("initialized git repo\n")
@@ -284,10 +285,9 @@ flags:
 
     // -- configure git hooks path --
 
-    const hooks_check = Bun.spawnSync(["git", "config", "core.hooksPath"], { stdout: "pipe", stderr: "pipe" })
-    const current_hooks = new TextDecoder().decode(hooks_check.stdout).trim()
-    if (current_hooks !== ".githooks") {
-      Bun.spawnSync(["git", "config", "core.hooksPath", ".githooks"], { stdout: "pipe", stderr: "pipe" })
+    const hooks_check = spawn_sync({ cmd: ["git", "config", "core.hooksPath"], label: "git config" })
+    if (hooks_check.stdout !== ".githooks") {
+      spawn_sync({ cmd: ["git", "config", "core.hooksPath", ".githooks"], label: "git config" })
       process.stderr.write(`  config   git core.hooksPath → .githooks\n`)
     }
   }

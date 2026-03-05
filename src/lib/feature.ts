@@ -7,6 +7,7 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs"
 import { resolve, relative, dirname, basename } from "node:path"
+import { spawn_sync } from "./spawn.ts"
 
 // -- types --
 
@@ -60,10 +61,10 @@ export function current_feature(): string | null {
   }
 
   // 3. git branch
-  const proc = Bun.spawnSync(["git", "rev-parse", "--abbrev-ref", "HEAD"], { stdout: "pipe", stderr: "pipe" })
-  if (proc.exitCode !== 0) return null
+  const r = spawn_sync({ cmd: ["git", "rev-parse", "--abbrev-ref", "HEAD"], label: "git" })
+  if (!r.ok) return null
 
-  const branch = new TextDecoder().decode(proc.stdout).trim()
+  const branch = r.stdout
   if (FEATURE_PATTERN.test(branch)) return branch
 
   return null

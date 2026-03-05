@@ -17,6 +17,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "./lib/result.ts"
 import { find_root } from "./lib/feature.ts"
+import { spawn_sync, which_check } from "./lib/spawn.ts"
 
 // -- types --
 
@@ -183,27 +184,25 @@ commands:
     }
 
     // check gh
-    const gh_check = Bun.spawnSync(["which", "gh"], { stdout: "pipe", stderr: "pipe" })
-    if (gh_check.exitCode !== 0) {
+    if (!which_check("gh")) {
       process.stdout.write(JSON.stringify(error({ gh: [{ code: "not_found", message: "gh CLI not found on PATH" }] }, meta()), null, 2) + "\n")
       return 1
     }
 
     // create issue
-    const proc = Bun.spawnSync(["gh", "issue", "create", "--title", target.text, "--body", `Promoted from bny todo #${n}`], {
-      stdout: "pipe",
-      stderr: "pipe",
+    const gh_result = spawn_sync({
+      cmd: ["gh", "issue", "create", "--title", target.text, "--body", `Promoted from bny todo #${n}`],
       cwd: root,
+      label: "gh issue create",
     })
 
-    if (proc.exitCode !== 0) {
-      const err = new TextDecoder().decode(proc.stderr).trim()
-      process.stdout.write(JSON.stringify(error({ gh: [{ code: "failed", message: `gh issue create failed: ${err}` }] }, meta()), null, 2) + "\n")
+    if (!gh_result.ok) {
+      process.stdout.write(JSON.stringify(error({ gh: [{ code: "failed", message: `gh issue create failed: ${gh_result.detail}` }] }, meta()), null, 2) + "\n")
       return 1
     }
 
     // parse issue url → number
-    const url = new TextDecoder().decode(proc.stdout).trim()
+    const url = gh_result.stdout
     const issue_match = url.match(/\/(\d+)$/)
     const issue_number = issue_match ? issue_match[1] : url
 

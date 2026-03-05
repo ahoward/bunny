@@ -23,6 +23,7 @@ import {
   call_claude, parse_json, list_sources,
 } from "./lib/brane.ts"
 import { create_spinner } from "./lib/spinner.ts"
+import { which_check } from "./lib/spawn.ts"
 
 // -- types --
 
@@ -255,8 +256,7 @@ Respond with ONLY valid JSON (no markdown fences):
 
   // -- check claude --
 
-  const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
-  if (claude_check.exitCode !== 0) {
+  if (!which_check("claude")) {
     process.stdout.write(JSON.stringify(error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] }, meta()), null, 2) + "\n")
     return 1
   }
@@ -506,8 +506,7 @@ Respond with ONLY valid JSON (no markdown fences):
 
   // -- check claude --
 
-  const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
-  if (claude_check.exitCode !== 0) {
+  if (!which_check("claude")) {
     process.stdout.write(JSON.stringify(error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] }, meta()), null, 2) + "\n")
     return 1
   }

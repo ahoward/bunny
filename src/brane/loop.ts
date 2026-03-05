@@ -28,6 +28,7 @@ import {
 } from "../lib/brane.ts"
 import type { EatResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
+import { which_check } from "../lib/spawn.ts"
 import { main as proposal_main } from "../proposal.ts"
 
 // -- types --
@@ -597,8 +598,7 @@ export async function main(argv: string[]): Promise<number> {
   // -- check claude --
 
   if (!dry_run) {
-    const claude_check = Bun.spawnSync(["which", "claude"], { stdout: "pipe", stderr: "pipe" })
-    if (claude_check.exitCode !== 0) {
+    if (!which_check("claude")) {
       process.stdout.write(JSON.stringify(error({ claude: [{ code: "not_found", message: "claude CLI not found on PATH" }] }, meta()), null, 2) + "\n")
       return 1
     }
