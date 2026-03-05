@@ -8,7 +8,7 @@
 
 **an autonomous coding pipeline where two AI agents fight each other to produce tested code.**
 
-self-testing is self-serving. when the same AI writes both code and tests, you get green suites for broken code. bny forces adversarial separation:
+self-testing is self-serving. when one AI writes both code and tests, you get green test suites for broken code. bny fixes this with adversarial separation:
 
 - **gemini** writes tests to *break* things — reads the spec, finds gaps, generates a hostile test suite.
 - **claude** writes code to *survive* — never sees the test-generation prompt, can't weaken the tests.
@@ -56,7 +56,7 @@ git clone https://github.com/ahoward/bunny.git && cd bunny
 ./dev/setup && export PATH="./bin:$PATH"
 ```
 
-`bny init` detects your project type (bun, node, rust, go, python, ruby) and generates appropriate dev scripts. it drops in as a guest — marker-delimited blocks in existing files, never clobbers. `bny uninit --force` removes all traces.
+`bny init` detects your environment and generates the right dev scripts. installs as a guest — `bny uninit --force` removes all traces.
 
 ## the core loop
 
@@ -72,7 +72,7 @@ bny brane loop "auth strategies"                     # autonomous: search → fe
 bny proposal "auth system"
 bny proposal accept auth-system                      # → roadmap item
 
-# 4. build (9 steps, 2 agents, tested code out)
+# 4. build (2 agents, 9 steps, tested code)
 bny build "add user auth"
 
 # 5. or prototype without guardrails
@@ -88,7 +88,7 @@ run `bny --help` for the full command reference.
 
 **we don't do TDD.** here's why.
 
-TDD assumes the test-writer wants to find bugs. that's true for a disciplined human developer. it's catastrophically false for AI agents. when the same agent writes tests and code, it writes tests that *confirm its own implementation* — tests optimized to pass, not to catch failures.
+TDD assumes the test-writer wants to find bugs. true for disciplined humans; catastrophically false for AI. when an agent writes both, it writes tests to *confirm its own implementation* — optimizing for green checks, not caught failures.
 
 the fix: two agents with opposed incentives.
 
@@ -117,7 +117,7 @@ gemini touches the code at 4 points. claude never writes tests. this is not a ru
 
 all gemini steps are non-fatal. no gemini? the factory still runs — claude does everything, with a warning. adversarial testing is the best path, but the factory never stops.
 
-### language portable
+### language agnostic
 
 | project | test framework | property lib |
 |---------|---------------|-------------|
@@ -185,7 +185,7 @@ bny is a guest, not a landlord. `bny init` uses marker-delimited blocks to safel
 - **code awareness:** [tree-sitter](https://tree-sitter.github.io/) via WASM
 - **no frameworks.** no orms. no build tools. pure unix.
 
-## more
+## dive deeper
 
-- [AGENTS.md](AGENTS.md) — the protocol ai agents must follow
-- [demos/](demos/) — projects built from a single sentence
+- [AGENTS.md](AGENTS.md) — the strict protocol agents must follow
+- [demos/](demos/) — complete projects generated from a single sentence
