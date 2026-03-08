@@ -2,9 +2,12 @@
 //
 // bny build — the dark factory
 //
-// full pipeline: specify → challenge → plan → tasks → test-gen →
-//                review → implement → verify → ruminate
+// full pipeline: specify → challenge → plan → tasks → narrow[1→2→3] → verify → ruminate
 // or run a single step: bny build specify "desc", bny build implement, etc.
+//
+// narrowing (3×3): 3 rounds of increasingly adversarial tests, each followed
+// by implement + retry(max 3). max 9 test runs. each round gets more adversarial
+// because gemini sees claude's actual code.
 //
 // usage:
 //   bny build "add user auth"            # full pipeline with description
@@ -13,9 +16,9 @@
 //   bny build challenge                  # just challenge
 //   bny build plan                       # just plan
 //   bny build tasks                      # just tasks
-//   bny build test-gen                   # just test-gen
-//   bny build review                     # just review
-//   bny build implement                  # just implement
+//   bny build narrow                     # just the 3×3 narrowing loop
+//   bny build test-gen                   # just test-gen (all layers)
+//   bny build implement                  # just implement (all tests)
 //   bny build verify                     # just verify
 //   bny build ruminate                   # just ruminate
 //   bny build --dry-run "add user auth"  # show what would run
@@ -30,14 +33,20 @@ import { main as challenge_main } from "./challenge.ts"
 import { main as plan_main } from "./plan.ts"
 import { main as tasks_main } from "./tasks.ts"
 import { main as testgen_main } from "./test-gen.ts"
-import { main as review_main } from "./review.ts"
+// review is absorbed into narrowing rounds 2-3 (gemini reads code, writes targeted tests)
 import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
 
 // -- constants --
 
-const STEPS = ["specify", "challenge", "plan", "tasks", "test-gen", "review", "implement", "verify", "ruminate"] as const
+const STEPS = ["specify", "challenge", "plan", "tasks", "narrow", "verify", "ruminate"] as const
+
+const NARROW_ROUNDS = [
+  { round: 1, label: "contracts" },
+  { round: 2, label: "properties" },
+  { round: 3, label: "boundaries+golden" },
+] as const
 type Step = typeof STEPS[number]
 
 const HELP = `usage: bny build [step] [--dry-run] [--interactive] [--max-iter N] [description]
@@ -49,23 +58,30 @@ steps:
   challenge        adversary hardens the spec (gemini)
   plan             create implementation plan (claude)
   tasks            generate task list (claude)
-  test-gen         generate test suite from spec (gemini)
-  review           antagonist review (gemini)
+  narrow           3×3 narrowing: test-gen → implement × 3 rounds
+  test-gen         generate test suite — all layers (gemini)
   implement        make tests pass (claude)
   verify           post-implementation review (gemini)
   ruminate         reflect on build, feed brane (claude)
 
+narrowing (3×3):
+  round 1: contracts        — gemini writes spec-as-code tests
+  round 2: properties       — gemini reads claude's code, writes invariants
+  round 3: boundaries+golden — gemini targets edge cases in the actual code
+  each round: implement with max 3 retries. max 9 test runs total.
+
 flags:
   --dry-run          show what would run, don't execute
   --interactive, -i  pause for human review at checkpoints
-  --max-iter N       ralph iterations for implement (default: 5)
+  --max-iter N       max retries per narrowing round (default: 3)
 
 examples:
-  bny build "add user auth"          # full pipeline
+  bny build "add user auth"          # full pipeline with narrowing
   bny build                          # resume current feature
   bny build specify "add user auth"  # just specify
-  bny build implement                # just implement
-  bny --effort full build            # full pipeline, 10 retries
+  bny build narrow                   # just the 3×3 narrowing loop
+  bny build test-gen                 # test-gen only (all layers)
+  bny build implement                # implement only
 `
 
 // -- main --
@@ -76,7 +92,7 @@ export async function main(argv: string[]): Promise<number> {
   let step: Step | null = null
   let dry_run = false
   let interactive = false
-  let max_iter = 5
+  let max_iter = 3
   const positional: string[] = []
 
   for (let i = 0; i < argv.length; i++) {
@@ -95,8 +111,13 @@ export async function main(argv: string[]): Promise<number> {
       i++
     } else if (!arg.startsWith("-")) {
       // first positional: check if it's a step name
-      if (positional.length === 0 && STEPS.includes(arg as Step)) {
-        step = arg as Step
+      // also accept test-gen/implement as single-step aliases (backward compat)
+      const SINGLE_STEP_ALIASES = ["test-gen", "implement", "review"] as const
+      type Alias = typeof SINGLE_STEP_ALIASES[number]
+      const is_step = STEPS.includes(arg as Step)
+      const is_alias = (SINGLE_STEP_ALIASES as readonly string[]).includes(arg)
+      if (positional.length === 0 && (is_step || is_alias)) {
+        step = arg as Step | Alias as any
       } else {
         positional.push(arg)
       }
@@ -134,7 +155,7 @@ interface Opts {
 }
 
 async function run_step(
-  step: Step, description: string, root: string, opts: Opts
+  step: string, description: string, root: string, opts: Opts
 ): Promise<number> {
   if (opts.dry_run) {
     process.stderr.write(`[bny build] dry-run: would run step '${step}'\n`)
@@ -156,12 +177,19 @@ async function run_step(
       return plan_main(description ? [description] : [])
     case "tasks":
       return tasks_main(description ? [description] : [])
+    case "narrow":
+      return run_narrowing(root, opts)
     case "test-gen":
+      // backward compat: single-step test-gen generates all layers
       return testgen_main(description ? [description] : [])
-    case "review":
-      return review_main([])
     case "implement":
+      // backward compat: single-step implement runs all tests
       return implement_main(description ? [description] : [])
+    case "review":
+      // backward compat: review is now absorbed into narrowing rounds 2-3
+      process.stderr.write("note: review is now part of narrowing rounds 2-3\n")
+      process.stderr.write("  use 'bny build narrow' instead\n")
+      return 0
     case "verify":
       return verify_main(description ? [description] : [])
     case "ruminate": {
@@ -170,7 +198,45 @@ async function run_step(
       if (description) args.push(description)
       return ruminate_main(args)
     }
+    default:
+      process.stderr.write(`error: unknown step '${step}'\n`)
+      return 1
   }
+}
+
+// -- narrowing loop --
+
+async function run_narrowing(root: string, opts: Opts): Promise<number> {
+  process.stderr.write(`\n--- narrow 3×3 (max-iter ${opts.max_iter} per round) ---\n`)
+
+  for (const { round, label } of NARROW_ROUNDS) {
+    // test-gen for this round
+    process.stderr.write(`\n--- test-gen:${label} (gemini, round ${round}) ---\n`)
+    const tg_code = await testgen_main(["--round", String(round)])
+    if (tg_code !== 0) {
+      process.stderr.write(`warning: test-gen:${label} failed (exit ${tg_code}), skipping round\n`)
+      continue
+    }
+
+    // implement with retries
+    process.stderr.write(`\n--- implement:${label} (claude, ralph, max-iter ${opts.max_iter}) ---\n`)
+    const result = await ralph({
+      fn:         () => implement_main(["--round", String(round)]),
+      max_iter:   opts.max_iter,
+      max_budget: 0,
+      timeout_ms: 0,
+      session_id: null,
+    })
+
+    if (result.status !== "complete") {
+      process.stderr.write(`\nerror: implement:${label} ${result.status} after ${result.iterations} iterations\n`)
+      return 1
+    }
+
+    process.stderr.write(`\n--- round ${round} (${label}) complete ---\n`)
+  }
+
+  return 0
 }
 
 // -- full pipeline --
@@ -202,11 +268,13 @@ async function run_pipeline(
     process.stderr.write(`  2. challenge (gemini)\n`)
     process.stderr.write(`  3. plan (claude)\n`)
     process.stderr.write(`  4. tasks (claude)\n`)
-    process.stderr.write(`  5. test-gen (gemini)\n`)
-    process.stderr.write(`  6. review (gemini)\n`)
-    process.stderr.write(`  7. implement (claude, ralph, max-iter ${opts.max_iter})\n`)
-    process.stderr.write(`  8. verify (gemini)\n`)
-    process.stderr.write(`  9. ruminate (claude)\n`)
+    process.stderr.write(`  5. narrow 3×3 (max-iter ${opts.max_iter} per round):\n`)
+    for (const { round, label } of NARROW_ROUNDS) {
+      process.stderr.write(`     ${round}a. test-gen:${label} (gemini)\n`)
+      process.stderr.write(`     ${round}b. implement:${label} (claude, ralph)\n`)
+    }
+    process.stderr.write(`  6. verify (gemini)\n`)
+    process.stderr.write(`  7. ruminate (claude)\n`)
     return 0
   }
 
@@ -286,47 +354,25 @@ async function run_pipeline(
     return 1
   }
 
-  // -- 5. test-gen (gemini) --
+  // -- 5. narrow (3×3: test-gen → implement × 3 rounds) --
 
-  if (!await run_fn(() => testgen_main([]), "test-gen (gemini)")) {
-    process.stderr.write("warning: test-gen failed, continuing without generated tests\n")
-    warnings.push("test-gen")
-  }
-
-  // -- 6. review (gemini) --
-
-  if (!await run_fn(() => review_main([]), "review (gemini)")) {
-    process.stderr.write("warning: review failed, continuing without antagonist review\n")
-    warnings.push("review")
-  }
-
-  // -- 7. implement (claude) --
-
-  process.stderr.write(`\n--- implement (claude, ralph, max-iter ${opts.max_iter}) ---\n`)
-  const impl_result = await ralph({
-    fn:         () => implement_main([]),
-    max_iter:   opts.max_iter,
-    max_budget: 0,
-    timeout_ms: 0,
-    session_id: null,
-  })
-
-  if (impl_result.status !== "complete") {
-    process.stderr.write(`\nerror: implement ${impl_result.status} after ${impl_result.iterations} iterations\n`)
-    if (!confirm("implementation did not complete cleanly. continue anyway? [y/N] ")) {
-      process.stderr.write("stopped at implement\n")
+  const narrow_code = await run_narrowing(root, opts)
+  if (narrow_code !== 0) {
+    if (!confirm("narrowing did not complete cleanly. continue anyway? [y/N] ")) {
+      process.stderr.write("stopped at narrow\n")
       return 1
     }
+    warnings.push("narrow")
   }
 
-  // -- 8. verify (gemini) --
+  // -- 6. verify (gemini) --
 
   if (!await run_fn(() => verify_main([]), "verify (gemini)")) {
     process.stderr.write("warning: verify failed, continuing...\n")
     warnings.push("verify")
   }
 
-  // -- 9. ruminate (claude) --
+  // -- 7. ruminate (claude) --
 
   const ruminate_args = !opts.interactive ? ["--yes"] : []
   if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {

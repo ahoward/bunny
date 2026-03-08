@@ -4,7 +4,7 @@
 //
 // reads bny/roadmap.md, extracts the first unchecked item,
 // and orchestrates: specify → challenge → (human reviews spec) → plan → tasks →
-// test-gen → review → implement → verify → ruminate → post_flight → update roadmap + decisions
+// narrow[1→2→3] → verify → ruminate → post_flight → update roadmap + decisions
 //
 // usage:
 //   bny next                    # run the pipeline
@@ -21,18 +21,24 @@ import { main as challenge_main } from "./challenge.ts"
 import { main as plan_main } from "./plan.ts"
 import { main as tasks_main } from "./tasks.ts"
 import { main as testgen_main } from "./test-gen.ts"
-import { main as review_main } from "./review.ts"
+// review is absorbed into narrowing rounds 2-3
 import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
 import { spawn_sync } from "./lib/spawn.ts"
+
+const NARROW_ROUNDS = [
+  { round: 1, label: "contracts" },
+  { round: 2, label: "properties" },
+  { round: 3, label: "boundaries+golden" },
+] as const
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
 
   let dry_run = false
   let interactive = false
-  let max_iter = 5
+  let max_iter = 3
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -54,18 +60,16 @@ picks the next roadmap item and runs the full pipeline:
   4. (human reviews spec, if --interactive)
   5. plan (claude)
   6. tasks (claude)
-  7. test-gen (gemini — generate test suite)
-  8. review (gemini — antagonist review)
-  9. implement (claude, with ralph)
-  10. verify (gemini — post-implementation review)
-  11. ruminate (claude — reflect + feed brane)
-  12. post_flight
-  13. update roadmap + decisions
+  7. narrow 3×3 (test-gen → implement × 3 rounds)
+  8. verify (gemini — post-implementation review)
+  9. ruminate (claude — reflect + feed brane)
+  10. post_flight
+  11. update roadmap + decisions
 
 flags:
   --dry-run          show what would run, don't execute
   --interactive, -i  pause for human review at checkpoints
-  --max-iter N       ralph iterations for implement (default: 5)
+  --max-iter N       retries per narrowing round (default: 3)
 `)
       return 0
     }
@@ -117,13 +121,15 @@ flags:
     process.stderr.write(`  4. (human reviews spec)\n`)
     process.stderr.write(`  5. bny plan (claude)\n`)
     process.stderr.write(`  6. bny tasks (claude)\n`)
-    process.stderr.write(`  7. bny test-gen (gemini)\n`)
-    process.stderr.write(`  8. bny review (gemini)\n`)
-    process.stderr.write(`  9. bny --ralph --max-iter ${max_iter} implement (claude)\n`)
-    process.stderr.write(` 10. bny verify (gemini)\n`)
-    process.stderr.write(` 11. bny ruminate (claude)\n`)
-    process.stderr.write(` 12. ./dev/post_flight\n`)
-    process.stderr.write(` 13. update roadmap + decisions\n`)
+    process.stderr.write(`  7. narrow 3×3 (max-iter ${max_iter} per round):\n`)
+    for (const { round, label } of NARROW_ROUNDS) {
+      process.stderr.write(`     ${round}a. test-gen:${label} (gemini)\n`)
+      process.stderr.write(`     ${round}b. implement:${label} (claude, ralph)\n`)
+    }
+    process.stderr.write(`  8. bny verify (gemini)\n`)
+    process.stderr.write(`  9. bny ruminate (claude)\n`)
+    process.stderr.write(` 10. ./dev/post_flight\n`)
+    process.stderr.write(` 11. update roadmap + decisions\n`)
     return 0
   }
 
@@ -232,60 +238,69 @@ flags:
     return 1
   }
 
-  // -- 7. test-gen (gemini — generate test suite) --
+  // -- 7. narrow (3×3: test-gen → implement × 3 rounds) --
 
-  if (!await run_fn(() => testgen_main([]), "test-gen (gemini)")) {
-    process.stderr.write("warning: test-gen failed, continuing without generated tests\n")
-  }
+  process.stderr.write(`\n--- narrow 3×3 (max-iter ${max_iter} per round) ---\n`)
+  let narrow_failed = false
 
-  // -- 8. review (gemini) --
-
-  if (!await run_fn(() => review_main([]), "review (gemini)")) {
-    process.stderr.write("warning: review failed, continuing without antagonist review\n")
-  }
-
-  // -- 9. implement (claude, with ralph) --
-
-  process.stderr.write(`\n--- implement (ralph, max-iter ${max_iter}) ---\n`)
-  const impl_result = await ralph({
-    fn:         () => implement_main([]),
-    max_iter,
-    max_budget: 0,
-    timeout_ms: 0,
-    session_id: null,
-  })
-
-  if (impl_result.status !== "complete") {
-    process.stderr.write(`\nerror: implement ${impl_result.status} after ${impl_result.iterations} iterations\n`)
-    if (interactive) {
-      process.stderr.write(`\nimplementation did not complete cleanly.\n`)
-      if (!confirm("continue anyway? [y/N] ")) {
-        process.stderr.write("stopped at implement\n")
-        return 1
-      }
+  for (const { round, label } of NARROW_ROUNDS) {
+    // test-gen for this round
+    process.stderr.write(`\n--- test-gen:${label} (gemini, round ${round}) ---\n`)
+    const tg_code = await testgen_main(["--round", String(round)])
+    if (tg_code !== 0) {
+      process.stderr.write(`warning: test-gen:${label} failed (exit ${tg_code}), skipping round\n`)
+      continue
     }
+
+    // implement with retries
+    process.stderr.write(`\n--- implement:${label} (claude, ralph, max-iter ${max_iter}) ---\n`)
+    const result = await ralph({
+      fn:         () => implement_main(["--round", String(round)]),
+      max_iter,
+      max_budget: 0,
+      timeout_ms: 0,
+      session_id: null,
+    })
+
+    if (result.status !== "complete") {
+      process.stderr.write(`\nerror: implement:${label} ${result.status} after ${result.iterations} iterations\n`)
+      narrow_failed = true
+      if (interactive) {
+        if (!confirm("narrowing round failed. continue? [y/N] ")) {
+          process.stderr.write("stopped at narrow\n")
+          return 1
+        }
+      }
+      break
+    }
+
+    process.stderr.write(`\n--- round ${round} (${label}) complete ---\n`)
   }
 
-  // -- 10. verify (gemini — post-implementation review) --
+  if (narrow_failed) {
+    process.stderr.write("warning: narrowing did not complete cleanly\n")
+  }
+
+  // -- 8. verify (gemini — post-implementation review) --
 
   if (!await run_fn(() => verify_main([]), "verify (gemini)")) {
     process.stderr.write("warning: verify failed, continuing...\n")
   }
 
-  // -- 11. ruminate (reflect + feed brane) --
+  // -- 9. ruminate (reflect + feed brane) --
 
   const ruminate_args = interactive ? [] : ["--yes"]
   if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
     process.stderr.write("warning: ruminate failed, continuing...\n")
   }
 
-  // -- 12. post_flight (external project script) --
+  // -- 10. post_flight (external project script) --
 
   if (!run_ext(["./dev/post_flight"], "post_flight")) {
     process.stderr.write("warning: post_flight failed\n")
   }
 
-  // -- 13. update roadmap + decisions --
+  // -- 11. update roadmap + decisions --
 
   process.stderr.write(`\n--- updating roadmap + decisions ---\n`)
 
@@ -307,7 +322,7 @@ flags:
     process.stderr.write(`decisions: appended '${item_name}'\n`)
   }
 
-  // -- 14. report --
+  // -- 12. report --
 
   process.stderr.write(`\n[bny next] complete: ${item_text}\n`)
   return 0

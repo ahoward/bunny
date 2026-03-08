@@ -18,8 +18,8 @@ the factory runs a single, observable pipeline — you can watch each step, inte
 code ships when claude beats gemini's tests. then both agents feed the brane.
 
 ```
-specify → challenge → plan → tasks → test-gen → review → implement → verify → ruminate
-claude    gemini      claude  claude   gemini     gemini   claude      gemini   claude
+specify → challenge → plan → tasks → narrow[1→2→3] → verify → ruminate
+claude    gemini      claude  claude   gemini+claude    gemini   claude
 ```
 
 ## proof
@@ -100,20 +100,32 @@ the fix: two agents with opposed incentives.
 | **challenge** | gemini | harden spec — find gaps, edge cases, ambiguities |
 | plan | claude | implementation plan |
 | tasks | claude | implementation tasks (no test tasks) |
-| **test-gen** | gemini | generate 4-layer test suite from hardened spec |
-| review | gemini | antagonist code review |
-| **implement** | claude | make gemini's tests pass |
+| **narrow** | gemini+claude | 3×3 narrowing: test-gen → implement × 3 rounds |
 | **verify** | gemini | post-implementation — are the tests real? anything missed? |
 | ruminate | claude | reflect on build, feed knowledge graph |
 
 gemini touches the code at 4 points. claude never writes tests. this is not a rule — it's architecture. the system makes the wrong thing hard.
 
+### 3×3 narrowing
+
+instead of generating all tests at once and hoping claude passes them, we narrow in 3 rounds — each more adversarial than the last:
+
+| round | gemini writes | gemini sees | claude's job |
+|-------|--------------|-------------|-------------|
+| 1. **contracts** | spec-as-code tests | spec + challenge | build the foundation |
+| 2. **properties** | behavioral invariants | spec + claude's source code | don't break contracts |
+| 3. **boundaries+golden** | edge cases + regression snapshots | spec + source + all tests | don't break anything |
+
+each round: gemini writes tests, claude implements with up to 3 retries. max 9 test runs total. typical: ~4.
+
+the key insight: rounds 2-3 include claude's actual source code. gemini doesn't just test the spec — it targets where claude's implementation is weakest. this is adversarial review with teeth.
+
 ### test layers
 
-1. **contract tests** — one test per acceptance scenario. the spec as code.
-2. **property tests** — invariants for all inputs (fast-check, hypothesis, proptest).
-3. **golden file tests** — known-good output as fixtures. diff on regression.
-4. **boundary tests** — edge cases from the challenge step. empty, max, malformed, unicode.
+1. **contract tests** (round 1) — one test per acceptance scenario. the spec as code.
+2. **property tests** (round 2) — invariants for all inputs (fast-check, hypothesis, proptest).
+3. **golden file tests** (round 3) — known-good output as fixtures. diff on regression.
+4. **boundary tests** (round 3) — edge cases from the challenge step. empty, max, malformed, unicode.
 
 ### graceful degradation
 
@@ -157,7 +169,7 @@ bny map                                              # generate structural codeb
 
 ### dark factory (build)
 
-the 9-step pipeline, or one step at a time:
+the 7-step pipeline (with 3×3 narrowing), or one step at a time:
 
 ```bash
 bny build "add user auth"                            # full pipeline

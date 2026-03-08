@@ -20,7 +20,7 @@ describe("bny build", () => {
     expect(r.stderr).toContain("no current feature")
   })
 
-  test("--dry-run prints pipeline steps", () => {
+  test("--dry-run prints pipeline steps with narrowing", () => {
     const r = bny("build", "--dry-run", "test feature for dry run")
     expect(r.exit).toBe(0)
     expect(r.stderr).toContain("would run")
@@ -28,9 +28,13 @@ describe("bny build", () => {
     expect(r.stderr).toContain("challenge")
     expect(r.stderr).toContain("plan")
     expect(r.stderr).toContain("tasks")
-    expect(r.stderr).toContain("test-gen")
-    expect(r.stderr).toContain("review")
-    expect(r.stderr).toContain("implement")
+    expect(r.stderr).toContain("narrow 3×3")
+    expect(r.stderr).toContain("test-gen:contracts")
+    expect(r.stderr).toContain("implement:contracts")
+    expect(r.stderr).toContain("test-gen:properties")
+    expect(r.stderr).toContain("implement:properties")
+    expect(r.stderr).toContain("test-gen:boundaries+golden")
+    expect(r.stderr).toContain("implement:boundaries+golden")
     expect(r.stderr).toContain("verify")
     expect(r.stderr).toContain("ruminate")
   })
@@ -78,7 +82,7 @@ describe("bny spike", () => {
     expect(r.stderr).toContain("no current feature")
   })
 
-  test("--dry-run prints full pipeline steps", () => {
+  test("--dry-run prints full pipeline steps with narrowing", () => {
     const r = bny("spike", "--dry-run", "test spike dry run")
     expect(r.exit).toBe(0)
     expect(r.stderr).toContain("would run")
@@ -86,9 +90,9 @@ describe("bny spike", () => {
     expect(r.stderr).toContain("challenge")
     expect(r.stderr).toContain("plan")
     expect(r.stderr).toContain("tasks")
-    expect(r.stderr).toContain("test-gen")
-    expect(r.stderr).toContain("review")
-    expect(r.stderr).toContain("implement")
+    expect(r.stderr).toContain("narrow 3×3")
+    expect(r.stderr).toContain("test-gen:contracts")
+    expect(r.stderr).toContain("implement:contracts")
     expect(r.stderr).toContain("verify")
     expect(r.stderr).toContain("ruminate")
   })

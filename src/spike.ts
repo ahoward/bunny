@@ -22,14 +22,20 @@ import { main as challenge_main } from "./challenge.ts"
 import { main as plan_main } from "./plan.ts"
 import { main as tasks_main } from "./tasks.ts"
 import { main as testgen_main } from "./test-gen.ts"
-import { main as review_main } from "./review.ts"
+// review is absorbed into narrowing rounds 2-3
 import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
 
 // -- constants --
 
-const STEPS = ["specify", "challenge", "plan", "tasks", "test-gen", "review", "implement", "verify", "ruminate"] as const
+const STEPS = ["specify", "challenge", "plan", "tasks", "narrow", "verify", "ruminate"] as const
+
+const NARROW_ROUNDS = [
+  { round: 1, label: "contracts" },
+  { round: 2, label: "properties" },
+  { round: 3, label: "boundaries+golden" },
+] as const
 type Step = typeof STEPS[number]
 
 const HELP = `usage: bny spike [step] [--dry-run] [--max-iter N] [description]
@@ -45,15 +51,15 @@ steps:
   challenge        adversary hardens spec (gemini)
   plan             create implementation plan (claude)
   tasks            generate task list (claude)
-  test-gen         generate test suite (gemini)
-  review           antagonist review (gemini)
+  narrow           3×3 narrowing: test-gen → implement × 3 rounds
+  test-gen         generate test suite — all layers (gemini)
   implement        make tests pass (claude)
   verify           post-implementation review (gemini)
   ruminate         reflect on build, feed brane (claude)
 
 flags:
   --dry-run        show what would run, don't execute
-  --max-iter N     ralph iterations for implement (default: 3)
+  --max-iter N     ralph iterations per narrowing round (default: 3)
 
 examples:
   bny spike "prototype oauth"            # full pipeline, no review
@@ -84,8 +90,11 @@ export async function main(argv: string[]): Promise<number> {
       if (!isNaN(val) && val > 0) max_iter = val
       i++
     } else if (!arg.startsWith("-")) {
-      if (positional.length === 0 && STEPS.includes(arg as Step)) {
-        step = arg as Step
+      const ALIASES = ["test-gen", "implement", "review"] as const
+      const is_step = STEPS.includes(arg as Step)
+      const is_alias = (ALIASES as readonly string[]).includes(arg)
+      if (positional.length === 0 && (is_step || is_alias)) {
+        step = arg as any
       } else {
         positional.push(arg)
       }
@@ -114,7 +123,7 @@ interface Opts {
 }
 
 async function run_step(
-  step: Step, description: string, root: string, opts: Opts
+  step: string, description: string, root: string, opts: Opts
 ): Promise<number> {
   if (opts.dry_run) {
     process.stderr.write(`[bny spike] dry-run: would run step '${step}'\n`)
@@ -136,18 +145,59 @@ async function run_step(
       return plan_main(description ? [description] : [])
     case "tasks":
       return tasks_main(description ? [description] : [])
+    case "narrow":
+      return run_narrowing(root, opts)
     case "test-gen":
       return testgen_main(description ? [description] : [])
-    case "review":
-      return review_main([])
     case "implement":
       return implement_main(description ? [description] : [])
+    case "review":
+      process.stderr.write("note: review is now part of narrowing rounds 2-3\n")
+      return 0
     case "verify":
       return verify_main(description ? [description] : [])
     case "ruminate":
       // spikes auto-yes ruminate — knowledge is never disposable
       return ruminate_main(["--yes", ...(description ? [description] : [])])
+    default:
+      process.stderr.write(`error: unknown step '${step}'\n`)
+      return 1
   }
+}
+
+// -- narrowing loop (all failures non-fatal in spikes) --
+
+async function run_narrowing(root: string, opts: Opts): Promise<number> {
+  process.stderr.write(`\n--- narrow 3×3 (max-iter ${opts.max_iter} per round) ---\n`)
+
+  for (const { round, label } of NARROW_ROUNDS) {
+    // test-gen for this round
+    process.stderr.write(`\n--- test-gen:${label} (gemini, round ${round}) ---\n`)
+    const tg_code = await testgen_main(["--round", String(round)])
+    if (tg_code !== 0) {
+      process.stderr.write(`warning: test-gen:${label} failed (exit ${tg_code}), skipping round\n`)
+      continue
+    }
+
+    // implement with retries
+    process.stderr.write(`\n--- implement:${label} (claude, ralph, max-iter ${opts.max_iter}) ---\n`)
+    const result = await ralph({
+      fn:         () => implement_main(["--round", String(round)]),
+      max_iter:   opts.max_iter,
+      max_budget: 0,
+      timeout_ms: 0,
+      session_id: null,
+    })
+
+    if (result.status !== "complete") {
+      process.stderr.write(`warning: implement:${label} ${result.status} after ${result.iterations} iterations\n`)
+      // spikes don't stop — keep going to next round
+    }
+
+    process.stderr.write(`\n--- round ${round} (${label}) complete ---\n`)
+  }
+
+  return 0
 }
 
 // -- full pipeline (all failures non-fatal) --
@@ -179,11 +229,13 @@ async function run_pipeline(
     process.stderr.write(`  2. challenge (gemini)\n`)
     process.stderr.write(`  3. plan (claude)\n`)
     process.stderr.write(`  4. tasks (claude)\n`)
-    process.stderr.write(`  5. test-gen (gemini)\n`)
-    process.stderr.write(`  6. review (gemini)\n`)
-    process.stderr.write(`  7. implement (claude, ralph, max-iter ${opts.max_iter})\n`)
-    process.stderr.write(`  8. verify (gemini)\n`)
-    process.stderr.write(`  9. ruminate (claude, auto-yes)\n`)
+    process.stderr.write(`  5. narrow 3×3 (max-iter ${opts.max_iter} per round):\n`)
+    for (const { round, label } of NARROW_ROUNDS) {
+      process.stderr.write(`     ${round}a. test-gen:${label} (gemini)\n`)
+      process.stderr.write(`     ${round}b. implement:${label} (claude, ralph)\n`)
+    }
+    process.stderr.write(`  6. verify (gemini)\n`)
+    process.stderr.write(`  7. ruminate (claude, auto-yes)\n`)
     return 0
   }
 
@@ -227,41 +279,20 @@ async function run_pipeline(
     return 1
   }
 
-  // -- 5. test-gen (gemini) --
+  // -- 5. narrow (3×3: test-gen → implement × 3 rounds, all non-fatal) --
 
-  if (!await run_fn(() => testgen_main([]), "test-gen (gemini)")) {
-    process.stderr.write("warning: test-gen failed, continuing...\n")
+  const narrow_code = await run_narrowing(root, opts)
+  if (narrow_code !== 0) {
+    process.stderr.write("warning: narrowing did not complete cleanly, continuing...\n")
   }
 
-  // -- 6. review (gemini) --
-
-  if (!await run_fn(() => review_main([]), "review (gemini)")) {
-    process.stderr.write("warning: review failed, continuing...\n")
-  }
-
-  // -- 7. implement (claude) --
-
-  process.stderr.write(`\n--- implement (claude, ralph, max-iter ${opts.max_iter}) ---\n`)
-  const impl_result = await ralph({
-    fn:         () => implement_main([]),
-    max_iter:   opts.max_iter,
-    max_budget: 0,
-    timeout_ms: 0,
-    session_id: null,
-  })
-
-  if (impl_result.status !== "complete") {
-    process.stderr.write(`\nwarning: implement ${impl_result.status} after ${impl_result.iterations} iterations\n`)
-    // spikes don't stop on implement failure — keep going
-  }
-
-  // -- 8. verify (gemini) --
+  // -- 6. verify (gemini) --
 
   if (!await run_fn(() => verify_main([]), "verify (gemini)")) {
     process.stderr.write("warning: verify failed, continuing...\n")
   }
 
-  // -- 9. ruminate (claude, auto-yes — knowledge is never disposable) --
+  // -- 7. ruminate (claude, auto-yes — knowledge is never disposable) --
 
   if (!await run_fn(() => ruminate_main(["--yes"]), "ruminate")) {
     process.stderr.write("warning: ruminate failed\n")

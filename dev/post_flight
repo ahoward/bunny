@@ -27,8 +27,8 @@ async function run_checks(): Promise<Check[]> {
     message: tsc_exit === 0 ? null : "tsc --noEmit failed"
   })
 
-  // 2. tests pass
-  const test_proc = Bun.spawn(["bun", "test"], {
+  // 2. tests pass (scope to ./tests/ to avoid demo test files)
+  const test_proc = Bun.spawn(["bun", "test", "./tests/"], {
     stdout: "pipe",
     stderr: "pipe",
     env: process.env

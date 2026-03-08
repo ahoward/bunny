@@ -22,13 +22,22 @@ export async function main(argv: string[]): Promise<number> {
   // -- parse args --
 
   let target: string | null = null
+  let round = 0  // 0 = no round (all tests)
 
-  for (const arg of argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
     if (arg === "--help" || arg === "-h") {
-      process.stdout.write("usage: bny implement [feature-name]\n")
+      process.stdout.write("usage: bny implement [--round 1|2|3] [feature-name]\n")
       process.stdout.write("\nshells out to claude -p with a prompt built from spec/plan/tasks.\n")
       process.stdout.write("use bny --ralph --max-iter N implement for retry loops.\n")
+      process.stdout.write("\nrounds (narrowing):\n")
+      process.stdout.write("  --round 1    build foundation — make contract tests pass\n")
+      process.stdout.write("  --round 2    make property tests pass without breaking contracts\n")
+      process.stdout.write("  --round 3    make boundary tests pass without breaking anything\n")
       return 0
+    } else if (arg === "--round" && argv[i + 1]) {
+      round = parseInt(argv[i + 1], 10)
+      i++
     } else if (!arg.startsWith("-")) {
       target = arg
     }
@@ -72,9 +81,34 @@ export async function main(argv: string[]): Promise<number> {
     read_section("Task List", paths.tasks),
   ].filter((s): s is NonNullable<typeof s> => s !== null)
 
-  const instructions = [
+  const round_instructions = round === 1 ? [
+    "## Round 1: Contract Tests",
+    "",
+    "Contract tests exist in the test directory, written by the antagonist agent.",
+    "Your job: build the foundation. Make ALL contract tests pass.",
+    "Focus on the happy path — get the API shape right.",
+  ] : round === 2 ? [
+    "## Round 2: Property Tests",
+    "",
+    "New property tests have been added by the antagonist agent.",
+    "Contract tests are ALREADY PASSING — do NOT break them.",
+    "Your job: make the new property tests pass without breaking contracts.",
+    "Focus on behavioral correctness — the properties test invariants the contracts missed.",
+  ] : round === 3 ? [
+    "## Round 3: Boundary + Golden File Tests",
+    "",
+    "New boundary and golden file tests have been added by the antagonist agent.",
+    "Contract and property tests are ALREADY PASSING — do NOT break them.",
+    "Your job: make the new boundary/golden tests pass without breaking anything.",
+    "Focus on edge cases and hardening — these tests target where your code is weakest.",
+  ] : [
     "Tests already exist in the test directory, written by the antagonist agent.",
     "Your job: make ALL tests pass by implementing the code.",
+  ]
+
+  const instructions = [
+    ...round_instructions,
+    "",
     "Work through the implementation tasks in the task list above, in order.",
     "After each code change, run `./dev/test`.",
     "Do NOT modify test files — they are locked by the antagonist.",
