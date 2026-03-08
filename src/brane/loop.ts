@@ -26,7 +26,7 @@ import {
   stash_source, preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
 } from "../lib/brane.ts"
-import type { EatResponse } from "../lib/brane.ts"
+import type { DigestResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
 import { main as proposal_main } from "../proposal.ts"
@@ -59,7 +59,7 @@ interface RoundJournal {
   round:       number
   searched:    string[]
   fetched:     string[]
-  eaten:       number
+  digested:    number
   operations:  number
   assessment:  string
   converging:  boolean
@@ -136,7 +136,7 @@ ${journal.searched.length > 0 ? journal.searched.map(q => `- ${q}`).join("\n") :
 ${journal.fetched.length > 0 ? journal.fetched.map(u => `- ${u}`).join("\n") : "(none)"}
 
 ## Results
-- Sources eaten: ${journal.eaten}
+- Sources digested: ${journal.digested}
 - Worldview operations: ${journal.operations}
 `
 
@@ -156,7 +156,7 @@ function list_all_loops(root: string): LoopState[] {
 }
 
 function empty_journal(round: number): RoundJournal {
-  return { round, searched: [], fetched: [], eaten: 0, operations: 0, assessment: "(round failed)", converging: false }
+  return { round, searched: [], fetched: [], digested: 0, operations: 0, assessment: "(round failed)", converging: false }
 }
 
 // -- subcommand: list --
@@ -316,7 +316,7 @@ and additional research would yield diminishing returns.
   if (reflect.converging) {
     process.stderr.write(`  converging — loop believes goal is sufficiently covered\n`)
     const journal: RoundJournal = {
-      round: round_num, searched: [], fetched: [], eaten: 0, operations: 0,
+      round: round_num, searched: [], fetched: [], digested: 0, operations: 0,
       assessment: reflect.assessment, converging: true,
     }
     return { journal, should_stop: true }
@@ -386,7 +386,7 @@ Skip: paywalled content, social media posts, SEO spam.
 
   // 6. EAT — incorporate fetched content into worldview
   let total_ops = 0
-  let total_eaten = 0
+  let total_digested = 0
 
   if (fetched_contents.length > 0) {
     const combined_content = fetched_contents
@@ -404,7 +404,7 @@ Skip: paywalled content, social media posts, SEO spam.
       ? current_lenses.map(p => `## ${p.heading}\n\n${p.content}`).join("\n\n")
       : "(no active lenses)"
 
-    const eat_prompt = `# Active Lenses
+    const digest_prompt = `# Active Lenses
 
 ${lens_blk}
 
@@ -453,25 +453,25 @@ Paths are relative to worldview/. Use lowercase-kebab-case for file and director
 If nothing is worth absorbing, return empty operations with reasoning explaining why.
 `
 
-    const spin_eat = create_spinner(`round ${round_num}: eating ${fetched_contents.length} source(s)`)
-    const eat_raw = call_claude(eat_prompt, root)
+    const spin_digest = create_spinner(`round ${round_num}: digesting ${fetched_contents.length} source(s)`)
+    const digest_raw = call_claude(digest_prompt, root)
 
-    if (eat_raw) {
-      let eat_resp = parse_json<EatResponse>(eat_raw)
-      if (!eat_resp) {
-        spin_eat.stop()
-        process.stderr.write("warning: failed to parse eat response, retrying...\n")
-        const spin_retry = create_spinner(`round ${round_num}: retrying eat`)
-        const retry = call_claude(eat_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
+    if (digest_raw) {
+      let digest_resp = parse_json<DigestResponse>(digest_raw)
+      if (!digest_resp) {
+        spin_digest.stop()
+        process.stderr.write("warning: failed to parse digest response, retrying...\n")
+        const spin_retry = create_spinner(`round ${round_num}: retrying digest`)
+        const retry = call_claude(digest_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
         spin_retry.stop()
-        if (retry) eat_resp = parse_json<EatResponse>(retry)
+        if (retry) digest_resp = parse_json<DigestResponse>(retry)
       } else {
-        spin_eat.stop()
+        spin_digest.stop()
       }
 
-      if (eat_resp && eat_resp.operations.length > 0) {
-        const diffs = preview_operations(root, eat_resp.operations)
-        print_intake_diff(diffs, eat_resp.reasoning)
+      if (digest_resp && digest_resp.operations.length > 0) {
+        const diffs = preview_operations(root, digest_resp.operations)
+        print_intake_diff(diffs, digest_resp.reasoning)
 
         let should_apply = auto_yes
         if (!auto_yes) {
@@ -479,9 +479,9 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
         }
 
         if (should_apply) {
-          apply_operations(root, eat_resp.operations)
-          total_ops = eat_resp.operations.length
-          total_eaten = fetched_contents.length
+          apply_operations(root, digest_resp.operations)
+          total_ops = digest_resp.operations.length
+          total_digested = fetched_contents.length
           process.stderr.write(`  applied ${total_ops} operation(s)\n`)
           await regenerate_index(root)
         } else {
@@ -491,10 +491,10 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
         process.stderr.write("  nothing absorbed\n")
       }
     } else {
-      spin_eat.stop()
+      spin_digest.stop()
     }
   } else {
-    process.stderr.write("  no new content to eat\n")
+    process.stderr.write("  no new content to digest\n")
   }
 
   // 7. JOURNAL
@@ -502,7 +502,7 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
     round: round_num,
     searched: reflect.queries,
     fetched: fetched_urls,
-    eaten: total_eaten,
+    digested: total_digested,
     operations: total_ops,
     assessment: reflect.assessment,
     converging: false,

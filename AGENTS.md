@@ -74,7 +74,7 @@ Rules:
 ```
 src/              # CLI source code (the dark factory)
   lib/            # shared modules (assassin, ralph, feature, prompt, brane, map, spinner, log, result, types)
-  brane/          # knowledge commands (eat, ask, storm, enhance, rebuild, lens, tldr, loop)
+  brane/          # knowledge commands (digest, ask, storm, enhance, rebuild, lens, tldr, loop)
   dev/            # wrappers for ./dev/* scripts
   templates/      # spec, plan, tasks templates
   build.ts        # the dark factory (full pipeline or per-step)

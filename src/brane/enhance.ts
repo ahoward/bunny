@@ -25,7 +25,7 @@ import {
   preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
 } from "../lib/brane.ts"
-import type { EatResponse } from "../lib/brane.ts"
+import type { DigestResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
 
@@ -187,7 +187,7 @@ If nothing needs refining, return empty operations with reasoning explaining why
       return 1
     }
 
-    let response = parse_json<EatResponse>(raw)
+    let response = parse_json<DigestResponse>(raw)
     if (!response) {
       spin.stop()
       process.stderr.write("warning: failed to parse response, retrying...\n")
@@ -195,7 +195,7 @@ If nothing needs refining, return empty operations with reasoning explaining why
       const retry = call_claude(enhance_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
       spin2.stop()
       if (!retry) { return 1 }
-      response = parse_json<EatResponse>(retry)
+      response = parse_json<DigestResponse>(retry)
       if (!response) {
         process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
         return 1

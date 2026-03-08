@@ -34,7 +34,7 @@ import { main as todo_main } from "../src/todo.ts"
 import { main as close_issue_main } from "../src/close-issue.ts"
 import { main as ipm_main } from "../src/ipm.ts"
 import { main as uninit_main } from "../src/uninit.ts"
-import { main as brane_eat_main } from "../src/brane/eat.ts"
+import { main as brane_digest_main } from "../src/brane/digest.ts"
 import { main as brane_ask_main } from "../src/brane/ask.ts"
 import { main as brane_rebuild_main } from "../src/brane/rebuild.ts"
 import { main as brane_lens_main } from "../src/brane/lens.ts"
@@ -79,7 +79,8 @@ const COMMANDS: Record<string, CommandFn> = {
   "spike":          spike_main,
   "uninit":         uninit_main,
   "digest":         digest_main,
-  "brane/eat":      brane_eat_main,
+  "brane/digest":   brane_digest_main,
+  "brane/eat":      brane_digest_main, // backward compat alias
   "brane/ask":      brane_ask_main,
   "brane/rebuild":  brane_rebuild_main,
   "brane/lens":     brane_lens_main,
@@ -380,7 +381,7 @@ function parse_args(argv: string[]): ParsedArgs {
       result.command = arg
       i++
 
-      // check for nested subcommand: bny ai init, bny brane eat, bny dev test
+      // check for nested subcommand: bny ai init, bny brane digest, bny dev test
       if (i < argv.length && !argv[i].startsWith("-")) {
         const key = `${result.command}/${argv[i]}`
         if (COMMANDS[key]) {

@@ -24,7 +24,7 @@ export interface FileOp {
   content: string
 }
 
-export interface EatResponse {
+export interface DigestResponse {
   operations: FileOp[]
   reasoning:  string
 }

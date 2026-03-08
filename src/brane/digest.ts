@@ -1,15 +1,15 @@
 #!/usr/bin/env bun
 //
-// bny brane eat — ingest information into the brane
+// bny brane digest — ingest information into the brane
 //
 // feeds a source (file, directory, or URL) through all active lenses.
 // the LLM extracts concepts and updates the worldview.
 //
 // usage:
-//   bny brane eat README.md              # ingest a file
-//   bny brane eat docs/                  # ingest a directory (recursive)
-//   bny brane eat https://example.com    # ingest a URL
-//   bny brane eat --dry-run README.md    # print prompt, don't run
+//   bny brane digest README.md              # ingest a file
+//   bny brane digest docs/                  # ingest a directory (recursive)
+//   bny brane digest https://example.com    # ingest a URL
+//   bny brane digest --dry-run README.md    # print prompt, don't run
 //
 
 import { success, error } from "../lib/result.ts"
@@ -20,7 +20,7 @@ import {
   stash_source, preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
 } from "../lib/brane.ts"
-import type { EatResponse } from "../lib/brane.ts"
+import type { DigestResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
 
@@ -37,7 +37,7 @@ export async function main(argv: string[]): Promise<number> {
     } else if (arg === "--yes" || arg === "-y") {
       auto_yes = true
     } else if (arg === "--help" || arg === "-h") {
-      process.stdout.write(`usage: bny brane eat [--dry-run] [--yes] <source>
+      process.stdout.write(`usage: bny digest [--dry-run] [--yes] <source>
 
 source can be a file path, directory, or URL.
 directories are ingested recursively.
@@ -58,7 +58,7 @@ flags:
   }
 
   function meta() {
-    return { path: "/bny/brane/eat", timestamp: new Date().toISOString(), duration_ms: 0 }
+    return { path: "/bny/brane/digest", timestamp: new Date().toISOString(), duration_ms: 0 }
   }
 
   // -- setup --
@@ -94,7 +94,7 @@ flags:
     ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
     : "(empty — first ingestion)"
 
-  const eat_prompt = `# Active Lenses
+  const digest_prompt = `# Active Lenses
 
 ${lens_block}
 
@@ -148,7 +148,7 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
   // -- dry run --
 
   if (dry_run) {
-    process.stdout.write(eat_prompt + "\n")
+    process.stdout.write(digest_prompt + "\n")
     return 0
   }
 
@@ -161,29 +161,29 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
 
   // -- call claude --
 
-  const spin = create_spinner(`eating: ${loaded.label}`)
+  const spin = create_spinner(`digesting: ${loaded.label}`)
 
-  const raw = call_claude(eat_prompt, root)
+  const raw = call_claude(digest_prompt, root)
   if (!raw) {
     spin.stop()
     return 1
   }
 
-  let response = parse_json<EatResponse>(raw)
+  let response = parse_json<DigestResponse>(raw)
   if (!response) {
     spin.stop()
     process.stderr.write("warning: failed to parse response, retrying...\n")
     const spin2 = create_spinner(`retrying: ${loaded.label}`)
-    const retry = call_claude(eat_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
+    const retry = call_claude(digest_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
     spin2.stop()
     if (!retry) { return 1 }
-    response = parse_json<EatResponse>(retry)
+    response = parse_json<DigestResponse>(retry)
     if (!response) {
       process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
       return 1
     }
   } else {
-    spin.stop(`🐰 ate: ${loaded.label}`)
+    spin.stop(`🐰 digested: ${loaded.label}`)
   }
 
   // -- intake gate --

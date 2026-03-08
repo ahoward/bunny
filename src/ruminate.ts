@@ -4,7 +4,7 @@
 //
 // after implementing a feature, ruminate gathers the spec, plan, tasks,
 // and git diff, then asks claude to extract durable knowledge.
-// insights are applied to the worldview using the same machinery as brane eat.
+// insights are applied to the worldview using the same machinery as brane digest.
 //
 // usage:
 //   bny ruminate                    # ruminate on current feature
@@ -23,7 +23,7 @@ import {
   preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
 } from "./lib/brane.ts"
-import type { EatResponse } from "./lib/brane.ts"
+import type { DigestResponse } from "./lib/brane.ts"
 import { create_spinner } from "./lib/spinner.ts"
 import { spawn_sync, which_check } from "./lib/spawn.ts"
 
@@ -232,7 +232,7 @@ If nothing durable emerged, return empty operations with reasoning explaining wh
     return 1
   }
 
-  let response = parse_json<EatResponse>(raw)
+  let response = parse_json<DigestResponse>(raw)
   if (!response) {
     spin.stop()
     process.stderr.write("warning: failed to parse response, retrying...\n")
@@ -240,7 +240,7 @@ If nothing durable emerged, return empty operations with reasoning explaining wh
     const retry = call_claude(ruminate_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
     spin2.stop()
     if (!retry) { return 1 }
-    response = parse_json<EatResponse>(retry)
+    response = parse_json<DigestResponse>(retry)
     if (!response) {
       process.stdout.write(JSON.stringify(error({
         parse: [{ code: "invalid_json", message: "could not get structured response from claude" }]

@@ -2,13 +2,13 @@
 //
 // bny brane rebuild — rebuild worldview from all sources
 //
-// clears the worldview and re-eats every stashed source in chronological
+// clears the worldview and re-digests every stashed source in chronological
 // order. use this after adding/removing lenses to rebuild the brane
 // through your current lenses.
 //
 // usage:
 //   bny brane rebuild              # rebuild worldview from all sources
-//   bny brane rebuild --dry-run   # show what would be re-eaten
+//   bny brane rebuild --dry-run   # show what would be re-digested
 //
 
 import { success, error } from "../lib/result.ts"
@@ -19,7 +19,7 @@ import {
   list_sources, load_stashed_source, clear_worldview,
   confirm_intake, regenerate_index,
 } from "../lib/brane.ts"
-import type { EatResponse } from "../lib/brane.ts"
+import type { DigestResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
 
@@ -37,11 +37,11 @@ export async function main(argv: string[]): Promise<number> {
     } else if (arg === "--help" || arg === "-h") {
       process.stdout.write(`usage: bny brane rebuild [--dry-run] [--yes]
 
-clears the worldview and re-eats all stashed sources through
+clears the worldview and re-digests all stashed sources through
 current lenses. rebuilds the brane from scratch.
 
 flags:
-  --dry-run    list sources, don't re-eat
+  --dry-run    list sources, don't re-digest
   --yes, -y    skip confirmation
 `)
       return 0
@@ -87,7 +87,7 @@ flags:
   // -- confirm --
 
   const total_size = sources.reduce((sum, s) => sum + s.size, 0)
-  process.stderr.write(`\nwill clear worldview and re-eat ${sources.length} source(s) (${total_size} bytes)\n`)
+  process.stderr.write(`\nwill clear worldview and re-digest ${sources.length} source(s) (${total_size} bytes)\n`)
 
   if (!auto_yes) {
     if (!confirm_intake()) {
@@ -101,7 +101,7 @@ flags:
   process.stderr.write(`clearing worldview...\n`)
   clear_worldview(root)
 
-  // -- re-eat each source --
+  // -- re-digest each source --
 
   let digested = 0
   let failed = 0
@@ -128,7 +128,7 @@ flags:
       ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
       : "(empty — first ingestion)"
 
-    const eat_prompt = `# Active Lenses
+    const digest_prompt = `# Active Lenses
 
 ${lens_block}
 
@@ -179,7 +179,7 @@ Paths are relative to worldview/. Use lowercase-kebab-case for file and director
 If nothing is worth absorbing, return empty operations with reasoning explaining why.
 `
 
-    const raw = call_claude(eat_prompt, root)
+    const raw = call_claude(digest_prompt, root)
     if (!raw) {
       spin.stop()
       process.stderr.write(`error: claude failed on '${entry.label}', skipping\n`)
@@ -187,14 +187,14 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
       continue
     }
 
-    let response = parse_json<EatResponse>(raw)
+    let response = parse_json<DigestResponse>(raw)
     if (!response) {
       spin.stop()
       process.stderr.write("warning: failed to parse response, retrying...\n")
       const spin2 = create_spinner(`retrying: ${entry.label}`)
-      const retry = call_claude(eat_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
+      const retry = call_claude(digest_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
       spin2.stop()
-      if (retry) response = parse_json<EatResponse>(retry)
+      if (retry) response = parse_json<DigestResponse>(retry)
       if (!response) {
         process.stderr.write(`error: could not parse response for '${entry.label}', skipping\n`)
         failed++

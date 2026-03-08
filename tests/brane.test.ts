@@ -156,6 +156,12 @@ describe("renamed commands", () => {
     expect(r.stdout).toContain("rebuild")
   })
 
+  test("bny brane digest --help exits 0", () => {
+    const r = bny("brane", "digest", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("usage")
+  })
+
   test("bny brane eat still works (hidden alias)", () => {
     const r = bny("brane", "eat", "--help")
     expect(r.exit).toBe(0)
@@ -163,10 +169,9 @@ describe("renamed commands", () => {
   })
 
   test("digest strips file:// prefix", () => {
-    // digest --dry-run should pass through to eat with the prefix stripped
+    // digest --dry-run should pass through to brane/digest with the prefix stripped
     const r = bny("digest", "--dry-run", "file://README.md")
     expect(r.exit).toBe(0)
-    // Should show the eat prompt (since it delegates to eat)
     expect(r.stdout).toContain("Active Lenses")
   })
 

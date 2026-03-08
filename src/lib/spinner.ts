@@ -5,9 +5,9 @@
 // degrades to plain text when piped or in CI.
 //
 // usage:
-//   const spin = create_spinner("eating: README.md")
+//   const spin = create_spinner("digesting: README.md")
 //   await long_operation()
-//   spin.stop("🐰 ate README.md")
+//   spin.stop("🐰 digested README.md")
 //
 
 export interface Spinner {
