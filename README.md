@@ -6,7 +6,7 @@
   <em>"why are you wearing that stupid man suit?"</em>
 </p>
 
-**a dark factory for the solo developer.** two AI agents, nine steps, one build at a time — and a knowledge graph that makes every build smarter than the last.
+**a dark factory for the solo developer.** two AI agents, seven steps, one build at a time — and a knowledge graph that makes every build smarter than the last.
 
 most AI coding tools scale by throwing more agents at the problem. bunny scales by *learning*. every build, every spike, every brainstorm feeds a persistent knowledge graph. the tenth build knows what the first nine learned. parallel agents are fast and dumb. serial + recursive is slow and wise.
 
@@ -15,7 +15,7 @@ the factory runs a single, observable pipeline — you can watch each step, inte
 - **gemini** writes tests to *break* things — reads the spec, finds gaps, generates a hostile test suite.
 - **claude** writes code to *survive* — never sees the test-generation prompt, can't weaken the tests.
 
-code ships when claude beats gemini's tests. then both agents feed the brane.
+code ships when claude beats gemini's tests. then both agents feed the knowledge graph.
 
 ```
 specify → challenge → plan → tasks → narrow[1→2→3] → verify → ruminate
@@ -32,7 +32,7 @@ each of these was built from a single sentence. zero human intervention:
 | "RFC 6902 JSON Patch — add, remove, replace, move, copy, test with atomic rollback" | 37 | clean |
 | "a cron expression parser that computes the next N scheduled times" | 12 | clean |
 
-see [demos/](demos/) for full pipeline output — specs, tests, source, brane state, and logs.
+see [demos/](demos/) for full pipeline output — specs, tests, source, knowledge graph state, and logs.
 
 ## quick start
 
@@ -42,13 +42,17 @@ requires `ANTHROPIC_API_KEY`. add `GEMINI_API_KEY` for adversarial testing (with
 # install into any git repo
 cd my-project
 curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
+```
+
+this drops a single binary at `./bin/bny`. put it somewhere on your PATH — or just run it directly:
+
+```bash
+# option A: add ./bin to PATH (in your shell profile for permanence)
 export PATH="./bin:$PATH"
+bny init && bny build "add an authentication middleware"
 
-# scaffold agent state (guest mode — won't clobber your files)
-bny init
-
-# give it a task
-bny build "add an authentication middleware"
+# option B: just use the path
+./bin/bny init && ./bin/bny build "add an authentication middleware"
 ```
 
 or from source:
@@ -58,7 +62,21 @@ git clone https://github.com/ahoward/bunny.git && cd bunny
 ./dev/setup && export PATH="./bin:$PATH"
 ```
 
-`bny init` detects your environment and generates the right dev scripts. installs as a guest — `bny uninit --force` removes all traces.
+### what `bny init` does
+
+`bny init` detects your project type (bun, node, rust, go, python, ruby) and scaffolds:
+
+- `bny/` directory — project state (roadmap, decisions, knowledge graph)
+- `dev/` scripts — test, setup, health, pre/post-flight (customizable)
+- `AGENTS.md` — protocol file for AI agents working in your repo
+
+it's a guest, not a landlord — uses marker-delimited blocks so it never clobbers your existing files. idempotent on re-run. `bny uninit --force` removes all traces.
+
+### what `bny build` does
+
+`bny build` creates a feature branch and runs the full pipeline. all changes happen on that branch — your main branch is untouched until you merge. the pipeline reads your knowledge graph for context, so builds get smarter over time.
+
+typical cost: **$0.50–$2.00 per build** depending on spec complexity and retry count. spikes are cheaper (~$0.25). knowledge graph operations (digest, storm, loop) are ~$0.05–$0.20 each.
 
 ## the core loop
 
@@ -72,9 +90,9 @@ bny brane loop "auth strategies"                     # autonomous: search → fe
 
 # 3. bridge knowledge to execution
 bny proposal "auth system"
-bny proposal accept auth-system                      # → roadmap item
+bny proposal accept auth-system                      # → appends to bny/roadmap.md
 
-# 4. build (2 agents, 9 steps, tested code)
+# 4. build (2 agents, 7 steps, tested code)
 bny build "add user auth"
 
 # 5. or prototype without guardrails
@@ -86,11 +104,50 @@ bny brane ask "what are the security risks?"
 
 run `bny --help` for the full command reference.
 
-## antagonistic testing
+## three pillars
 
-**we don't do TDD.** here's why.
+### knowledge graph (brane)
 
-TDD assumes the test-writer wants to find bugs. true for disciplined humans; catastrophically false for AI. when an agent writes both, it writes tests to *confirm its own implementation* — optimizing for green checks, not caught failures.
+a persistent, self-organizing knowledge graph that accumulates understanding across every build, spike, and brainstorm. `brane loop` is autonomous research — it reflects on gaps, searches the web, fetches sources, absorbs what it finds, and repeats until it converges. the tenth build knows what the first nine learned.
+
+stored locally in `bny/brane/` as markdown files. commit it to share context with your team, or gitignore it for personal use.
+
+```bash
+bny digest <file|dir|url>                            # ingest
+bny brane ask "what are the security risks?"         # query (read-only)
+bny brane storm "real-time collab?"                  # divergent brainstorming
+bny brane loop "distributed systems"                 # autonomous research
+bny brane enhance "security model"                   # convergent refinement
+bny brane lens add security "attack vectors, auth"   # filtering perspectives
+bny brane rebuild                                    # reprocess everything through current lenses
+bny brane tldr                                       # instant outline
+```
+
+### code graph (map)
+
+structural codebase awareness via tree-sitter. functions, classes, imports, exports — parsed, not guessed.
+
+```bash
+bny map                                              # generate structural codebase map
+```
+
+### dark factory (build)
+
+the 7-step pipeline (with 3×3 narrowing), or one step at a time:
+
+```bash
+bny build "add user auth"                            # full pipeline
+bny build specify "add user auth"                    # just one step
+bny build challenge                                  # just one step
+bny next                                             # pick next roadmap item, run pipeline
+bny --effort full build                              # more retries per round
+```
+
+## adversarial TDD
+
+**we don't let the same agent write tests and code.** here's why.
+
+traditional TDD assumes the test-writer wants to find bugs. true for disciplined humans; catastrophically false for AI. when one agent writes both tests and implementation, it writes tests to *confirm its own approach* — optimizing for green checks, not caught failures.
 
 the fix: two agents with opposed incentives.
 
@@ -104,7 +161,7 @@ the fix: two agents with opposed incentives.
 | **verify** | gemini | post-implementation — are the tests real? anything missed? |
 | ruminate | claude | reflect on build, feed knowledge graph |
 
-gemini touches the code at 4 points. claude never writes tests. this is not a rule — it's architecture. the system makes the wrong thing hard.
+gemini writes every test. claude writes every line of implementation. claude never sees the test-generation prompt. this is not a rule — it's architecture. the system makes the wrong thing hard.
 
 ### 3×3 narrowing
 
@@ -129,9 +186,11 @@ the key insight: rounds 2-3 include claude's actual source code. gemini doesn't 
 
 ### graceful degradation
 
-all gemini steps are non-fatal. no gemini? the factory still runs — claude does everything, with a warning. adversarial testing is the best path, but the factory never stops.
+all gemini steps are non-fatal. no gemini key? the factory still runs — claude does everything, with a warning. adversarial testing is the best path, but the factory never stops.
 
 ### language agnostic
+
+bunny auto-detects your project type from config files (`package.json`, `Cargo.toml`, `go.mod`, etc.) and configures the right test framework and property testing library. zero config.
 
 | project | test framework | property lib |
 |---------|---------------|-------------|
@@ -142,53 +201,12 @@ all gemini steps are non-fatal. no gemini? the factory still runs — claude doe
 | python | `pytest` | `hypothesis` |
 | ruby | `rspec` | `rantly` |
 
-## three pillars
-
-### knowledge graph (brane)
-
-this is what makes bunny recursive, not just serial. a persistent, self-organizing knowledge graph that accumulates understanding across every build, spike, and brainstorm. `brane loop` is autonomous research — it reflects on gaps, searches the web, fetches sources, absorbs what it finds, and repeats until it converges. the tenth build knows what the first nine learned.
-
-```bash
-bny digest <file|dir|url>                            # ingest
-bny brane ask "what are the security risks?"         # query
-bny brane storm "real-time collab?"                  # brainstorm
-bny brane loop "distributed systems"                 # autonomous research
-bny brane enhance "security model"                   # refine
-bny brane lens add security "attack vectors, auth"   # perspectives
-bny brane rebuild                                    # reprocess everything
-bny brane tldr                                       # instant outline
-```
-
-### code graph (map)
-
-structural codebase awareness via tree-sitter. functions, classes, imports, exports — parsed, not guessed.
-
-```bash
-bny map                                              # generate structural codebase map
-```
-
-### dark factory (build)
-
-the 7-step pipeline (with 3×3 narrowing), or one step at a time:
-
-```bash
-bny build "add user auth"                            # full pipeline
-bny build specify "add user auth"                    # just one step
-bny build challenge                                  # just one step
-bny next                                             # pick next roadmap item, run pipeline
-bny --effort full build                              # 10 retries, $5 budget
-```
-
-## guest mode
-
-bny is a guest, not a landlord. `bny init` uses marker-delimited blocks to safely append to CLAUDE.md, GEMINI.md, AGENTS.md without clobbering your content. idempotent on re-run. `bny uninit --force` removes all traces.
-
 ## environment
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `ANTHROPIC_API_KEY` | required | claude (specify, plan, tasks, implement, ruminate) |
-| `GEMINI_API_KEY` | optional | gemini (challenge, test-gen, review, verify) |
+| `GEMINI_API_KEY` | optional | gemini (challenge, test-gen, verify) |
 | `BNY_MODEL` | — | override LLM model for all subcommands |
 | `BUNNY_LOG` | off | structured JSON logging to stderr |
 
@@ -197,7 +215,7 @@ bny is a guest, not a landlord. `bny init` uses marker-delimited blocks to safel
 - **runtime:** [bun](https://bun.sh) — fast typescript runtime
 - **language:** typescript (strict mode)
 - **code awareness:** [tree-sitter](https://tree-sitter.github.io/) via WASM
-- **no frameworks.** no orms. no build tools. pure unix.
+- **no frameworks.** no orms. no build tools. zero framework dependencies.
 
 ## dive deeper
 
