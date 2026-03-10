@@ -1,0 +1,256 @@
+#!/usr/bin/env bash
+#
+# run-rails-experiment — Rails demo showcasing brane + dark factory
+#
+# creates demos/event-rsvp/ with a Rails API project built entirely by bunny.
+# heavy brane exercise: 3 storms, 1 loop, 1 enhance — then build.
+#
+# usage:
+#   ./demos/run-rails-experiment
+#
+# prerequisites: ruby, rails, bundle on PATH
+#
+
+set -euo pipefail
+
+NAME="event-rsvp"
+DESC="Event RSVP API: RESTful endpoints for events and RSVPs with capacity limits, automatic waitlist promotion, and concurrency-safe reservation handling"
+BUNNY_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DEMO_DIR="$BUNNY_ROOT/demos/$NAME"
+LOG="$DEMO_DIR/experiment.log"
+ERRORS="$DEMO_DIR/errors.log"
+
+export PATH="$BUNNY_ROOT/bin:$PATH"
+
+# -- prerequisites --
+
+for cmd in ruby rails bundle; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "error: $cmd not found on PATH" >&2
+    echo "install ruby + rails first: gem install rails" >&2
+    exit 1
+  fi
+done
+
+if [ -d "$DEMO_DIR" ]; then
+  echo "error: demos/$NAME already exists" >&2
+  exit 1
+fi
+
+# -- helpers --
+
+step() {
+  local label="$1"
+  shift
+  echo "" >> "$LOG"
+  echo "=== STEP: $label ===" >> "$LOG"
+  echo "--- cmd: $* ---" >> "$LOG"
+  echo "  [$label] $*"
+
+  if "$@" >> "$LOG" 2>&1; then
+    echo "--- exit: 0 ---" >> "$LOG"
+  else
+    local code=$?
+    echo "--- exit: $code ---" >> "$LOG"
+    echo "STEP=$label CMD=$* EXIT=$code" >> "$ERRORS"
+    echo "  !! error (exit $code) — logged"
+  fi
+}
+
+check() {
+  local label="$1" condition="$2"
+  if eval "$condition"; then
+    echo "  [ok] $label" | tee -a "$LOG"
+    return 0
+  else
+    echo "  [FAIL] $label" | tee -a "$LOG"
+    echo "VALIDATION=$label" >> "$ERRORS"
+    return 1
+  fi
+}
+
+# -- setup --
+
+echo "=== rails experiment: $NAME ==="
+echo "=== description: $DESC ==="
+echo ""
+
+mkdir -p "$DEMO_DIR"
+echo "experiment: $NAME (rails)" > "$LOG"
+echo "description: $DESC" >> "$LOG"
+echo "started: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$LOG"
+touch "$ERRORS"
+
+# -- phase 1: bootstrap rails --
+
+echo "--- phase 1: bootstrap rails ---"
+
+step "rails-new" rails new "$DEMO_DIR" --api --skip-git --database=sqlite3 --skip-action-mailer --skip-action-mailbox --skip-active-storage
+
+cd "$DEMO_DIR"
+git init >> "$LOG" 2>&1
+git add -A >> "$LOG" 2>&1
+git commit -m "rails new" >> "$LOG" 2>&1
+
+# -- phase 2: bny init + seed --
+
+echo ""
+echo "--- phase 2: init + seed ---"
+
+step "bny-init" bny init
+
+cat > seed.md << 'SEED_EOF'
+# Event RSVP Platform
+
+A Rails API for managing events with RSVP tracking, capacity limits, and waitlists.
+
+## Core Domain
+
+- Events have a title, description, location, start/end times, and a capacity limit
+- Users can RSVP to events (accept, decline, maybe)
+- When capacity is reached, new RSVPs go to a waitlist
+- When someone declines, the first waitlisted person is automatically promoted
+- Event organizers can see attendee lists and waitlist position
+
+## Open Questions
+
+- How should we handle concurrent RSVPs racing for the last spot?
+- What happens when an event is cancelled — notify all RSVPs?
+- Should waitlist promotion be automatic or require confirmation?
+- How do we prevent abuse (spam RSVPs, bot registrations)?
+- What's the right API shape — RESTful resources or RPC-style actions?
+- Should capacity be a hard limit or soft (with organizer override)?
+- How do we handle time zones for events?
+- What validation rules make sense for event dates (no past dates? minimum duration?)
+SEED_EOF
+
+step "digest-seed" bny digest seed.md
+
+# -- phase 3: deep brane research (the showcase) --
+
+echo ""
+echo "--- phase 3: brane research (3 storms + loop + enhance) ---"
+
+# storm 1: broad domain exploration
+step "storm-domain" bny brane storm --yes "event RSVP systems — capacity management, waitlists, and fairness"
+
+# storm 2: targeted technical concerns
+step "storm-concurrency" bny brane storm --yes "concurrency patterns for reservation systems — race conditions, optimistic locking, database constraints"
+
+# storm 3: product design
+step "storm-api" bny brane storm --yes "RSVP UX patterns — what makes a great event platform API?"
+
+# autonomous research loop (2 rounds)
+step "loop-research" bny brane loop --rounds 2 --yes "waitlist fairness algorithms and capacity management in event platforms"
+
+# converge knowledge
+step "enhance" bny brane enhance --yes "event RSVP platform architecture"
+
+# -- phase 4: targeted brane queries (prove the graph learned) --
+
+echo ""
+echo "--- phase 4: brane queries ---"
+
+step "ask-concurrency" bny brane ask "what concurrency strategy should we use for RSVP capacity limits?"
+step "ask-risks"       bny brane ask "what are the biggest risks in our waitlist promotion design?"
+step "ask-endpoints"   bny brane ask "what API endpoints do we need for a complete RSVP system?"
+step "ask-cancel"      bny brane ask "how should we handle event cancellation and notifications?"
+step "ask-edge-cases"  bny brane ask "what edge cases should our tests cover?"
+step "brane-tldr"      bny brane tldr
+
+# -- phase 5: proposals --
+
+echo ""
+echo "--- phase 5: proposals ---"
+
+step "proposal" bny proposal --count 2 --yes "event RSVP API with capacity management and waitlists"
+
+PROPOSAL=$(ls bny/proposals/*.md 2>/dev/null | head -1)
+if [ -n "$PROPOSAL" ]; then
+  SLUG=$(basename "$PROPOSAL" .md)
+  step "accept" bny proposal accept --yes "$SLUG"
+fi
+
+# -- phase 6: dark factory build --
+
+echo ""
+echo "--- phase 6: build ---"
+
+step "build" bny build --yes "$DESC"
+
+# -- phase 7: test --
+
+step "dev-test" ./dev/test
+
+# -- phase 8: validate --
+
+echo "" >> "$LOG"
+echo "=== VALIDATION ===" >> "$LOG"
+echo ""
+echo "--- validation ---"
+
+V_PASS=0
+V_FAIL=0
+
+run_check() {
+  if check "$@"; then
+    V_PASS=$((V_PASS + 1))
+  else
+    V_FAIL=$((V_FAIL + 1))
+  fi
+}
+
+# rails artifacts
+run_check "Gemfile exists"                "[ -f Gemfile ]"
+run_check "app/models/ has .rb"           "find app/models -name '*.rb' ! -name 'application_record.rb' | grep -q ."
+run_check "app/controllers/ has .rb"      "find app/controllers -name '*.rb' ! -name 'application_controller.rb' | grep -q ."
+run_check "db/migrate/ has files"         "ls db/migrate/*.rb >/dev/null 2>&1"
+run_check "config/routes.rb exists"       "[ -f config/routes.rb ]"
+
+# bunny artifacts
+run_check "spec.md exists"               "ls specs/[0-9][0-9][0-9]-*/spec.md >/dev/null 2>&1"
+run_check "plan.md exists"               "ls specs/[0-9][0-9][0-9]-*/plan.md >/dev/null 2>&1"
+run_check "challenge.md exists"          "ls specs/[0-9][0-9][0-9]-*/challenge.md >/dev/null 2>&1"
+run_check "tasks.md exists"             "ls specs/[0-9][0-9][0-9]-*/tasks.md >/dev/null 2>&1"
+
+# test artifacts (rspec for rails)
+run_check "has test files"              "find tests spec -name '*_spec.rb' 2>/dev/null | grep -q ."
+
+# brane artifacts
+run_check "worldview has content"       "[ -d bny/brane/worldview ] && find bny/brane/worldview -name '*.md' -type f | grep -q ."
+run_check "sources ingested"            "[ -f bny/brane/sources/manifest.json ]"
+run_check "proposals generated"         "ls bny/proposals/*.md >/dev/null 2>&1"
+run_check "roadmap has items"           "grep -q '\\- \\[' bny/roadmap.md 2>/dev/null"
+
+echo "" >> "$LOG"
+echo "validation: $V_PASS passed, $V_FAIL failed" >> "$LOG"
+
+# -- brane stats --
+
+echo ""
+echo "--- brane stats ---"
+WORLDVIEW_FILES=$(find bny/brane/worldview -name '*.md' -type f 2>/dev/null | wc -l | tr -d ' ')
+SOURCE_COUNT=$(ls bny/brane/sources/*.txt 2>/dev/null | wc -l | tr -d ' ')
+PROPOSAL_COUNT=$(ls bny/proposals/*.md 2>/dev/null | wc -l | tr -d ' ')
+echo "  worldview files: $WORLDVIEW_FILES" | tee -a "$LOG"
+echo "  sources ingested: $SOURCE_COUNT" | tee -a "$LOG"
+echo "  proposals: $PROPOSAL_COUNT" | tee -a "$LOG"
+
+# -- summary --
+
+echo "" >> "$LOG"
+echo "finished: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$LOG"
+
+# clean up nested .git
+rm -rf "$DEMO_DIR/.git"
+
+ERROR_COUNT=$(wc -l < "$ERRORS" | tr -d ' ')
+echo ""
+echo "=== done: $NAME ==="
+echo "  log:         demos/$NAME/experiment.log"
+echo "  errors:      $ERROR_COUNT"
+echo "  validations: $V_PASS passed, $V_FAIL failed"
+if [ "$ERROR_COUNT" -gt 0 ]; then
+  echo ""
+  cat "$ERRORS" | sed 's/^/  !! /'
+fi
