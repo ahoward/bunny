@@ -1,0 +1,5 @@
+# bny:start
+bny/bny.pid
+bny/children/
+bny/spin/
+# bny:end

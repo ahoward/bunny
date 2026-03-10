@@ -1,0 +1,1296 @@
+experiment: event-rsvp (rails)
+description: Event RSVP API: RESTful endpoints for events and RSVPs with capacity limits, automatic waitlist promotion, and concurrency-safe reservation handling
+started: 2026-03-10T21:09:24Z
+
+=== STEP: rails-new ===
+--- cmd: rails new /Users/ahoward/gh/ahoward/bunny/demos/event-rsvp --api --skip-git --database=sqlite3 --skip-action-mailer --skip-action-mailbox --skip-active-storage ---
+Rails is not currently installed on this system. To get the latest version, simply type:
+
+    $ sudo gem install rails
+
+You can then rerun your "rails" command.
+--- exit: 0 ---
+Initialized empty Git repository in /Users/ahoward/gh/ahoward/bunny/demos/event-rsvp/.git/
+[main (root-commit) 590be23] rails new
+ 2 files changed, 13 insertions(+)
+ create mode 100644 errors.log
+ create mode 100644 experiment.log
+
+=== STEP: bny-init ===
+--- cmd: bny init ---
+[bny init] 
+
+  create   bny/constitution.md
+  create   bny/guardrails.json
+  create   bny/roadmap.md
+  create   bny/decisions.md
+  create   bny/todos.md
+  create   bny/brane/worldview.md
+  create   bny/brane/index.md
+  detected generic project
+  create   dev/setup
+  create   dev/test
+  create   dev/health
+  create   dev/pre_flight
+  create   dev/post_flight
+  create   .githooks/pre-commit
+  create   .githooks/pre-push
+  create   .gitignore
+  create   CLAUDE.md
+  create   GEMINI.md
+  create   AGENTS.md
+  config   git core.hooksPath → .githooks
+
+  18 created
+
+  next: edit bny/roadmap.md, then run 'bny ipm' to plan
+--- exit: 0 ---
+
+=== STEP: digest-seed ===
+--- cmd: bny digest seed.md ---
+stashed: 2026-03-10T21-09-25-847Z-seed-md.txt (998 bytes)
+eating: seed.md...
+
+[intake]
+  + domain/event-rsvp-core.md  (30 lines)
+  + domain/open-questions.md  (35 lines)
+
+reasoning: Absorbed the core domain model (entities, relationships, key behaviors) and the open design questions as two separate worldview files. The domain model captures the stable facts about events, RSVPs, capacity, and waitlist mechanics. The open questions file preserves unresolved architectural decisions that will drive future design work. Filtered out the project description framing (just context, not a concept) and kept focus on what matters for building the system.
+
+2 operation(s) (2 new)
+applied 2 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "source": "seed.md",
+    "operations": [
+      {
+        "action": "create",
+        "path": "domain/event-rsvp-core.md"
+      },
+      {
+        "action": "create",
+        "path": "domain/open-questions.md"
+      }
+    ],
+    "reasoning": "Absorbed the core domain model (entities, relationships, key behaviors) and the open design questions as two separate worldview files. The domain model captures the stable facts about events, RSVPs, capacity, and waitlist mechanics. The open questions file preserves unresolved architectural decisions that will drive future design work. Filtered out the project description framing (just context, not a concept) and kept focus on what matters for building the system."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/eat",
+    "timestamp": "2026-03-10T21:09:58.349Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: storm-domain ===
+--- cmd: bny brane storm --yes event RSVP systems — capacity management, waitlists, and fairness ---
+storming: inline...
+
+[intake]
+  + domain/fairness-models.md  (30 lines)
+  + domain/no-show-problem.md  (32 lines)
+  + domain/group-rsvps-and-plus-ones.md  (31 lines)
+  + domain/notification-timing.md  (31 lines)
+  + domain/event-series-recurring.md  (25 lines)
+  + domain/privacy-and-visibility.md  (29 lines)
+  + domain/game-theory-rsvps.md  (26 lines)
+  + domain/failure-modes.md  (26 lines)
+
+reasoning: The current worldview covers the basic domain model and lists open questions but stays safely within CRUD territory. I expanded outward in several directions: (1) Fairness as a first-class design concern, since the seed explicitly mentions it but the worldview only has FIFO implicitly. (2) The no-show problem, which is the #1 operational issue in real RSVP systems and isn't mentioned at all. (3) Group RSVPs, which break the 1-user-1-RSVP assumption and create complex capacity math. (4) Notification timing, because promotion from waitlist is meaningless if the user doesn't see it in time. (5) Recurring events, since most real events repeat and the isolated-event model is limiting. (6) Privacy, which the worldview completely ignores despite attendee lists being sensitive personal data. (7) Game theory, challenging the assumption that users behave honestly. (8) Concrete failure modes, turning the abstract open questions into specific scenarios that demand specific answers.
+
+8 operation(s) (8 new)
+applied 8 operation(s)
+regenerating index...
+
+[suggestions]
+  LENS     adversarial-user
+           The worldview assumes cooperative users. An adversarial lens would surface abuse patterns: scalping spots, griefing organizers with mass RSVPs, social engineering via attendee lists.
+  LENS     scale-stress
+           Everything changes at 10,000 concurrent RSVPs. Database locking strategies, notification throughput, and fairness algorithms all have different tradeoffs at scale.
+  LENS     accessibility
+           Physical accessibility requirements (wheelchair spots, sign language interpreters) create capacity sub-categories that the current flat model can't represent.
+  QUESTION What happens when the organizer is also an attendee?
+           Role overlap creates permission edge cases — can an organizer waitlist themselves? Skip the queue?
+  QUESTION Should declined RSVPs be deletable or permanent records?
+           This determines whether RSVP history is an audit log (append-only) or a mutable user preference, with cascading effects on analytics and privacy.
+  QUESTION How should the system handle events that change capacity after RSVPs exist?
+           Capacity reduction with existing acceptances is an unaddressed conflict between organizer control and attendee expectations.
+  SOURCE   Roth, A.E. 'Who Gets What and Why' (2015)
+           Nobel laureate's accessible treatment of matching markets and mechanism design — directly applicable to waitlist promotion and fairness models.
+  SOURCE   Eventbrite's engineering blog on capacity management
+           Real-world war stories from a platform handling millions of RSVPs, including their approach to race conditions and overbooking.
+  QUESTION Is 'maybe' a real status or just polite noise?
+           The 'maybe' RSVP status consumes no capacity but provides no commitment. It may add complexity without value — many systems (e.g., Eventbrite) don't offer it.
+
+9 suggestion(s)
+{
+  "status": "success",
+  "result": {
+    "seed": "inline",
+    "rounds": 1,
+    "operations": 8,
+    "suggestions": [
+      {
+        "kind": "lens",
+        "value": "adversarial-user",
+        "reason": "The worldview assumes cooperative users. An adversarial lens would surface abuse patterns: scalping spots, griefing organizers with mass RSVPs, social engineering via attendee lists."
+      },
+      {
+        "kind": "lens",
+        "value": "scale-stress",
+        "reason": "Everything changes at 10,000 concurrent RSVPs. Database locking strategies, notification throughput, and fairness algorithms all have different tradeoffs at scale."
+      },
+      {
+        "kind": "lens",
+        "value": "accessibility",
+        "reason": "Physical accessibility requirements (wheelchair spots, sign language interpreters) create capacity sub-categories that the current flat model can't represent."
+      },
+      {
+        "kind": "question",
+        "value": "What happens when the organizer is also an attendee?",
+        "reason": "Role overlap creates permission edge cases — can an organizer waitlist themselves? Skip the queue?"
+      },
+      {
+        "kind": "question",
+        "value": "Should declined RSVPs be deletable or permanent records?",
+        "reason": "This determines whether RSVP history is an audit log (append-only) or a mutable user preference, with cascading effects on analytics and privacy."
+      },
+      {
+        "kind": "question",
+        "value": "How should the system handle events that change capacity after RSVPs exist?",
+        "reason": "Capacity reduction with existing acceptances is an unaddressed conflict between organizer control and attendee expectations."
+      },
+      {
+        "kind": "source",
+        "value": "Roth, A.E. 'Who Gets What and Why' (2015)",
+        "reason": "Nobel laureate's accessible treatment of matching markets and mechanism design — directly applicable to waitlist promotion and fairness models."
+      },
+      {
+        "kind": "source",
+        "value": "Eventbrite's engineering blog on capacity management",
+        "reason": "Real-world war stories from a platform handling millions of RSVPs, including their approach to race conditions and overbooking."
+      },
+      {
+        "kind": "question",
+        "value": "Is 'maybe' a real status or just polite noise?",
+        "reason": "The 'maybe' RSVP status consumes no capacity but provides no commitment. It may add complexity without value — many systems (e.g., Eventbrite) don't offer it."
+      }
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/storm",
+    "timestamp": "2026-03-10T21:12:13.399Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: storm-concurrency ===
+--- cmd: bny brane storm --yes concurrency patterns for reservation systems — race conditions, optimistic locking, database constraints ---
+storming: inline...
+
+[intake]
+  + domain/concurrency-patterns-reservations.md  (113 lines)
+  + domain/isolation-levels-and-anomalies.md  (47 lines)
+  + domain/idempotency-and-retry-safety.md  (45 lines)
+  + domain/capacity-as-inventory.md  (41 lines)
+  + domain/distributed-failure-modes.md  (51 lines)
+
+reasoning: The current worldview covers the domain model, edge cases, and behavioral/social aspects well, but is thin on the technical implementation of concurrency — which is exactly what the seed asks about. I expanded in five directions: (1) A comprehensive catalog of concurrency patterns with Rails-specific guidance, (2) Database isolation levels and how they interact with RSVP anomalies, (3) Idempotency patterns critical for retry safety, (4) The inventory management analogy which brings decades of supply chain research to bear, and (5) Distributed system failure modes beyond single-database concurrency.
+
+5 operation(s) (5 new)
+applied 5 operation(s)
+regenerating index...
+
+[suggestions]
+  LENS     adversarial-load
+           The worldview assumes normal operation. A lens focused on adversarial conditions (DDoS, bot swarms, coordinated abuse) would reveal brittleness in the concurrency model.
+  LENS     operations
+           How does an operator observe, debug, and recover from concurrency failures in production? Monitoring, alerting, runbooks, and manual intervention paths are unexplored.
+  QUESTION What happens when the database failover occurs mid-transaction?
+           PostgreSQL failover during a SELECT FOR UPDATE creates a unique failure mode — the lock is lost but the application may not know. Cloud-managed databases (RDS, Cloud SQL) add another layer.
+  QUESTION Should the waitlist promotion be synchronous or asynchronous, and what are the UX tradeoffs?
+           Synchronous promotion gives instant feedback but holds locks longer. Async is safer but creates a notification delay that affects user experience and no-show rates.
+  QUESTION How do you test concurrency correctness in CI?
+           Most Rails test suites are single-threaded. The worldview identifies concurrency bugs but not how to catch them before production.
+  SOURCE   Designing Data-Intensive Applications by Martin Kleppmann, Chapter 7 (Transactions)
+           The definitive reference on isolation levels, write skew, and phantom reads — exactly the anomalies that bite RSVP systems.
+  SOURCE   The Architecture of Open Source Applications: Scalable Web Architecture (Chapter on reservation systems)
+           Real-world patterns from production reservation systems that have solved these problems at scale.
+  QUESTION Is the RSVP counter a CRDT candidate?
+           Conflict-free replicated data types could allow multi-region RSVP processing without coordination, but capacity enforcement requires coordination — this tension is worth exploring.
+
+8 suggestion(s)
+{
+  "status": "success",
+  "result": {
+    "seed": "inline",
+    "rounds": 1,
+    "operations": 5,
+    "suggestions": [
+      {
+        "kind": "lens",
+        "value": "adversarial-load",
+        "reason": "The worldview assumes normal operation. A lens focused on adversarial conditions (DDoS, bot swarms, coordinated abuse) would reveal brittleness in the concurrency model."
+      },
+      {
+        "kind": "lens",
+        "value": "operations",
+        "reason": "How does an operator observe, debug, and recover from concurrency failures in production? Monitoring, alerting, runbooks, and manual intervention paths are unexplored."
+      },
+      {
+        "kind": "question",
+        "value": "What happens when the database failover occurs mid-transaction?",
+        "reason": "PostgreSQL failover during a SELECT FOR UPDATE creates a unique failure mode — the lock is lost but the application may not know. Cloud-managed databases (RDS, Cloud SQL) add another layer."
+      },
+      {
+        "kind": "question",
+        "value": "Should the waitlist promotion be synchronous or asynchronous, and what are the UX tradeoffs?",
+        "reason": "Synchronous promotion gives instant feedback but holds locks longer. Async is safer but creates a notification delay that affects user experience and no-show rates."
+      },
+      {
+        "kind": "question",
+        "value": "How do you test concurrency correctness in CI?",
+        "reason": "Most Rails test suites are single-threaded. The worldview identifies concurrency bugs but not how to catch them before production."
+      },
+      {
+        "kind": "source",
+        "value": "Designing Data-Intensive Applications by Martin Kleppmann, Chapter 7 (Transactions)",
+        "reason": "The definitive reference on isolation levels, write skew, and phantom reads — exactly the anomalies that bite RSVP systems."
+      },
+      {
+        "kind": "source",
+        "value": "The Architecture of Open Source Applications: Scalable Web Architecture (Chapter on reservation systems)",
+        "reason": "Real-world patterns from production reservation systems that have solved these problems at scale."
+      },
+      {
+        "kind": "question",
+        "value": "Is the RSVP counter a CRDT candidate?",
+        "reason": "Conflict-free replicated data types could allow multi-region RSVP processing without coordination, but capacity enforcement requires coordination — this tension is worth exploring."
+      }
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/storm",
+    "timestamp": "2026-03-10T21:14:36.008Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: storm-api ===
+--- cmd: bny brane storm --yes RSVP UX patterns — what makes a great event platform API? ---
+storming: inline...
+
+[intake]
+  + domain/api-design-patterns.md  (73 lines)
+  + domain/rsvp-state-machine.md  (62 lines)
+  + domain/undo-and-forgiveness.md  (42 lines)
+  + domain/real-time-and-live-updates.md  (45 lines)
+  + domain/progressive-disclosure-api.md  (69 lines)
+  + domain/event-discovery-social-graph.md  (49 lines)
+  + domain/organizer-experience-api.md  (50 lines)
+  + domain/time-as-design-material.md  (65 lines)
+  + domain/error-recovery-ux.md  (86 lines)
+
+reasoning: The current worldview is deep on backend concerns (concurrency, isolation levels, distributed systems) and behavioral/economic dynamics (game theory, no-shows, fairness). What's almost entirely missing is the UX and API design layer — which is exactly what the seed asks about. I explored: (1) API design patterns — how REST conventions map to RSVP semantics, error design as UX, the waitlist-is-it-an-error question; (2) State machine formalization — making implicit states explicit, the re-RSVP problem; (3) Undo and forgiveness — grace periods, soft deletes, organizer mistake recovery; (4) Real-time updates — WebSockets vs polling, the false-hope problem of showing exact counts; (5) Progressive disclosure — serving both simple integrators and platform builders; (6) Social graph and discovery — the hidden graph in RSVP data; (7) Organizer experience — the underserved supply side of the platform; (8) Time as design material — registration windows, phases, timezone display; (9) Error recovery — actionable errors, degraded operation, partial success.
+
+9 operation(s) (9 new)
+applied 9 operation(s)
+regenerating index...
+
+[suggestions]
+  LENS     mobile-first
+           The worldview assumes desktop API consumers. Mobile clients face unique constraints: unreliable networks, battery-conscious polling, offline-first patterns, push notification limitations. A mobile-first lens would reshape API design around latency tolerance, payload size, and intermittent connectivity.
+  LENS     skeptic
+           The worldview assumes RSVP systems need all this complexity. A skeptic would ask: do most events actually hit capacity? Is the waitlist used? Are race conditions a real problem at typical scale? Premature engineering for edge cases may be the bigger risk than the edge cases themselves.
+  QUESTION What does the check-in experience look like and how does it feed back into the RSVP data model?
+           The worldview ends at the event door. Check-in is where RSVP promises meet reality — no-show marking, walk-ins, actual vs expected attendance. This data closes the loop for reputation systems and demand forecasting.
+  QUESTION How should the API handle event modifications after RSVPs exist?
+           Changing a venue, time, or date after 50 people RSVPed is common but unexplored. Does a time change require re-confirmation? Should users be auto-declined if they indicated time-based availability? This is a rich edge case area.
+  QUESTION What does the onboarding flow look like for a zero-config RSVP?
+           The simplest possible RSVP is an unauthenticated form with just a name and email — no account required. How does this interact with the user model, duplicate detection, and later account creation? Many successful event platforms (Lu.ma, Partiful) optimize for frictionless first RSVP.
+  SOURCE   Designing Web APIs by Brenda Jin, Saurabh Sahni, Amir Shevat (O'Reilly)
+           Covers progressive disclosure, error design, pagination, and versioning patterns specifically for API design — directly relevant to making the RSVP API developer-friendly.
+  SOURCE   Partiful and Lu.ma as case studies
+           Both are modern RSVP platforms that prioritize UX over technical completeness. Studying their flows would ground the theoretical worldview in real product decisions — especially around frictionless RSVP, social features, and mobile-first design.
+
+7 suggestion(s)
+{
+  "status": "success",
+  "result": {
+    "seed": "inline",
+    "rounds": 1,
+    "operations": 9,
+    "suggestions": [
+      {
+        "kind": "lens",
+        "value": "mobile-first",
+        "reason": "The worldview assumes desktop API consumers. Mobile clients face unique constraints: unreliable networks, battery-conscious polling, offline-first patterns, push notification limitations. A mobile-first lens would reshape API design around latency tolerance, payload size, and intermittent connectivity."
+      },
+      {
+        "kind": "lens",
+        "value": "skeptic",
+        "reason": "The worldview assumes RSVP systems need all this complexity. A skeptic would ask: do most events actually hit capacity? Is the waitlist used? Are race conditions a real problem at typical scale? Premature engineering for edge cases may be the bigger risk than the edge cases themselves."
+      },
+      {
+        "kind": "question",
+        "value": "What does the check-in experience look like and how does it feed back into the RSVP data model?",
+        "reason": "The worldview ends at the event door. Check-in is where RSVP promises meet reality — no-show marking, walk-ins, actual vs expected attendance. This data closes the loop for reputation systems and demand forecasting."
+      },
+      {
+        "kind": "question",
+        "value": "How should the API handle event modifications after RSVPs exist?",
+        "reason": "Changing a venue, time, or date after 50 people RSVPed is common but unexplored. Does a time change require re-confirmation? Should users be auto-declined if they indicated time-based availability? This is a rich edge case area."
+      },
+      {
+        "kind": "question",
+        "value": "What does the onboarding flow look like for a zero-config RSVP?",
+        "reason": "The simplest possible RSVP is an unauthenticated form with just a name and email — no account required. How does this interact with the user model, duplicate detection, and later account creation? Many successful event platforms (Lu.ma, Partiful) optimize for frictionless first RSVP."
+      },
+      {
+        "kind": "source",
+        "value": "Designing Web APIs by Brenda Jin, Saurabh Sahni, Amir Shevat (O'Reilly)",
+        "reason": "Covers progressive disclosure, error design, pagination, and versioning patterns specifically for API design — directly relevant to making the RSVP API developer-friendly."
+      },
+      {
+        "kind": "source",
+        "value": "Partiful and Lu.ma as case studies",
+        "reason": "Both are modern RSVP platforms that prioritize UX over technical completeness. Studying their flows would ground the theoretical worldview in real product decisions — especially around frictionless RSVP, social features, and mobile-first design."
+      }
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/storm",
+    "timestamp": "2026-03-10T21:18:18.866Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: loop-research ===
+--- cmd: bny brane loop --rounds 2 --yes waitlist fairness algorithms and capacity management in event platforms ---
+created loop 'waitlist-fairness-algorithms-and-capacity-management-in-event-platforms'
+
+[round 1 (1/2)]
+round 1: reflecting...
+  gaps: 5, queries: 5, urls: 2
+  assessment: The current worldview has strong conceptual coverage of fairness models (FIFO, lottery, priority, weighted hybrid), concurrency patterns, and failure modes. However, it lacks concrete algorithmic implementations, real-world platform case studies, formal mechanism design theory applied to waitlists, and quantitative approaches to capacity management (overbooking ratios, demand forecasting). The game theory section identifies problems but doesn't provide solutions. Anti-gaming is mentioned but not detailed.
+round 1: searching...
+  search returned 17 result(s)
+round 1: fetching https://en.wikipedia.org/wiki/Fair_division...
+
+warning: potential secrets detected in source: https://en.wikipedia.org/wiki/Fair_division:
+  line 6: aws-secret-key — wgConfirmE...Edit
+
+(set BNY_SECRETS_BLOCK=1 to block, BNY_SECRETS_SCAN=off to disable)
+  fetched: https://en.wikipedia.org/wiki/Fair_division (187788 bytes)
+round 1: fetching https://en.wikipedia.org/wiki/Mechanism_design...
+
+warning: potential secrets detected in source: https://en.wikipedia.org/wiki/Mechanism_design:
+  line 6: aws-secret-key — wgConfirmE...Edit
+
+(set BNY_SECRETS_BLOCK=1 to block, BNY_SECRETS_SCAN=off to disable)
+  fetched: https://en.wikipedia.org/wiki/Mechanism_design (428507 bytes)
+round 1: fetching https://developers.google.com/actions-center/verticals/reser...
+  fetched: https://developers.google.com/actions-center/verticals/reservations/waitlists/integration-steps/implement-waitlist-booking-server (125280 bytes)
+round 1: fetching https://www.sciencedirect.com/science/article/abs/pii/S00220...
+
+warning: potential secrets detected in source: https://www.sciencedirect.com/science/article/abs/pii/S0022053121000806:
+  line 19: aws-secret-key — +sYYFq8m2b...03a+
+
+(set BNY_SECRETS_BLOCK=1 to block, BNY_SECRETS_SCAN=off to disable)
+  fetched: https://www.sciencedirect.com/science/article/abs/pii/S0022053121000806 (832756 bytes)
+round 1: fetching https://waitwhile.com/event-waitlist/...
+  fetched: https://waitwhile.com/event-waitlist/ (141844 bytes)
+round 1: fetching https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/...
+  fetched: https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/ (141426 bytes)
+round 1: fetching https://www.journals.uchicago.edu/doi/full/10.1086/707212...
+  fetched: https://www.journals.uchicago.edu/doi/full/10.1086/707212 (7003 bytes)
+round 1: fetching https://pmc.ncbi.nlm.nih.gov/articles/PMC10474557/...
+  fetched: https://pmc.ncbi.nlm.nih.gov/articles/PMC10474557/ (188369 bytes)
+round 1: fetching https://www.researchgate.net/publication/2765117_Lottery_and...
+  fetched: https://www.researchgate.net/publication/2765117_Lottery_and_Stride_Scheduling_Flexible_Proportional-Share_Resource_Management (16 bytes)
+round 1: fetching https://pmc.ncbi.nlm.nih.gov/articles/PMC4187098/...
+  fetched: https://pmc.ncbi.nlm.nih.gov/articles/PMC4187098/ (264324 bytes)
+round 1: eating 10 source(s)...
+
+warning: potential secrets detected in prompt:
+  line 1259: aws-secret-key — wgConfirmE...Edit
+  line 1957: aws-secret-key — wgConfirmE...Edit
+  line 3759: aws-secret-key — +sYYFq8m2b...03a+
+
+(set BNY_SECRETS_BLOCK=1 to block, BNY_SECRETS_SCAN=off to disable)
+
+[intake]
+  + domain/weighted-lottery-allocation.md  (51 lines)
+  ~ domain/no-show-problem.md  (+15, -0)
+  ~ domain/fairness-models.md  (+13, -1)
+  ~ domain/game-theory-rsvps.md  (+10, -0)
+  ~ index.md  (+3, -2)
+
+reasoning: Absorbed three key concepts from the research: (1) Weighted lotteries as a fairness mechanism — created new file based on PMC articles about COVID-19 vaccine/monoclonal antibody allocation via weighted lotteries (Jansen & Wall 2021, McCreary et al. 2023), which provide real-world evidence for this approach; (2) No-show predictive models — updated no-show-problem.md with concrete data from Huang & Hanauer 2014 showing 86-90% prediction accuracy and quantified benefits of evidence-based overbooking; (3) Formal fair division properties — updated fairness-models.md with proportional/envy-free/equitable/strategy-proof definitions from Wikipedia's fair division article, and added weighted lottery as a named model. Updated game-theory-rsvps.md with mechanism design formalism (revelation principle, Gibbard-Satterthwaite). Updated index.md to include new weighted-lottery-allocation.md. Filtered out: Google Actions Center waitlist API (too implementation-specific), Waitwhile product page (commercial features, not conceptual), ScienceDirect abstract (paywalled, insufficient content), ResearchGate (blocked by Cloudflare), raw HTML boilerplate from all sources.
+
+5 operation(s) (1 new, 4 updated)
+  applied 5 operation(s)
+regenerating index...
+
+[round 2 (2/2)]
+round 2: reflecting...
+  gaps: 5, queries: 5, urls: 3
+  assessment: The worldview has excellent conceptual breadth covering fairness models, concurrency, state machines, and game theory. Round 1 added formal fair division theory and mechanism design foundations. Key remaining gaps are: (1) concrete algorithmic implementations (pseudocode for weighted lottery, stride scheduling), (2) real platform engineering case studies, (3) quantitative methods for overbooking calibration, and (4) practical anti-gaming techniques. The theoretical framework is strong but needs more actionable, implementation-oriented content.
+round 2: searching...
+round 2: fetching https://en.wikipedia.org/wiki/Lottery_scheduling...
+
+warning: potential secrets detected in source: https://en.wikipedia.org/wiki/Lottery_scheduling:
+  line 6: aws-secret-key — wgConfirmE...Edit
+
+(set BNY_SECRETS_BLOCK=1 to block, BNY_SECRETS_SCAN=off to disable)
+  fetched: https://en.wikipedia.org/wiki/Lottery_scheduling (64859 bytes)
+round 2: fetching https://en.wikipedia.org/wiki/Stride_scheduling...
+
+warning: potential secrets detected in source: https://en.wikipedia.org/wiki/Stride_scheduling:
+  line 6: aws-secret-key — wgConfirmE...Edit
+
+(set BNY_SECRETS_BLOCK=1 to block, BNY_SECRETS_SCAN=off to disable)
+  fetched: https://en.wikipedia.org/wiki/Stride_scheduling (74801 bytes)
+round 2: fetching https://engineering.eventbrite.com/...
+  fetched: https://engineering.eventbrite.com/ (165332 bytes)
+round 2: eating 3 source(s)...
+
+warning: potential secrets detected in prompt:
+  line 1364: aws-secret-key — wgConfirmE...Edit
+  line 1963: aws-secret-key — wgConfirmE...Edit
+
+(set BNY_SECRETS_BLOCK=1 to block, BNY_SECRETS_SCAN=off to disable)
+
+[intake]
+  ~ domain/fairness-models.md  (+20, -0)
+  ~ domain/weighted-lottery-allocation.md  (+7, -0)
+  ~ index.md  (+2, -2)
+
+reasoning: Absorbed stride scheduling (Waldspurger 1995) as a deterministic alternative to lottery-based waitlist promotion — directly relevant to fairness algorithms. Updated fairness-models.md with a new Stride Scheduling section including how-it-works, trade-off comparison table vs lottery, and when-to-use guidance for RSVPs. Updated weighted-lottery-allocation.md to add the theoretical foundation from Waldspurger's lottery scheduling (1994) and the non-starvation guarantee. Updated index.md to reflect the new content in fairness-models. Filtered out: Eventbrite homepage (no engineering content, just marketing/nav). The Wikipedia articles' general OS scheduling details were filtered — only the concepts applicable to event capacity allocation were kept.
+
+3 operation(s) (3 updated)
+  applied 3 operation(s)
+regenerating index...
+--- exit: 0 ---
+
+=== STEP: enhance ===
+--- cmd: bny brane enhance --yes event RSVP platform architecture ---
+enhancing: event RSVP platform architecture...
+
+[intake]
+  ~ index.md  (+7, -6)
+  ~ domain/event-rsvp-core.md  (+35, -9)
+  ~ domain/rsvp-state-machine.md  (+18, -14)
+  ~ domain/failure-modes.md  (+15, -15)
+  ~ domain/open-questions.md  (+25, -17)
+  ~ domain/concurrency-patterns-reservations.md  (+11, -9)
+  ~ domain/isolation-levels-and-anomalies.md  (+16, -12)
+  ~ domain/idempotency-and-retry-safety.md  (+7, -5)
+  ~ domain/no-show-problem.md  (+7, -11)
+  ~ domain/capacity-as-inventory.md  (+11, -8)
+  ~ domain/distributed-failure-modes.md  (+6, -6)
+  ~ domain/api-design-patterns.md  (+12, -16)
+  ~ domain/progressive-disclosure-api.md  (+6, -6)
+  ~ domain/error-recovery-ux.md  (+7, -6)
+  ~ domain/fairness-models.md  (+10, -20)
+  ~ domain/weighted-lottery-allocation.md  (+8, -14)
+  ~ domain/privacy-and-visibility.md  (+14, -9)
+  ~ domain/game-theory-rsvps.md  (+13, -11)
+  ~ domain/time-as-design-material.md  (+12, -22)
+  ~ domain/undo-and-forgiveness.md  (+10, -9)
+  ~ domain/notification-timing.md  (+14, -9)
+  ~ domain/real-time-and-live-updates.md  (+6, -6)
+  ~ domain/group-rsvps-and-plus-ones.md  (+18, -16)
+  ~ domain/event-series-recurring.md  (+9, -6)
+  ~ domain/event-discovery-social-graph.md  (+12, -11)
+  ~ domain/organizer-experience-api.md  (+19, -13)
+
+reasoning: Key refinements: (1) Added TL;DR one-liners to all 22 files as required by format spec — none had them. (2) Fixed critical contradiction: event-rsvp-core.md listed only 3 RSVP statuses (accepted/declined/maybe) while rsvp-state-machine.md defined 7 — updated core to reference the full state machine. (3) Reconciled undo-and-forgiveness.md's 'soft decline' with state machine's 'declined→accepted is invalid' by clarifying that the grace period is application-layer only (DB status stays 'accepted' during the window), so no formal state transition is violated. (4) Deduplicated overbooking content — removed the detailed 'Overbooking as Inventory Management' section from no-show-problem.md and replaced with a cross-reference to capacity-as-inventory.md where that content now lives exclusively. (5) Updated open-questions.md to mark 4 questions as resolved (concurrency, REST vs RPC, time zones, promotion model) with links to the files that address them, and expanded remaining questions with specific sub-questions. (6) Added solution cross-references to all 13 failure scenarios in failure-modes.md — each now links to the architectural pattern that addresses it. (7) Expanded event-rsvp-core.md from 30 lines to a proper hub document with cross-references to all major subsystems, architectural decision table, and key invariants. (8) Added cross-references between related files throughout (e.g., concurrency-patterns ↔ isolation-levels, notification-timing ↔ distributed-failures, fairness-models ↔ game-theory). (9) Sharpened vague recommendations to specific ones (e.g., 'polling with ETag is recommended starting point', 'FIFO is recommended default fairness model', 'pessimistic locking is recommended default').
+
+26 operation(s) (26 updated)
+applied 26 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "focus": "event RSVP platform architecture",
+    "rounds": 1,
+    "operations": 26
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/brane/enhance",
+    "timestamp": "2026-03-10T21:37:23.620Z",
+    "duration_ms": 0
+  }
+}
+--- exit: 0 ---
+
+=== STEP: ask-concurrency ===
+--- cmd: bny brane ask what concurrency strategy should we use for RSVP capacity limits? ---
+asking brane...
+## Concurrency Strategy for RSVP Capacity Limits
+
+**Use a layered hybrid approach with pessimistic locking as the default.**
+
+### The Core Recommendation
+
+1. **Database unique constraint on `(user_id, event_id)`** — always present, non-negotiable safety net. Prevents double-RSVPs regardless of application bugs. Also gives you natural idempotency for free.
+
+2. **Pessimistic locking (`SELECT FOR UPDATE`) for RSVP creation** — lock the event row before reading capacity, insert the RSVP, commit. Simple mental model, guarantees correctness, and sufficient for low-to-medium concurrency (which is most events).
+
+```sql
+BEGIN;
+SELECT * FROM events WHERE id = 42 FOR UPDATE;
+-- check accepted_count < capacity
+INSERT INTO rsvps (event_id, user_id, status) VALUES (42, 7, 'accepted');
+UPDATE events SET accepted_count = accepted_count + 1 WHERE id = 42;
+COMMIT;
+```
+
+In Rails: `event.with_lock { ... }` wraps this cleanly.
+
+3. **Optimistic locking (`lock_version`) for organizer capacity changes** — low contention, multiple fields updated, retry on conflict is acceptable.
+
+4. **Serialized queue (Sidekiq) for waitlist promotion** — promotion is already async, naturally serialized, and must be idempotent. Track promotion state per-RSVP (`promoted_at`), not per-job, so re-running is safe.
+
+### Why Not the Alternatives?
+
+- **READ COMMITTED without locking** (Rails/PostgreSQL default): Two transactions both read `accepted = 49`, both insert, now `accepted = 51`. This is the most common reservation overbooking bug in production. You *must* add explicit locking or atomic updates.
+
+- **Optimistic locking for RSVP creation**: Under high contention (popular events), retry storms cause starvation. Users who keep losing the race get a degraded experience.
+
+- **Redis atomic counter (DECR)**: Extremely fast but introduces two sources of truth. A crash between the DECR and the DB write means a lost slot. Only justified for ticket-sale spikes — overkill for typical RSVP workloads.
+
+- **SERIALIZABLE isolation**: Correct without explicit locking, and PostgreSQL's SSI is efficient under low contention. But you must handle serialization failures everywhere. Better as a targeted choice for the promotion path than a global default.
+
+### Critical Detail: `party_size`
+
+If you support group RSVPs, the capacity check must account for `party_size`, not just count rows. The `SELECT FOR UPDATE` path becomes:
+
+```sql
+-- check accepted_count + party_size <= capacity
+```
+
+A group of 4 consuming the last 3 slots must be waitlisted, not partially accepted (unless you explicitly support partial fit).
+
+### The Atomic UPDATE Alternative
+
+Instead of SELECT FOR UPDATE + separate INSERT, you can do:
+
+```sql
+UPDATE events SET accepted_count = accepted_count + 1
+WHERE id = 42 AND accepted_count < capacity;
+```
+
+If `affected_rows == 0`, the event is full. This is simpler and avoids holding a lock during the INSERT, but gives you less control over the error response (you can't distinguish "event full" from "event doesn't exist" without a follow-up query).
+
+### Bottom Line
+
+Start with pessimistic locking + unique constraints. It's correct, simple, and handles the load profile of most events. Add Redis or queue-based processing only when you have measured evidence that `SELECT FOR UPDATE` is a bottleneck — which for most RSVP systems, it never will be.
+
+---
+
+**Sources:**
+- domain/concurrency-patterns-reservations.md (from: Lottery and Stride Scheduling research, Eventbrite engineering)
+- domain/isolation-levels-and-anomalies.md
+- domain/idempotency-and-retry-safety.md
+- domain/event-rsvp-core.md (from: seed.md)
+- domain/failure-modes.md
+- domain/distributed-failure-modes.md
+- domain/group-rsvps-and-plus-ones.md
+- domain/rsvp-state-machine.md
+--- exit: 0 ---
+
+=== STEP: ask-risks ===
+--- cmd: bny brane ask what are the biggest risks in our waitlist promotion design? ---
+asking brane...
+## Biggest Risks in Waitlist Promotion Design
+
+### 1. Silent Promotion (the #1 operational risk)
+A user gets promoted but never sees the notification. The spot is wasted. This is failure scenario #13 — if the email service is down or the user doesn't check in time, the promotion is meaningless. The promotion window compounds this: promoting someone at 11 PM for a 9 AM event is promoting into the void.
+
+**Mitigations not yet built:** Multi-channel notification (email + SMS + push simultaneously), promotion cutoff window (no promotions within N hours of event start), starting the confirmation timer from acknowledgment not send time.
+
+### 2. Promotion Job Crash / Double-Promotion
+The promotion job crashes mid-execution (failure scenario #12). If promotion state is tracked per-job rather than per-RSVP, restarting the job can over-promote — promoting users who should still be waiting. This is the most dangerous non-idempotent operation in the system.
+
+**Fix:** Track `promoted_at` per-RSVP. The promotion query should be inherently idempotent: "find next N unpromoted waitlisted RSVPs where accepted_count < capacity."
+
+### 3. Cancel-Promote-RSVP Race Condition
+User A cancels. The promotion job starts processing. User B submits a new RSVP for the same event. Both the promotion and the new RSVP claim the freed slot. Without `SELECT FOR UPDATE` on the event row, capacity is violated.
+
+This is especially dangerous because the promotion path (background job) and the RSVP creation path (web request) use different code paths that must coordinate on the same capacity lock.
+
+### 4. Group RSVP Partial Fit
+Next on the waitlist is a party of 3, but only 1 slot opened. Do you skip them? Hold the slot open? This is a bin-packing problem with no clean answer. Skipping violates FIFO fairness. Holding wastes perishable capacity. The design doesn't yet specify a default policy.
+
+### 5. Undo Grace Period Interaction
+A user cancels, triggering the 5-minute undo window. During those 5 minutes, the slot is technically still held. If the user undoes, no promotion happens. If they don't, promotion fires. But what if someone new RSVPs during that 5-minute window? The slot's status is ambiguous — is it available or held for undo?
+
+### 6. Thundering Herd on Promotion
+If 5 people cancel simultaneously and real-time updates broadcast "spots available," hundreds of waitlisted users and new users may hit the RSVP endpoint at once. The promotion job is also trying to run. This creates contention on the event row lock.
+
+### 7. Confirmation Window Creates a Mini-Reservation System
+The `promoted` state holds a capacity slot for N hours. If two users are promoted simultaneously for one remaining slot, the first to confirm wins. This reintroduces the same concurrency problems as RSVP creation, at a smaller scale, in a less-tested code path.
+
+### 8. Testing Gap
+Concurrency bugs in promotion are invisible in single-threaded test suites. The cancel-promote-RSVP race, double-promotion, and confirmation window races all require multi-threaded integration tests or load testing to surface. This is the gap between "works in dev" and "works in production."
+
+---
+
+**Priority order for mitigation:** #2 (idempotent promotion) and #3 (race condition locking) are correctness bugs that silently corrupt data. #1 (silent promotion) is the most common real-world failure. The rest are edge cases that matter at scale.
+
+---
+
+Sources:
+- domain/failure-modes.md (from: seed.md)
+- domain/notification-timing.md (from: seed.md)
+- domain/idempotency-and-retry-safety.md (from: seed.md)
+- domain/concurrency-patterns-reservations.md (from: seed.md, Lottery and Stride Scheduling research)
+- domain/rsvp-state-machine.md (from: seed.md)
+- domain/distributed-failure-modes.md (from: seed.md)
+- domain/group-rsvps-and-plus-ones.md (from: seed.md)
+- domain/undo-and-forgiveness.md (from: seed.md)
+- domain/real-time-and-live-updates.md (from: seed.md)
+- domain/isolation-levels-and-anomalies.md (from: seed.md)
+- domain/open-questions.md
+--- exit: 0 ---
+
+=== STEP: ask-endpoints ===
+--- cmd: bny brane ask what API endpoints do we need for a complete RSVP system? ---
+asking brane...
+# API Endpoints for a Complete RSVP System
+
+## Core RSVP Operations
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/events/:id/rsvps` | Create RSVP (system determines accepted vs waitlisted) |
+| `GET` | `/events/:id/rsvps` | List attendees (filtered by status, paginated, visibility-scoped) |
+| `GET` | `/rsvps/:id` | Get single RSVP detail |
+| `PATCH` | `/rsvps/:id` | Update RSVP (change party_size, note, notification preference) |
+| `DELETE` | `/rsvps/:id` | Cancel RSVP (returns `undo_token` + `undo_expires_at`) |
+| `POST` | `/rsvps/:id/undo` | Undo cancellation within grace window (`?token=xxx`) |
+| `POST` | `/rsvps/:id/confirm` | Confirm promotion from waitlist (accepts the `promoted` state) |
+
+Key design: `POST /events/:id/rsvps` never accepts a `status` parameter. The server determines accepted vs waitlisted based on capacity. Waitlisting returns `201 Created` with `status: waitlisted`, not an error.
+
+## Event Management
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/events` | Create event |
+| `GET` | `/events` | List events (with filters: geo, temporal, capacity, category) |
+| `GET` | `/events/:id` | Get event detail (includes `spots_remaining`, lifecycle phase) |
+| `PATCH` | `/events/:id` | Update event (time, location, capacity — capacity reduction triggers special flow) |
+| `DELETE` | `/events/:id` | Cancel event (destructive — requires confirmation pattern) |
+| `POST` | `/events/:id/clone` | Duplicate event for recurring/repeat use |
+
+## Organizer Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `PATCH` | `/events/:id/rsvps/:rsvp_id` | Organizer override: manually accept/decline/waitlist a user |
+| `POST` | `/events/:id/actions/promote-all` | Async bulk promotion (returns job ID) |
+| `POST` | `/events/:id/actions/message` | Message all or filtered attendees |
+| `GET` | `/events/:id/rsvps/export` | Export attendee list (CSV/PDF) |
+| `GET` | `/events/:id/analytics` | RSVP conversion, no-show rate, cancellation patterns |
+| `POST` | `/events/:id/rsvps/:rsvp_id/no-show` | Mark no-show post-event |
+
+### Capacity Reduction Flow
+`PATCH /events/:id` with reduced capacity should:
+1. Return a preview of affected RSVPs before confirming
+2. Require explicit confirmation parameter
+3. Record `capacity_change` reason in audit trail
+
+## User Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/users/me/rsvps` | My RSVPs across all events |
+| `GET` | `/users/me/events` | Events I'm attending |
+| `PATCH` | `/users/me` | Update profile, notification preferences |
+| `DELETE` | `/users/me` | Account deletion (soft delete, GDPR cascade) |
+
+## Webhooks & Real-Time
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/webhooks` | Register webhook (event types: rsvp.created, capacity.reached, event.cancelled) |
+| `GET` | `/webhooks` | List registered webhooks |
+| `DELETE` | `/webhooks/:id` | Remove webhook |
+| `GET` | `/events/:id/stream` | SSE endpoint for live capacity updates (or ActionCable channel) |
+
+## Discovery (Platform-Level, Optional)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/events/search` | Full-text + geo + temporal + social search |
+| `GET` | `/events/trending` | Popular events |
+| `GET` | `/events/recommended` | Personalized recommendations (opt-in only) |
+| `GET` | `/events?similar_to=:id` | Similar events |
+
+## Supporting Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/events/:id/waitlist` | Waitlist position and count (privacy-scoped) |
+| `POST` | `/batch` | Batch operations envelope (multiple actions in one request) |
+| `GET` | `/jobs/:id` | Poll async job status (for bulk operations) |
+
+## Idempotency Notes
+
+- `POST /events/:id/rsvps` is naturally idempotent via `(user_id, event_id)` unique constraint — second POST returns `200` with existing RSVP
+- Support `Idempotency-Key` header for non-naturally-idempotent mutations
+- All responses include `Retry-After` on 429/503
+
+## Progressive Disclosure
+
+Level 1 (minimal): `POST /events/:id/rsvps` with empty body — just works.
+Level 2 (options): Add `party_size`, `note`.
+Level 3 (power): Add `idempotency_key`, `notification_preference`, webhook callbacks.
+
+## What's Missing (Open Questions)
+
+- **Recurring events**: Series-level RSVP endpoints (`POST /series/:id/rsvps`?) depend on whether series is a first-class entity
+- **Payments/deposits**: Would add `/events/:id/rsvps/:id/payment` and saga orchestration
+- **Multi-organizer RBAC**: Permission management endpoints for organizer roles
+
+---
+
+**Sources:**
+- domain/api-design-patterns.md (from: seed.md)
+- domain/progressive-disclosure-api.md (from: seed.md)
+- domain/organizer-experience-api.md (from: seed.md)
+- domain/rsvp-state-machine.md (from: seed.md)
+- domain/undo-and-forgiveness.md (from: seed.md)
+- domain/error-recovery-ux.md (from: seed.md)
+- domain/idempotency-and-retry-safety.md (from: seed.md)
+- domain/privacy-and-visibility.md (from: seed.md)
+- domain/group-rsvps-and-plus-ones.md (from: seed.md)
+- domain/real-time-and-live-updates.md (from: seed.md)
+- domain/event-discovery-social-graph.md (from: seed.md)
+- domain/event-series-recurring.md (from: seed.md)
+- domain/capacity-as-inventory.md (from: seed.md)
+- domain/open-questions.md (from: seed.md)
+- domain/event-rsvp-core.md (from: seed.md)
+--- exit: 0 ---
+
+=== STEP: ask-cancel ===
+--- cmd: bny brane ask how should we handle event cancellation and notifications? ---
+asking brane...
+## Event Cancellation and Notifications
+
+### Event Cancellation Flow
+
+Event cancellation is a **destructive, high-impact operation** that affects every attendee simultaneously. It needs proportional friction and careful orchestration.
+
+**Organizer-side:**
+- Require explicit confirmation: "Type the event name to confirm" pattern — a single misclick shouldn't cancel an event with 200 attendees
+- Record cancellation in the audit trail with actor and reason
+- Support **un-cancellation** (soft cancel): if the event is restored, all RSVPs should be auto-restored to their pre-cancellation status, using the audit trail to determine what those were (failure scenario #7)
+
+**RSVP state implications:**
+- Event cancellation is an event-level state, not an RSVP state transition. Individual RSVPs don't move to `declined` — they're frozen in place so un-cancellation can restore them
+- If cancellation is permanent (hard cancel), then RSVPs transition to `declined` with reason `event_cancelled`, accepted counts decrement, but no waitlist promotion triggers (there's nothing to promote into)
+
+### Notification Strategy for Cancellation
+
+Cancellation notifications are **immediate and multi-channel** — this is the one case where you arguably should be aggressive:
+
+| Channel | Use | Rationale |
+|---------|-----|-----------|
+| Email | Always | Reliable record, but slow to read |
+| Push | If available | Fast delivery for app users |
+| SMS | For imminent events (< 24h) | Intrusive but justified when someone might already be en route |
+| In-app | Always | Catch users currently browsing |
+
+**Critical design decision from the open questions:** Should cancellation block until all attendees are notified? **No.** Notifications are best-effort with retry. The event record is the source of truth. A user hitting the event page should see "This event has been cancelled" regardless of whether their notification was delivered. Queue notifications for retry across all channels — silent cancellation (failure scenario #13) is worse than delayed notification.
+
+### Notification Timing for Other Scenarios
+
+Beyond cancellation, the notification system should handle:
+
+1. **RSVP confirmed** — immediate, email
+2. **Waitlisted** — immediate, with position number
+3. **Promoted from waitlist** — time-sensitive, multi-channel simultaneous. Start the confirmation window timer from **acknowledgment**, not send time (handles offline/reconnection)
+4. **Promotion cutoff** — no promotions within 12h of event start. Better to slightly overbook than promote into the void
+5. **Event reminders** — 24h and 1h before, respect quiet hours
+6. **Event changes** (time/location) — immediate, may require re-confirmation
+7. **Waitlist closed** — post-event, notify remaining waitlisted users they won't be promoted (often forgotten, but important for UX closure)
+
+### Architectural Principles
+
+- **Never block the write path on notifications.** The RSVP/event mutation succeeds or fails independently of email/SMS delivery
+- **Batch when simultaneous.** If 5 cancellations happen at once, batch promotion notifications rather than sending rapid-fire individual messages (prevents thundering herd on the confirmation endpoint)
+- **Deduplication is mandatory.** At-least-once delivery + idempotent handlers. Track sent notifications by message ID to prevent double-sends on job retries
+- **Circuit breakers on external services.** If the email provider is down, queue and retry — don't let it cascade into API failures
+
+### For Recurring Events
+
+Cancelling one instance vs. cancelling the series requires different notification copy and different scope. "Next Tuesday's meetup is cancelled" vs. "The Tuesday meetup series has ended." The system must prompt the organizer to choose and notify accordingly.
+
+---
+
+Sources:
+- domain/notification-timing.md (from: seed.md)
+- domain/failure-modes.md (from: seed.md)
+- domain/rsvp-state-machine.md (from: seed.md)
+- domain/distributed-failure-modes.md (from: seed.md)
+- domain/undo-and-forgiveness.md (from: seed.md)
+- domain/open-questions.md (from: seed.md)
+- domain/organizer-experience-api.md (from: seed.md)
+- domain/error-recovery-ux.md (from: seed.md)
+- domain/event-series-recurring.md (from: seed.md)
+- domain/real-time-and-live-updates.md (from: seed.md)
+- domain/idempotency-and-retry-safety.md (from: seed.md)
+--- exit: 0 ---
+
+=== STEP: ask-edge-cases ===
+--- cmd: bny brane ask what edge cases should our tests cover? ---
+asking brane...
+# Edge Cases Your Tests Should Cover
+
+## Concurrency & Capacity
+
+1. **Last-spot double-insert** — Two simultaneous RSVPs for the final spot. Only one should be accepted; the other waitlisted. Requires multi-threaded test.
+2. **Cancel-promote-RSVP race** — User A cancels, triggering promotion. User B RSVPs simultaneously. Only one should get the freed slot.
+3. **Capacity reduction below accepted count** — Reduce capacity from 100 to 50 with 80 accepted. Verify correct number bumped, audit trail records reason as `capacity_change`.
+4. **Capacity increase after reduction** — Auto-restore bumped RSVPs before promoting from waitlist.
+5. **Zero-capacity event** — Set capacity to 0. All accepted RSVPs must be handled through the capacity-reduction flow.
+
+## State Machine Transitions
+
+6. **Every valid transition** — `pending→accepted`, `pending→waitlisted`, `accepted→declined`, `waitlisted→promoted`, `promoted→accepted`, `promoted→expired`, `promoted→declined`, `waitlisted→declined`, `expired→waitlisted`, `accepted→no_show`.
+7. **Every invalid transition rejected** — `declined→accepted`, `accepted→waitlisted`, `no_show→accepted`, any transition on a past event (except to `no_show`).
+8. **Re-RSVP after decline** — Creates a new RSVP, may be waitlisted. Original position lost.
+9. **Promotion confirmation timeout** — Promoted user doesn't confirm within window. Status transitions to `expired`, next waitlisted user promoted.
+10. **Two simultaneous promotion confirmations, one slot** — First to confirm wins; second gets re-waitlisted or declined.
+
+## Undo & Forgiveness
+
+11. **Undo within grace period** — Cancel then undo within 5 minutes. RSVP restored to `accepted`, no waitlist promotion triggered.
+12. **Undo after grace period expires** — Returns error; user must re-RSVP.
+13. **Group RSVP undo** — Cancelling a group RSVP then undoing restores all party members.
+
+## Idempotency & Retries
+
+14. **Duplicate RSVP creation** — Same user, same event. Second request returns existing RSVP (200), not error.
+15. **Promotion job crash and restart** — Job promotes 3 of 5 users, crashes, restarts. Only remaining 2 promoted, no double-promotions.
+16. **Duplicate cancel request** — Already-cancelled RSVP cancelled again. No-op, no error.
+
+## Temporal Edge Cases
+
+17. **RSVP before registration opens** — Rejected with clear error.
+18. **RSVP after registration closes** — Rejected with clear error including `closed_at` timestamp.
+19. **RSVP at exact boundary** — Submit at `registration_closes_at` timestamp. Define and test whether this is accepted or rejected.
+20. **DST nonexistent time** — Event scheduled at 2 AM on spring-forward day. System handles via IANA tz database.
+21. **Past event state transitions** — Only `no_show` marking allowed after event ends.
+
+## Group RSVPs & Party Size
+
+22. **Party size exceeds remaining capacity** — Group of 3, only 2 spots. Verify behavior (skip, partial, or waitlist entire group).
+23. **Party size validation** — Zero, negative, exceeding max. All rejected with 400.
+24. **Primary cancels group** — All guests' spots released, correct number of waitlist promotions triggered.
+25. **Capacity check accounts for party_size** — Remaining = capacity - sum(accepted party_sizes), not just count of RSVPs.
+
+## Data Integrity
+
+26. **Deleted user cascade** — Soft-delete user. RSVPs soft-deleted. Accepted count decremented. Waitlist promotion triggered for freed spots.
+27. **Unique constraint enforcement** — `(user_id, event_id)` prevents duplicate RSVPs at DB level regardless of application logic.
+28. **Accepted count never exceeds capacity** — Property test: after any sequence of operations, `accepted_count <= capacity` holds.
+
+## API Behavior
+
+29. **Waitlisting returns 201, not 422** — RSVP created with `status: waitlisted` is a success, not an error.
+30. **Status is server-determined** — Client-supplied `status` parameter in POST is ignored.
+31. **Attendee list respects visibility settings** — Default privacy-by-default (organizer only). Non-organizer gets filtered response.
+32. **Rate limiting returns 429 with Retry-After header**.
+
+## Notification Decoupling
+
+33. **RSVP succeeds when email service is down** — Notification failure never blocks the write path.
+34. **Promotion with notification failure** — RSVP record updated to `promoted` even if notification fails. Notification queued for retry.
+
+## The Testing Gap to Watch
+
+Per the knowledge base: most test suites run single-threaded, making concurrency bugs invisible. You need:
+- **Multi-threaded integration tests** for items 1, 2, 10
+- **Property-based tests** for invariant 28
+- **Load tests** for thundering herd (registration open at noon, many simultaneous RSVPs)
+
+---
+
+Sources:
+- domain/failure-modes.md (from: seed.md)
+- domain/concurrency-patterns-reservations.md (from: seed.md)
+- domain/rsvp-state-machine.md (from: seed.md)
+- domain/isolation-levels-and-anomalies.md (from: seed.md)
+- domain/idempotency-and-retry-safety.md (from: seed.md)
+- domain/undo-and-forgiveness.md (from: seed.md)
+- domain/group-rsvps-and-plus-ones.md (from: seed.md)
+- domain/time-as-design-material.md (from: seed.md)
+- domain/api-design-patterns.md (from: seed.md)
+- domain/error-recovery-ux.md (from: seed.md)
+- domain/notification-timing.md (from: seed.md)
+- domain/distributed-failure-modes.md (from: seed.md)
+- domain/privacy-and-visibility.md (from: seed.md)
+- domain/open-questions.md (from: seed.md)
+- domain/event-rsvp-core.md (from: seed.md)
+--- exit: 0 ---
+
+=== STEP: brane-tldr ===
+--- cmd: bny brane tldr ---
+
+🐰 brane  25 files, 1 dirs
+
+domain/
+  failure-modes.md                      A catalog of concrete failure scenarios with cross-references to the architectural patterns that address each one.
+  no-show-problem.md                    Free events see 30-50% no-show rates — the biggest operational failure in RSVP systems is not technical but behavioral.
+  event-rsvp-core.md                    A Rails API for managing events with RSVP tracking, capacity limits, and automatic waitlist promotion — the foundational entities and behaviors that every other file in this knowledge base builds on.
+  weighted-lottery-allocation.md        A weighted lottery gives every eligible person a chance proportional to how many fairness criteria they satisfy — more nuanced than strict priority or pure randomness.
+  error-recovery-ux.md                  The best APIs tell you exactly what went wrong and what to do next — every error response should answer: what happened, why, and what can the user do.
+  fairness-models.md                    No allocation system is universally fair — the choice of fairness model is a values statement about the community, not a technical decision.
+  capacity-as-inventory.md              Event capacity is perishable inventory — an empty seat at a past event has zero value, justifying more aggressive management than durable goods.
+  api-design-patterns.md                A great event API is one developers can guess correctly before reading the docs.
+  notification-timing.md                When and how users are notified shapes their experience more than the underlying data model — a silent promotion is a wasted promotion.
+  rsvp-state-machine.md                 Every RSVP bug is a state transition that shouldn't have been allowed.
+  time-as-design-material.md            Every feature in an RSVP system interacts with time in non-obvious ways — time zones, lifecycle phases, and registration windows are architectural concerns, not display concerns.
+  undo-and-forgiveness.md               The best UX assumes users will make mistakes — a 5-minute undo window for cancellations dramatically reduces regret-driven support tickets without compromising fairness.
+  idempotency-and-retry-safety.md       Every mutation in a distributed RSVP system must be safe to retry, because "did my request succeed?" is sometimes unanswerable.
+  event-discovery-social-graph.md       RSVP data is a social graph in disguise — co-attendance patterns reveal interests and relationships, but analyzing them conflicts with privacy-by-default.
+  event-series-recurring.md             The simplest RSVP model treats events as isolated instances, but recurring events (weekly meetups, annual conferences, multi-session workshops) require either a first-class series entity or carefully managed individual events.
+  game-theory-rsvps.md                  RSVP systems create strategic incentives that rational users will exploit — the rules you choose determine the equilibrium behavior of your users.
+  progressive-disclosure-api.md         A great API serves both the 5-minute integration and the 5-month deep build — by making simple things simple and complex things possible.
+  privacy-and-visibility.md             Attendee list visibility is a safety issue, not just a preference — visible lists reveal planned location and time, creating stalking risk.
+  concurrency-patterns-reservations.md  Multiple actors competing for finite capacity requires explicit concurrency control — the default (READ COMMITTED without locking) silently allows overbooking.
+  group-rsvps-and-plus-ones.md          A group RSVP for N people consumes N capacity slots, creating partial-fit problems that don't exist in the one-person-one-RSVP model.
+  real-time-and-live-updates.md         Users staring at a full event page want to know the instant a spot opens — but real-time capacity displays can cause more problems than they solve.
+  organizer-experience-api.md           Organizers create the supply — their needs are batch-oriented, analytics-heavy, and dashboard-shaped, fundamentally different from the single-event attendee experience.
+  open-questions.md                     Remaining unresolved decisions not yet addressed by other files in this knowledge base.
+  distributed-failure-modes.md          The RSVP system becomes a distributed system the moment you add background jobs, email services, or multiple app servers — and distributed systems fail in ways that single-process systems cannot.
+  isolation-levels-and-anomalies.md     The isolation level determines which concurrency bugs are possible — READ COMMITTED (Rails/PostgreSQL default) allows the most common reservation overbooking bug.
+
+lenses: all (on)
+sources: 14 stashed (last: 2026-03-10)
+--- exit: 0 ---
+
+=== STEP: proposal ===
+--- cmd: bny proposal --count 2 --yes event RSVP API with capacity management and waitlists ---
+proposing...
+  + bny/proposals/capacity-safe-rsvp-creation-with-waitlist-promotion.md — Capacity-Safe RSVP Creation With Waitlist Promotion
+  + bny/proposals/undo-grace-period-and-promotion-confirmation-window.md — Undo Grace Period And Promotion Confirmation Window
+
+2 proposal(s) created
+--- exit: 0 ---
+
+=== STEP: accept ===
+--- cmd: bny proposal accept --yes capacity-safe-rsvp-creation-with-waitlist-promotion ---
+bny proposal accept: not found: --yes capacity-safe-rsvp-creation-with-waitlist-promotion
+
+available proposals:
+  capacity-safe-rsvp-creation-with-waitlist-promotion
+  undo-grace-period-and-promotion-confirmation-window
+--- exit: 1 ---
+
+=== STEP: build ===
+--- cmd: bny build --yes Event RSVP API: RESTful endpoints for events and RSVPs with capacity limits, automatic waitlist promotion, and concurrency-safe reservation handling ---
+
+[bny build] Event RSVP API: RESTful endpoints for events and RSVPs with capacity limits, automatic waitlist promotion, and concurrency-safe reservation handling
+  max-iter: 5
+
+
+--- specify ---
+[specify] generating spec for: Event RSVP API: RESTful endpoints for events and RSVPs with capacity limits, automatic waitlist promotion, and concurrency-safe reservation handling
+{
+  "status": "success",
+  "result": {
+    "feature_name": "001-event-rsvp-api",
+    "feature_num": "001",
+    "spec_file": "/Users/ahoward/gh/ahoward/bunny/demos/event-rsvp/specs/001-event-rsvp-api/spec.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/specify",
+    "timestamp": "2026-03-10T21:42:20.402Z",
+    "duration_ms": 0
+  }
+}
+
+--- challenge (gemini) ---
+[challenge] hardening spec for: 001-event-rsvp-api
+[challenge] wrote /Users/ahoward/gh/ahoward/bunny/demos/event-rsvp/specs/001-event-rsvp-api/challenge.md
+{
+  "status": "success",
+  "result": {
+    "feature": "001-event-rsvp-api",
+    "challenge_file": "/Users/ahoward/gh/ahoward/bunny/demos/event-rsvp/specs/001-event-rsvp-api/challenge.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/challenge",
+    "timestamp": "2026-03-10T21:43:01.894Z",
+    "duration_ms": 0
+  }
+}
+
+--- plan ---
+[plan] generating plan for: 001-event-rsvp-api
+{
+  "status": "success",
+  "result": {
+    "feature": "001-event-rsvp-api",
+    "plan_file": "/Users/ahoward/gh/ahoward/bunny/demos/event-rsvp/specs/001-event-rsvp-api/plan.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/plan",
+    "timestamp": "2026-03-10T21:45:11.406Z",
+    "duration_ms": 0
+  }
+}
+
+--- tasks ---
+[tasks] generating tasks for: 001-event-rsvp-api
+{
+  "status": "success",
+  "result": {
+    "feature": "001-event-rsvp-api",
+    "tasks_file": "/Users/ahoward/gh/ahoward/bunny/demos/event-rsvp/specs/001-event-rsvp-api/tasks.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/tasks",
+    "timestamp": "2026-03-10T21:46:21.990Z",
+    "duration_ms": 0
+  }
+}
+
+--- test-gen (gemini) ---
+[test-gen] generating tests for: 001-event-rsvp-api (generic/unknown)
+  + tests/contract/events_api_spec.rb
+  + tests/property/rsvp_capacity_spec.rb
+  + tests/golden/api_responses_spec.rb
+  + tests/boundary/edge_cases_spec.rb
+  + tests/fixtures/golden_event_response.json (fixture)
+
+suggested dependencies: rspec-rails, factory_bot_rails, faker
+  install with: echo add -d rspec-rails factory_bot_rails faker
+
+[test-gen] wrote 5 file(s)
+{
+  "status": "success",
+  "result": {
+    "feature": "001-event-rsvp-api",
+    "files": [
+      "tests/contract/events_api_spec.rb",
+      "tests/property/rsvp_capacity_spec.rb",
+      "tests/golden/api_responses_spec.rb",
+      "tests/boundary/edge_cases_spec.rb"
+    ],
+    "fixtures": [
+      "tests/fixtures/golden_event_response.json"
+    ],
+    "dependencies": [
+      "rspec-rails",
+      "factory_bot_rails",
+      "faker"
+    ]
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/test-gen",
+    "timestamp": "2026-03-10T21:47:08.228Z",
+    "duration_ms": 0
+  }
+}
+
+--- review (gemini) ---
+Here is my antagonist review of the Event RSVP API specification and implementation plan. 
+
+### 1. Missing Edge Cases and Boundary Conditions
+- **Problem**: **Undo Grace Period vs. Capacity Reduction Race Condition.** User A cancels their RSVP, freeing 1 spot. The waitlist promotion is delayed by the 5-minute grace period. During this window, the organizer notices the 1 open spot and reduces the event capacity by 1 (which is allowed since `accepted_count` just dropped). Minutes later, User A calls `POST /rsvps/:id/undo`. The `RsvpUndoer` attempts to restore the status to `accepted` and increment `accepted_count`. This will violate the database `accepted_count <= capacity` CHECK constraint.
+- **Impact**: **Critical**. The user receives an unhandled 500 Internal Server Error when attempting a valid undo, and their RSVP is permanently lost.
+- **Fix**: The `RsvpUndoer` must explicitly check `event.spots_remaining >= rsvp.party_size` before restoring the RSVP, or rescue `ActiveRecord::RecordInvalid`. If capacity is gone, it must return a 422 Unprocessable Entity with a clear message (e.g., "Event capacity was reduced and is no longer available").
+
+- **Problem**: **No Phase 1 workaround for emergency capacity reduction.** The spec states that reducing capacity below `accepted_count` returns a 409 Conflict. The proposed `confirm_capacity_reduction` action is deferred to Phase 2. 
+- **Impact**: **High**. If a venue suddenly reduces available space (e.g., safety hazard, room change), the organizer is completely blocked from updating their event in the system.
+- **Fix**: Provide a documented Phase 1 workaround (e.g., the organizer must manually cancel specific RSVPs before reducing capacity). Ensure this exact flow is tested in `spec/requests/events_spec.rb`.
+
+### 2. Security Vulnerabilities and Attack Vectors
+- **Problem**: **Pessimistic Lock DoS (Denial of Service).** `RsvpCreator` uses `Event.lock("FOR UPDATE")`, which locks the event row. A malicious actor could spam `POST /events/:id/rsvps` with varying (or invalid) payloads. This forces the database to repeatedly acquire an exclusive lock on the event row, effectively blocking legitimate users from RSVPing.
+- **Impact**: **High**. A single script can take down the registration for a high-profile event.
+- **Fix**: Implement aggressive application-level rate limiting (e.g., via `Rack::Attack`) on the `POST /events/:id/rsvps` endpoint, keyed by IP and `user_id`. Furthermore, perform all input validation (like `party_size`, registration windows) *before* acquiring the database lock.
+
+### 3. Error Handling Gaps
+- **Problem**: **Missing transactional boundaries for external side-effects.** Waitlist promotion is inherently asynchronous. If the system eventually hooks up email/push notifications (implied by "promoted user is notified" in US-005), doing this inside or immediately following the active ActiveRecord transaction without safeguards is dangerous.
+- **Impact**: **Medium**. If the database transaction rolls back, but an email has already been fired, the user is told they have a spot when they do not.
+- **Fix**: Explicitly specify in `WaitlistPromoter` that any future notification logic MUST use an Outbox pattern or `after_commit` hooks to guarantee notifications only fire if the database state is durably saved.
+
+### 4. Missing Test Scenarios
+- **Problem**: **No test coverage for Waitlist Starvation.** The spec states "Skip groups that don't fit". 
+- **Impact**: **High**. This is a complex logic path that breaks standard FIFO assumptions.
+- **Fix**: Add a specific integration test in `spec/services/waitlist_promoter_spec.rb`: Event has 1 spot. Waitlist Position 1 has `party_size: 2`. Waitlist Position 2 has `party_size: 1`. Assert that Position 2 is promoted and Position 1 remains waitlisted.
+
+### 5. Ambiguous or Contradictory Requirements
+- **Problem**: **GDPR Requirement contradicts the Database Schema.** E-008 states "User deletes account... Personal data scrubbed per GDPR". However, the `User` model specifies `has_many :rsvps, dependent: :restrict_with_error`. This means a user who has RSVPs *cannot* be deleted. Furthermore, the migrations do not include any soft-delete mechanisms (e.g., `deleted_at`).
+- **Impact**: **High**. The system cannot fulfill its own data integrity and privacy requirements.
+- **Fix**: Either add a `deleted_at` soft-delete column to the `users` table and update the `dependent` logic, or define an anonymization service that scrambles the user's `name` and `email` while leaving the ID intact to preserve FK constraints.
+
+### 6. Performance Concerns at Scale
+- **Problem**: **O(N) Write Amplification on Waitlist Cancellation.** Task T026 explicitly states: "recalculate waitlist_position for remaining waitlisted". If 10,000 people are on a waitlist and the person at position #2 cancels, the system will execute 9,998 row updates. In PostgreSQL, due to MVCC, this creates 9,998 dead tuples and massive table bloat for a single cancellation.
+- **Impact**: **Critical**. Canceling a waitlisted RSVP on a popular event will stall the database and exhaust connections.
+- **Fix**: **Do not recalculate waitlist positions.** Allow gaps in the sequence. `WaitlistPromoter` simply queries `ORDER BY waitlist_position ASC`. A sequence of `[1, 3, 4, 8]` is just as valid for FIFO processing as `[1, 2, 3, 4]`. Update `app/services/rsvp_canceller.rb` to just drop the user from the waitlist and leave the remaining numbers untouched.
+
+- **Problem**: **Poor Pagination Indexing.** `EventsController#index` uses cursor pagination on `(created_at, id)`. Users browse events to see what's upcoming, not what the organizer drafted most recently.
+- **Impact**: **Medium**. Terrible UX and inefficient queries if users have to paginate through hundreds of past events.
+- **Fix**: Change the default API sort order and cursor index to `(start_time, id)`. Add a composite database index on `events(start_time, id)` to support this.
+
+### 7. Assumptions That Should Be Made Explicit
+- **Problem**: **Waitlist Starvation Acceptability.** The "skip groups that don't fit" rule mathematically guarantees that a party of 4 at position #1 might sit there forever while parties of 1 repeatedly bypass them as single spots open up.
+- **Impact**: **Low/Medium**. Depending on the business context, users may view this as a catastrophic bug ("I was first on the waitlist but didn't get in!").
+- **Fix**: Explicitly document this known starvation behavior in `bny/decisions.md` as an accepted trade-off to maximize event capacity. 
+
+### 8. Data Validation Gaps
+- **Problem**: **Missing IANA Time Zone Validation.** The spec mandates `time_zone: string (IANA identifier, required)`. However, the `Event` model implementation plan only includes `presence: true`.
+- **Impact**: **Medium**. If an API client sends an invalid timezone string (e.g., "EST" instead of "America/New_York"), it will bypass validation but cause fatal 500 errors later when the system attempts to perform DST gap checks (Task T044).
+- **Fix**: Add strict inclusion validation to `app/models/event.rb` using `TZInfo::Timezone.all_identifiers`.
+
+--- implement (claude, ralph, max-iter 5) ---
+**All 16 tests pass, 0 failures.** Implementation complete.
+
+Summary of what was done:
+
+- **Root cause of E-001 failure**: Thread sessions saw empty routes because `eager_load = false` meant routes were lazy-loaded and not thread-safe. Setting `config.eager_load = true` in test.rb fixed it — all 5 concurrent threads now properly find the event and create RSVPs.
+
+- **Cleanup**: Removed all `$stderr.puts` debug statements from `rsvp_creator.rb` and `rails_helper.rb`, removed temp test files.
+
+- **Final state**: All 53 tasks complete (T001-T053), all 16 antagonist tests green, `./dev/post_flight` passes, decisions logged to `bny/decisions.md`.
+
+--- verify (gemini) ---
+[verify] post-implementation review for: 001-event-rsvp-api
+[verify] wrote /Users/ahoward/gh/ahoward/bunny/demos/event-rsvp/specs/001-event-rsvp-api/verify.md
+{
+  "status": "success",
+  "result": {
+    "feature": "001-event-rsvp-api",
+    "verify_file": "/Users/ahoward/gh/ahoward/bunny/demos/event-rsvp/specs/001-event-rsvp-api/verify.md"
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/verify",
+    "timestamp": "2026-03-10T22:29:56.992Z",
+    "duration_ms": 0
+  }
+}
+
+--- ruminate ---
+[ruminate] feature: 001-event-rsvp-api
+ruminating on: 001-event-rsvp-api...
+
+[intake]
+  + domain/implementation-patterns-rails.md  (63 lines)
+  + domain/testing-taxonomy.md  (49 lines)
+  ~ domain/concurrency-patterns-reservations.md  (+28, -4)
+  ~ domain/undo-and-forgiveness.md  (+13, -4)
+  ~ domain/group-rsvps-and-plus-ones.md  (+12, -1)
+  ~ domain/open-questions.md  (+12, -0)
+  ~ index.md  (+3, -0)
+
+reasoning: Extracted 4 categories of durable knowledge: (1) NEW: Implementation patterns file covering service-layer Result objects, transaction boundaries, two-layer idempotency, headcount vs record count, and undo soft-state — these are reusable patterns not captured in the theoretical worldview. (2) NEW: Testing taxonomy file documenting the 4 test types (contract, property, boundary, golden) and infrastructure decisions (truncation vs transactions, thread-safe requests) — the worldview had no testing guidance. (3) UPDATED: Concurrency patterns file with Rails-specific implementation notes and headcount counter pattern — theory was solid but lacked concrete Rails code patterns. (4) UPDATED: Undo file with implementation details (token+job pattern, race resolution, idempotency guards). (5) UPDATED: Group RSVPs with the actual skip-and-retain algorithm. (6) UPDATED: Open questions to move resolved items and add newly discovered gaps (token comparison, auth storage). (7) UPDATED: Index to include new implementation section. Skipped: session-specific details (branch names, task completion status), ephemeral build state, information already well-captured.
+
+7 operation(s) (2 new, 5 updated)
+applied 7 operation(s)
+regenerating index...
+{
+  "status": "success",
+  "result": {
+    "feature": "001-event-rsvp-api",
+    "operations": [
+      {
+        "action": "create",
+        "path": "domain/implementation-patterns-rails.md"
+      },
+      {
+        "action": "create",
+        "path": "domain/testing-taxonomy.md"
+      },
+      {
+        "action": "update",
+        "path": "domain/concurrency-patterns-reservations.md"
+      },
+      {
+        "action": "update",
+        "path": "domain/undo-and-forgiveness.md"
+      },
+      {
+        "action": "update",
+        "path": "domain/group-rsvps-and-plus-ones.md"
+      },
+      {
+        "action": "update",
+        "path": "domain/open-questions.md"
+      },
+      {
+        "action": "update",
+        "path": "index.md"
+      }
+    ],
+    "reasoning": "Extracted 4 categories of durable knowledge: (1) NEW: Implementation patterns file covering service-layer Result objects, transaction boundaries, two-layer idempotency, headcount vs record count, and undo soft-state — these are reusable patterns not captured in the theoretical worldview. (2) NEW: Testing taxonomy file documenting the 4 test types (contract, property, boundary, golden) and infrastructure decisions (truncation vs transactions, thread-safe requests) — the worldview had no testing guidance. (3) UPDATED: Concurrency patterns file with Rails-specific implementation notes and headcount counter pattern — theory was solid but lacked concrete Rails code patterns. (4) UPDATED: Undo file with implementation details (token+job pattern, race resolution, idempotency guards). (5) UPDATED: Group RSVPs with the actual skip-and-retain algorithm. (6) UPDATED: Open questions to move resolved items and add newly discovered gaps (token comparison, auth storage). (7) UPDATED: Index to include new implementation section. Skipped: session-specific details (branch names, task completion status), ephemeral build state, information already well-captured."
+  },
+  "errors": null,
+  "meta": {
+    "path": "/bny/ruminate",
+    "timestamp": "2026-03-10T22:36:43.840Z",
+    "duration_ms": 0
+  }
+}
+
+[bny build] complete: Event RSVP API: RESTful endpoints for events and RSVPs with capacity limits, automatic waitlist promotion, and concurrency-safe reservation handling
+--- exit: 0 ---
+
+=== STEP: dev-test ===
+--- cmd: ./dev/test ---
+../Users/ahoward/.rbenv/versions/3.4.5/lib/ruby/gems/3.4.0/gems/rspec-rails-8.0.3/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+../Users/ahoward/.rbenv/versions/3.4.5/lib/ruby/gems/3.4.0/gems/rspec-rails-8.0.3/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+.../Users/ahoward/.rbenv/versions/3.4.5/lib/ruby/gems/3.4.0/gems/rspec-rails-8.0.3/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+./Users/ahoward/.rbenv/versions/3.4.5/lib/ruby/gems/3.4.0/gems/rspec-rails-8.0.3/lib/rspec/rails/matchers/have_http_status.rb:219: warning: Status code :unprocessable_entity is deprecated and will be removed in a future version of Rack. Please use :unprocessable_content instead.
+........
+
+Finished in 0.42094 seconds (files took 0.49323 seconds to load)
+16 examples, 0 failures
+
+--- exit: 0 ---
+
+=== VALIDATION ===
+  [ok] Gemfile exists
+  [ok] app/models/ has .rb
+  [ok] app/controllers/ has .rb
+  [ok] db/migrate/ has files
+  [ok] config/routes.rb exists
+  [ok] spec.md exists
+  [ok] plan.md exists
+  [ok] challenge.md exists
+  [ok] tasks.md exists
+  [FAIL] spec/ has tests
+  [ok] worldview has content
+  [ok] sources ingested
+  [ok] proposals generated
+  [ok] roadmap has items
+
+validation: 13 passed, 1 failed
+  worldview files: 28
+  sources ingested: 14
+  proposals: 2
+
+finished: 2026-03-10T22:36:45Z

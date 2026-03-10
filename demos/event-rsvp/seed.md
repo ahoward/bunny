@@ -1,0 +1,22 @@
+# Event RSVP Platform
+
+A Rails API for managing events with RSVP tracking, capacity limits, and waitlists.
+
+## Core Domain
+
+- Events have a title, description, location, start/end times, and a capacity limit
+- Users can RSVP to events (accept, decline, maybe)
+- When capacity is reached, new RSVPs go to a waitlist
+- When someone declines, the first waitlisted person is automatically promoted
+- Event organizers can see attendee lists and waitlist position
+
+## Open Questions
+
+- How should we handle concurrent RSVPs racing for the last spot?
+- What happens when an event is cancelled — notify all RSVPs?
+- Should waitlist promotion be automatic or require confirmation?
+- How do we prevent abuse (spam RSVPs, bot registrations)?
+- What's the right API shape — RESTful resources or RPC-style actions?
+- Should capacity be a hard limit or soft (with organizer override)?
+- How do we handle time zones for events?
+- What validation rules make sense for event dates (no past dates? minimum duration?)

@@ -1,0 +1,2 @@
+STEP=accept CMD=bny proposal accept --yes capacity-safe-rsvp-creation-with-waitlist-promotion EXIT=1
+VALIDATION=spec/ has tests

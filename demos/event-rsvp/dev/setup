@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# bny-generated
+set -e
+
+cd "$(dirname "$0")/.."
+
+echo "installing dependencies..."
+bundle install
+
+echo "setting up database..."
+bundle exec rails db:create db:migrate 2>/dev/null || bundle exec rails db:migrate
+
+echo "configuring git hooks..."
+git config core.hooksPath .githooks
+
+echo "done."

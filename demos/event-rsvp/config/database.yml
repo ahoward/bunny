@@ -1,0 +1,19 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: event_rsvp_development
+
+test:
+  <<: *default
+  database: event_rsvp_test
+  pool: 20
+
+production:
+  <<: *default
+  database: event_rsvp_production
+  username: event_rsvp
+  password: <%= ENV["EVENT_RSVP_DATABASE_PASSWORD"] %>

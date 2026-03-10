@@ -1,0 +1,120 @@
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO public /*application='EventRsvp'*/[0m
+  [1m[35m (166.7ms)[0m  [1m[35mCREATE DATABASE "event_rsvp_development" ENCODING = 'unicode' /*application='EventRsvp'*/[0m
+  [1m[35mSQL (0.0ms)[0m  [1m[35mSET search_path TO public /*application='EventRsvp'*/[0m
+  [1m[35m (52.8ms)[0m  [1m[35mCREATE DATABASE "event_rsvp_test" ENCODING = 'unicode' /*application='EventRsvp'*/[0m
+  [1m[35m (4.8ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" character varying NOT NULL PRIMARY KEY) /*application='EventRsvp'*/[0m
+  [1m[35m (2.9ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" character varying NOT NULL PRIMARY KEY, "value" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='EventRsvp'*/[0m
+  [1m[35m (0.1ms)[0m  [1m[34mSELECT pg_try_advisory_lock(6913340853216553350) /*application='EventRsvp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.9ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='EventRsvp'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.0ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Create (0.6ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-03-10 21:57:47.725889', '2026-03-10 21:57:47.725890') RETURNING "key" /*application='EventRsvp'*/[0m
+Migrating to CreateUsers (20260310000001)
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[35m (6.3ms)[0m  [1m[35mCREATE TABLE "users" ("id" bigserial primary key, "name" character varying NOT NULL, "email" character varying NOT NULL, "auth_token" character varying NOT NULL, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='EventRsvp'*/[0m
+  [1m[35m (1.3ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email") /*application='EventRsvp'*/[0m
+  [1m[35m (1.6ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_auth_token" ON "users" ("auth_token") /*application='EventRsvp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.3ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260310000001') RETURNING "version" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+Migrating to CreateEvents (20260310000002)
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[35m (5.9ms)[0m  [1m[35mCREATE TABLE "events" ("id" bigserial primary key, "title" character varying NOT NULL, "description" text, "location" character varying, "start_time" timestamp(6) NOT NULL, "end_time" timestamp(6) NOT NULL, "time_zone" character varying NOT NULL, "capacity" integer NOT NULL, "registration_opens_at" timestamp(6), "registration_closes_at" timestamp(6), "attendee_visibility" character varying DEFAULT 'organizer_only' NOT NULL, "accepted_count" integer DEFAULT 0 NOT NULL, "organizer_id" bigint NOT NULL, "cancelled_at" timestamp(6), "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_91125650cd"
+FOREIGN KEY ("organizer_id")
+  REFERENCES "users" ("id")
+) /*application='EventRsvp'*/[0m
+  [1m[35m (1.3ms)[0m  [1m[35mCREATE INDEX "index_events_on_organizer_id" ON "events" ("organizer_id") /*application='EventRsvp'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[35mALTER TABLE "events" ADD CONSTRAINT events_capacity_positive CHECK (capacity > 0) /*application='EventRsvp'*/[0m
+  [1m[35m (0.4ms)[0m  [1m[35mALTER TABLE "events" ADD CONSTRAINT events_end_after_start CHECK (end_time > start_time) /*application='EventRsvp'*/[0m
+  [1m[35m (0.5ms)[0m  [1m[35mALTER TABLE "events" ADD CONSTRAINT events_accepted_count_non_negative CHECK (accepted_count >= 0) /*application='EventRsvp'*/[0m
+  [1m[35m (0.4ms)[0m  [1m[35mALTER TABLE "events" ADD CONSTRAINT events_valid_visibility CHECK (attendee_visibility IN ('organizer_only','attendees_only','count_only','public')) /*application='EventRsvp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260310000002') RETURNING "version" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+Migrating to CreateRsvps (20260310000003)
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[35m (5.0ms)[0m  [1m[35mCREATE TABLE "rsvps" ("id" bigserial primary key, "event_id" bigint NOT NULL, "user_id" bigint NOT NULL, "status" character varying NOT NULL, "waitlist_position" integer, "party_size" integer DEFAULT 1 NOT NULL, "undo_token" character varying, "undo_expires_at" timestamp(6), "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_115d52081c"
+FOREIGN KEY ("event_id")
+  REFERENCES "events" ("id")
+, CONSTRAINT "fk_rails_4ab9d5c589"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+) /*application='EventRsvp'*/[0m
+  [1m[35m (1.2ms)[0m  [1m[35mCREATE INDEX "index_rsvps_on_event_id" ON "rsvps" ("event_id") /*application='EventRsvp'*/[0m
+  [1m[35m (1.4ms)[0m  [1m[35mCREATE INDEX "index_rsvps_on_user_id" ON "rsvps" ("user_id") /*application='EventRsvp'*/[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_rsvps_on_user_id_and_event_id" ON "rsvps" ("user_id", "event_id") /*application='EventRsvp'*/[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE INDEX "index_rsvps_on_event_id_and_status" ON "rsvps" ("event_id", "status") /*application='EventRsvp'*/[0m
+  [1m[35m (1.2ms)[0m  [1m[35mCREATE INDEX "index_rsvps_on_event_id_and_waitlist_position" ON "rsvps" ("event_id", "waitlist_position") /*application='EventRsvp'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[35mALTER TABLE "rsvps" ADD CONSTRAINT rsvps_party_size_positive CHECK (party_size >= 1) /*application='EventRsvp'*/[0m
+  [1m[35m (0.4ms)[0m  [1m[35mALTER TABLE "rsvps" ADD CONSTRAINT rsvps_valid_status CHECK (status IN ('pending','accepted','waitlisted','declined','promoted','expired','no_show')) /*application='EventRsvp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260310000003') RETURNING "version" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+Migrating to CreateRsvpTransitions (20260310000004)
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[35m (5.2ms)[0m  [1m[35mCREATE TABLE "rsvp_transitions" ("id" bigserial primary key, "rsvp_id" bigint NOT NULL, "from_status" character varying, "to_status" character varying NOT NULL, "actor_type" character varying NOT NULL, "actor_id" integer, "reason" character varying, "created_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_fb3466c410"
+FOREIGN KEY ("rsvp_id")
+  REFERENCES "rsvps" ("id")
+) /*application='EventRsvp'*/[0m
+  [1m[35m (1.2ms)[0m  [1m[35mCREATE INDEX "index_rsvp_transitions_on_rsvp_id" ON "rsvp_transitions" ("rsvp_id") /*application='EventRsvp'*/[0m
+  [1m[35m (1.5ms)[0m  [1m[35mCREATE INDEX "index_rsvp_transitions_on_rsvp_id_and_created_at" ON "rsvp_transitions" ("rsvp_id", "created_at") /*application='EventRsvp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260310000004') RETURNING "version" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+  [1m[35m (0.7ms)[0m  [1m[34mSELECT pg_advisory_unlock(6913340853216553350) /*application='EventRsvp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.2ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='EventRsvp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO public /*application='EventRsvp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO "$user", public /*application='EventRsvp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO public /*application='EventRsvp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO "$user", public /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mUser Exists? (2.9ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'test1@test.com' LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mUser Create (0.7ms)[0m  [1m[32mINSERT INTO "users" ("name", "email", "auth_token", "created_at", "updated_at") VALUES ('Test1', 'test1@test.com', 'tok1', '2026-03-10 22:14:27.807065', '2026-03-10 22:14:27.807065') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mUser Exists? (1.6ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'test2@test.com' LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mUser Create (0.2ms)[0m  [1m[32mINSERT INTO "users" ("name", "email", "auth_token", "created_at", "updated_at") VALUES ('Test2', 'test2@test.com', 'tok2', '2026-03-10 22:14:27.812796', '2026-03-10 22:14:27.812796') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mUser Exists? (0.5ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'org@test.com' LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mUser Create (0.1ms)[0m  [1m[32mINSERT INTO "users" ("name", "email", "auth_token", "created_at", "updated_at") VALUES ('Org', 'org@test.com', 'orgtok', '2026-03-10 22:14:27.819754', '2026-03-10 22:14:27.819754') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mEvent Create (2.2ms)[0m  [1m[32mINSERT INTO "events" ("title", "description", "location", "start_time", "end_time", "time_zone", "capacity", "registration_opens_at", "registration_closes_at", "attendee_visibility", "accepted_count", "organizer_id", "cancelled_at", "created_at", "updated_at") VALUES ('Test', NULL, NULL, '2026-03-17 22:14:27.821340', '2026-03-18 00:14:27.821630', 'UTC', 50, NULL, NULL, 'organizer_only', 49, 3, NULL, '2026-03-10 22:14:27.826572', '2026-03-10 22:14:27.826572') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+[ActionDispatch::HostAuthorization::DefaultResponseApp] Blocked hosts: www.example.com
+[ActionDispatch::HostAuthorization::DefaultResponseApp] Blocked hosts: www.example.com
+  [1m[36mEvent Load (0.5ms)[0m  [1m[34mSELECT "events".* FROM "events" WHERE "events"."id" = 1 LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mRsvp Count (2.2ms)[0m  [1m[34mSELECT COUNT(*) FROM "rsvps" WHERE "rsvps"."event_id" = 1 AND "rsvps"."status" = 'accepted' /*application='EventRsvp'*/[0m
+  [1m[36mRsvp Count (0.2ms)[0m  [1m[34mSELECT COUNT(*) FROM "rsvps" WHERE "rsvps"."event_id" = 1 AND "rsvps"."status" = 'waitlisted' /*application='EventRsvp'*/[0m
+  [1m[36mRsvp Count (0.1ms)[0m  [1m[34mSELECT COUNT(*) FROM "rsvps" WHERE "rsvps"."event_id" = 1 /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mUser Exists? (2.4ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'test1@test.com' LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[31mROLLBACK /*application='EventRsvp'*/[0m
+  [1m[36mRsvpTransition Delete All (2.1ms)[0m  [1m[31mDELETE FROM "rsvp_transitions" /*application='EventRsvp'*/[0m
+  [1m[36mRsvp Delete All (1.4ms)[0m  [1m[31mDELETE FROM "rsvps" /*application='EventRsvp'*/[0m
+  [1m[36mEvent Delete All (1.4ms)[0m  [1m[31mDELETE FROM "events" /*application='EventRsvp'*/[0m
+  [1m[36mUser Delete All (1.5ms)[0m  [1m[31mDELETE FROM "users" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mUser Exists? (2.0ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'test1@test.com' LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mUser Create (0.4ms)[0m  [1m[32mINSERT INTO "users" ("name", "email", "auth_token", "created_at", "updated_at") VALUES ('Test1', 'test1@test.com', 'tok1', '2026-03-10 22:14:59.626220', '2026-03-10 22:14:59.626220') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mUser Exists? (1.1ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'org@test.com' LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mUser Create (0.1ms)[0m  [1m[32mINSERT INTO "users" ("name", "email", "auth_token", "created_at", "updated_at") VALUES ('Org', 'org@test.com', 'orgtok', '2026-03-10 22:14:59.630401', '2026-03-10 22:14:59.630401') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mEvent Create (0.8ms)[0m  [1m[32mINSERT INTO "events" ("title", "description", "location", "start_time", "end_time", "time_zone", "capacity", "registration_opens_at", "registration_closes_at", "attendee_visibility", "accepted_count", "organizer_id", "cancelled_at", "created_at", "updated_at") VALUES ('Test', NULL, NULL, '2026-03-17 22:14:59.631217', '2026-03-18 00:14:59.631266', 'UTC', 50, NULL, NULL, 'organizer_only', 49, 5, NULL, '2026-03-10 22:14:59.635656', '2026-03-10 22:14:59.635656') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+[ActionDispatch::HostAuthorization::DefaultResponseApp] Blocked hosts: www.example.com
+  [1m[36mRsvpTransition Delete All (1.0ms)[0m  [1m[31mDELETE FROM "rsvp_transitions" /*application='EventRsvp'*/[0m
+  [1m[36mRsvp Delete All (1.1ms)[0m  [1m[31mDELETE FROM "rsvps" /*application='EventRsvp'*/[0m
+  [1m[36mEvent Delete All (1.4ms)[0m  [1m[31mDELETE FROM "events" /*application='EventRsvp'*/[0m
+  [1m[36mUser Delete All (1.6ms)[0m  [1m[31mDELETE FROM "users" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mUser Exists? (1.8ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'test1@test.com' LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mUser Create (0.3ms)[0m  [1m[32mINSERT INTO "users" ("name", "email", "auth_token", "created_at", "updated_at") VALUES ('Test1', 'test1@test.com', 'tok1', '2026-03-10 22:15:19.598036', '2026-03-10 22:15:19.598036') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mUser Exists? (1.0ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'org@test.com' LIMIT 1 /*application='EventRsvp'*/[0m
+  [1m[36mUser Create (0.2ms)[0m  [1m[32mINSERT INTO "users" ("name", "email", "auth_token", "created_at", "updated_at") VALUES ('Org', 'org@test.com', 'orgtok', '2026-03-10 22:15:19.601908', '2026-03-10 22:15:19.601908') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='EventRsvp'*/[0m
+  [1m[36mEvent Create (1.0ms)[0m  [1m[32mINSERT INTO "events" ("title", "description", "location", "start_time", "end_time", "time_zone", "capacity", "registration_opens_at", "registration_closes_at", "attendee_visibility", "accepted_count", "organizer_id", "cancelled_at", "created_at", "updated_at") VALUES ('Test', NULL, NULL, '2026-03-17 22:15:19.602938', '2026-03-18 00:15:19.602998', 'UTC', 50, NULL, NULL, 'organizer_only', 49, 7, NULL, '2026-03-10 22:15:19.607694', '2026-03-10 22:15:19.607694') RETURNING "id" /*application='EventRsvp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='EventRsvp'*/[0m
+[ActionDispatch::HostAuthorization::DefaultResponseApp] Blocked hosts: 

@@ -1,0 +1,17 @@
+{
+  "event": {
+    "id": 42,
+    "title": "Golden Event",
+    "description": "A perfect event",
+    "location": "123 Golden St",
+    "start_time": "2026-04-01T10:00:00.000Z",
+    "end_time": "2026-04-01T12:00:00.000Z",
+    "time_zone": "UTC",
+    "capacity": 100,
+    "spots_remaining": 95,
+    "registration_opens_at": null,
+    "registration_closes_at": null,
+    "attendee_visibility": "public"
+  },
+  "meta": {}
+}

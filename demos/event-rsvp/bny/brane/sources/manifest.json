@@ -1,0 +1,88 @@
+{
+  "sources": [
+    {
+      "label": "seed.md",
+      "filename": "2026-03-10T21-09-25-847Z-seed-md.txt",
+      "eaten_at": "2026-03-10T21:09:25.848Z",
+      "size": 998
+    },
+    {
+      "label": "https://en.wikipedia.org/wiki/Fair_division",
+      "filename": "2026-03-10T21-19-46-132Z-https-en-wikipedia-org-wiki-fair-division.txt",
+      "eaten_at": "2026-03-10T21:19:46.134Z",
+      "size": 187788
+    },
+    {
+      "label": "https://en.wikipedia.org/wiki/Mechanism_design",
+      "filename": "2026-03-10T21-19-46-824Z-https-en-wikipedia-org-wiki-mechanism-design.txt",
+      "eaten_at": "2026-03-10T21:19:46.825Z",
+      "size": 428507
+    },
+    {
+      "label": "https://developers.google.com/actions-center/verticals/reservations/waitlists/integration-steps/implement-waitlist-booking-server",
+      "filename": "2026-03-10T21-19-47-385Z-https-developers-google-com-actions-center-verticals-reservations-waitlists-inte.txt",
+      "eaten_at": "2026-03-10T21:19:47.386Z",
+      "size": 125280
+    },
+    {
+      "label": "https://www.sciencedirect.com/science/article/abs/pii/S0022053121000806",
+      "filename": "2026-03-10T21-19-48-061Z-https-www-sciencedirect-com-science-article-abs-pii-s0022053121000806.txt",
+      "eaten_at": "2026-03-10T21:19:48.063Z",
+      "size": 832756
+    },
+    {
+      "label": "https://waitwhile.com/event-waitlist/",
+      "filename": "2026-03-10T21-19-48-841Z-https-waitwhile-com-event-waitlist.txt",
+      "eaten_at": "2026-03-10T21:19:48.842Z",
+      "size": 141844
+    },
+    {
+      "label": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/",
+      "filename": "2026-03-10T21-19-49-374Z-https-pmc-ncbi-nlm-nih-gov-articles-pmc8014103.txt",
+      "eaten_at": "2026-03-10T21:19:49.375Z",
+      "size": 141426
+    },
+    {
+      "label": "https://www.journals.uchicago.edu/doi/full/10.1086/707212",
+      "filename": "2026-03-10T21-19-49-703Z-https-www-journals-uchicago-edu-doi-full-10-1086-707212.txt",
+      "eaten_at": "2026-03-10T21:19:49.704Z",
+      "size": 7003
+    },
+    {
+      "label": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10474557/",
+      "filename": "2026-03-10T21-19-50-239Z-https-pmc-ncbi-nlm-nih-gov-articles-pmc10474557.txt",
+      "eaten_at": "2026-03-10T21:19:50.240Z",
+      "size": 188369
+    },
+    {
+      "label": "https://www.researchgate.net/publication/2765117_Lottery_and_Stride_Scheduling_Flexible_Proportional-Share_Resource_Management",
+      "filename": "2026-03-10T21-19-50-519Z-https-www-researchgate-net-publication-2765117-lottery-and-stride-scheduling-fle.txt",
+      "eaten_at": "2026-03-10T21:19:50.520Z",
+      "size": 16
+    },
+    {
+      "label": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4187098/",
+      "filename": "2026-03-10T21-19-51-271Z-https-pmc-ncbi-nlm-nih-gov-articles-pmc4187098.txt",
+      "eaten_at": "2026-03-10T21:19:51.272Z",
+      "size": 264324
+    },
+    {
+      "label": "https://en.wikipedia.org/wiki/Lottery_scheduling",
+      "filename": "2026-03-10T21-24-37-161Z-https-en-wikipedia-org-wiki-lottery-scheduling.txt",
+      "eaten_at": "2026-03-10T21:24:37.162Z",
+      "size": 64859
+    },
+    {
+      "label": "https://en.wikipedia.org/wiki/Stride_scheduling",
+      "filename": "2026-03-10T21-24-37-633Z-https-en-wikipedia-org-wiki-stride-scheduling.txt",
+      "eaten_at": "2026-03-10T21:24:37.634Z",
+      "size": 74801
+    },
+    {
+      "label": "https://engineering.eventbrite.com/",
+      "filename": "2026-03-10T21-24-38-942Z-https-engineering-eventbrite-com.txt",
+      "eaten_at": "2026-03-10T21:24:38.943Z",
+      "size": 165332
+    }
+  ]
+}

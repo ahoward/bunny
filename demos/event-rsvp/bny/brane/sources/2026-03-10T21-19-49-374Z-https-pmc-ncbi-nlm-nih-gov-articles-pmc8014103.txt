@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="en" >
+    <head >
+
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="MobileOptimized" content="320" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        
+        
+
+        
+        
+  <link  rel="stylesheet" href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/base_style-BxRs1iOp.css" />
+<script type="module" crossorigin="" src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/base_style-D-jH62-1.js"></script>
+
+  <link  rel="stylesheet" href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/article_style-B67IZFds.css" />
+<link  rel="stylesheet" href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/style-D77LS1kY.css" />
+<script type="module" crossorigin="" src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/article_style-CTAd1LmM.js"></script>
+
+  
+  
+    <style>
+  
+  
+  @media screen and (min-width: 64em) {
+    div.pmc-wm {
+      background: repeat-y;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='350' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cdefs%3E%3Cfilter x='-.02' y='0' width='1.05' height='1' id='c'%3E%3CfeFlood flood-color='%23FFF'/%3E%3CfeComposite in='SourceGraphic'/%3E%3C/filter%3E%3Ctext id='b' font-family='Helvetica' font-size='11pt' style='opacity:1;fill:%23005ea2;stroke:none;text-anchor:middle' x='175' y='14'%3E%3C/text%3E%3Cpath id='a' style='fill:%23005ea2' d='M0 8h350v3H0z'/%3E%3C/defs%3E%3Cuse xlink:href='%23a' transform='rotate(90 10 10)'/%3E%3Cuse xlink:href='%23b' transform='rotate(90 10 10)' filter='url(%23c)'/%3E%3C/svg%3E");
+      padding-left: 3rem;
+    }
+  }
+</style>
+
+  
+
+
+
+        
+            <link rel="apple-touch-icon"
+                  sizes="180x180"
+                  href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/favicons/apple-touch-icon.png" />
+            <link rel="icon"
+                  type="image/png"
+                  sizes="48x48"
+                  href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/favicons/favicon-48x48.png" />
+            <link rel="icon"
+                  type="image/png"
+                  sizes="32x32"
+                  href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/favicons/favicon-32x32.png" />
+            <link rel="icon"
+                  type="image/png"
+                  sizes="16x16"
+                  href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/favicons/favicon-16x16.png" />
+            <link rel="manifest" href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/favicons/site.webmanifest" />
+            <link rel="mask-icon"
+                  href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/favicons/safari-pinned-tab.svg"
+                  color="#0071bc" />
+            <meta name="msapplication-config"
+                  content="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/favicons/browserconfig.xml" />
+            <meta name="theme-color" content="#ffffff" />
+        
+
+        <title>
+            Weighted Lotteries and the Allocation of Scarce Medications for Covid‐19 - PMC
+        </title>
+
+        
+        
+  
+  <!-- Logging params: Pinger defaults -->
+<meta name="ncbi_app" content="cloudpmc-viewer" />
+<meta name="ncbi_db" content="pmc" />
+<meta name="ncbi_phid" content="321F0CB29B088503040CB200259728BE.m_1" />
+<meta name="ncbi_pinger_stat_url" content="https://pmc.ncbi.nlm.nih.gov/stat" />
+<!-- Logging params: Pinger custom -->
+<meta name="ncbi_pdid" content="article" />
+  
+    <link rel="preconnect" href="https://www.google-analytics.com" />
+
+    
+        <link rel="preconnect" href="https://cdn.ncbi.nlm.nih.gov" />
+    
+
+    <!-- Include USWDS Init Script -->
+    <script src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/uswds-init.js"></script>
+
+
+    <meta name="ncbi_domain" content="pheblackwell">
+<meta name="ncbi_type" content="fulltext">
+<meta name="ncbi_pcid" content="journal">
+<link rel="canonical" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/">
+<meta name="robots" content="INDEX,NOFOLLOW,NOARCHIVE">
+<meta name="citation_journal_title" content="The Hastings Center Report">
+<meta name="citation_title" content="Weighted Lotteries and the Allocation of Scarce Medications for Covid‐19">
+<meta name="citation_author" content="Lynn A Jansen">
+<meta name="citation_author" content="Steven Wall">
+<meta name="citation_publication_date" content="2021 Feb 25">
+<meta name="citation_volume" content="51">
+<meta name="citation_issue" content="1">
+<meta name="citation_firstpage" content="39">
+<meta name="citation_doi" content="10.1002/hast.1218">
+<meta name="citation_pmid" content="33630329">
+<meta name="citation_abstract_html_url" content="https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/">
+<meta name="citation_fulltext_html_url" content="https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/">
+<meta name="citation_pdf_url" content="https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/pdf/HAST-51-39.pdf">
+<meta name="description" content="The allocation of vaccines and therapeutics for Covid‐19 obviously raises ethical questions, and physicians and ethicists have begun to address them. Writers have identified various criteria that should guide allocation decisions, but the criteria ...">
+<meta name="og:title" content="Weighted Lotteries and the Allocation of Scarce Medications for Covid‐19">
+<meta name="og:type" content="article">
+<meta name="og:site_name" content="PubMed Central (PMC)">
+<meta name="og:description" content="The allocation of vaccines and therapeutics for Covid‐19 obviously raises ethical questions, and physicians and ethicists have begun to address them. Writers have identified various criteria that should guide allocation decisions, but the criteria ...">
+<meta name="og:url" content="https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/">
+<meta name="og:image" content="https://cdn.ncbi.nlm.nih.gov/pmc/cms/images/pmc-card-share.jpg?_=0">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@ncbi">
+    
+    
+
+    </head>
+    <body >
+        
+    <a class="usa-skipnav " href="#main-content">
+      Skip to main content
+    </a>
+
+
+        
+            
+
+<section class="usa-banner " aria-label="Official website of the United States government" >
+    <div class="usa-accordion">
+        <header class="usa-banner__header">
+            <div class="usa-banner__inner">
+                <div class="grid-col-auto">
+                    <img aria-hidden="true"
+                         class="usa-banner__header-flag"
+                         src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/us_flag.svg"
+                         alt="" />
+                </div>
+
+                <div class="grid-col-fill tablet:grid-col-auto" aria-hidden="true">
+                    <p class="usa-banner__header-text">
+                        An official website of the United States government
+                    </p>
+                    <span class="usa-banner__header-action">Here's how you know</span>
+                </div>
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-accordion__button usa-banner__button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    aria-expanded="false"
+    aria-controls="gov-banner-default"
+    
+    data-testid="storybook-django-banner"
+    
+    >
+    
+        
+
+        
+                    <span class="usa-banner__button-text">Here's how you know</span>
+                
+
+        
+    
+        
+            </button>
+        
+
+
+            </div>
+        </header>
+
+        <div class="usa-banner__content usa-accordion__content"
+             id="gov-banner-default"
+             hidden>
+            <div class="grid-row grid-gap-lg">
+                <div class="usa-banner__guidance tablet:grid-col-6">
+                    <img class="usa-banner__icon usa-media-block__img"
+                         src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/icon-dot-gov.svg"
+                         alt=""
+                         aria-hidden="true" />
+                    <div class="usa-media-block__body">
+                        <p>
+                            <strong>Official websites use .gov</strong>
+                            <br />
+                            A
+                            <strong>.gov</strong> website belongs to an official
+                            government organization in the United States.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="usa-banner__guidance tablet:grid-col-6">
+                    <img class="usa-banner__icon usa-media-block__img"
+                         src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/icon-https.svg"
+                         alt=""
+                         aria-hidden="true" />
+
+                    <div class="usa-media-block__body">
+                        <p>
+                            <strong>Secure .gov websites use HTTPS</strong>
+                            <br />
+                            A <strong>lock</strong> (
+                            <span class="icon-lock">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="52"
+                                     height="64"
+                                     viewBox="0 0 52 64"
+                                     class="usa-banner__lock-image"
+                                     role="graphics-symbol"
+                                     aria-labelledby="banner-lock-description"
+                                     focusable="false">
+                                    <title id="banner-lock-title">Lock</title>
+                                    <desc id="banner-lock-description">
+                                    Locked padlock icon
+                                    </desc>
+                                    <path fill="#000000"
+                                          fill-rule="evenodd"
+                                          d="M26 0c10.493 0 19 8.507 19 19v9h3a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V32a4 4 0 0 1 4-4h3v-9C7 8.507 15.507 0 26 0zm0 8c-5.979 0-10.843 4.77-10.996 10.712L15 19v9h22v-9c0-6.075-4.925-11-11-11z" />
+                                </svg>
+</span>) or <strong>https://</strong> means you've safely
+                                connected to the .gov website. Share sensitive
+                                information only on official, secure websites.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+        
+
+        
+    
+    
+    
+
+<div class="usa-overlay">
+</div>
+
+
+
+<header class="usa-header usa-header--extended usa-header--wide" data-header data-testid="header"    >
+    <div class="ncbi-header">
+        <div class="ncbi-header__container">
+            <a class="ncbi-header__logo-container"
+               href="https://www.ncbi.nlm.nih.gov/">
+                <img alt="NCBI home page"
+                     class="ncbi-header__logo-image"
+                     src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/ncbi-logos/nih-nlm-ncbi--white.svg"
+                     width="410"
+                     height="100" />
+            </a>
+
+            <!-- Mobile menu hamburger button -->
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-menu-btn ncbi-header__hamburger-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    
+    
+    aria-label="Show menu"
+    data-testid="navMenuButton"
+    
+    >
+    
+        
+
+        
+                <svg aria-hidden="true"
+                     class="ncbi-hamburger-icon"
+                     fill="none"
+                     focusable="false"
+                     height="21"
+                     viewBox="0 0 31 21"
+                     width="31"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path clip-rule="evenodd"
+                          d="M0.125 20.75H30.875V17.3333H0.125V20.75ZM0.125 12.2083H30.875V8.79167H0.125V12.2083ZM0.125 0.25V3.66667H30.875V0.25H0.125Z"
+                          fill="#F1F1F1"
+                          fill-rule="evenodd" />
+                </svg>
+            
+
+        
+    
+        
+            </button>
+        
+
+
+
+            
+                <!-- Desktop buttons-->
+                <div class="ncbi-header__desktop-buttons">
+                    
+                        <!-- Desktop search button -->
+                        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           usa-button--unstyled ncbi-header__desktop-button
+           "
+    aria-expanded="false"
+    aria-controls="search-field-desktop-navigation"
+    aria-label="Show search overlay"
+    data-testid="toggleSearchPanelButton"
+    data-toggle-search-panel-button
+    >
+    
+        
+
+        
+                            
+
+
+
+    <img
+        src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/search.svg"
+        class="usa-icon "
+        aria-hidden="true"
+        
+        
+    />
+
+
+                            Search
+                        
+
+        
+    
+        
+            </button>
+        
+
+
+                    
+
+                    <!-- Desktop login dropdown -->
+                    
+                        <div class="ncbi-header__login-dropdown">
+                            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           usa-button--unstyled ncbi-header__desktop-button ncbi-header__login-dropdown-button
+           "
+    aria-expanded="false"
+    aria-controls="login-dropdown-menu"
+    aria-label="Show login menu"
+    data-testid="toggleLoginMenuDropdown"
+    data-desktop-login-button
+    >
+    
+        
+
+        
+                                
+
+
+
+    <img
+        src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/person.svg"
+        class="usa-icon "
+        aria-hidden="true"
+        
+        
+    />
+
+
+
+                                <span data-login-dropdown-text>Log in</span>
+
+                                <!-- Dropdown icon pointing up -->
+                                
+
+
+
+    <img
+        src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/expand_less.svg"
+        class="usa-icon ncbi-header__login-dropdown-icon ncbi-header__login-dropdown-icon--expand-less ncbi-header__login-dropdown-icon--hidden"
+        aria-hidden="true"
+        data-login-dropdown-up-arrow
+        
+    />
+
+
+
+                                <!-- Dropdown icon pointing down -->
+                                
+
+
+
+    <img
+        src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/expand_more.svg"
+        class="usa-icon ncbi-header__login-dropdown-icon ncbi-header__login-dropdown-icon--expand-more ncbi-header__login-dropdown-icon--hidden"
+        aria-hidden="true"
+        data-login-dropdown-down-arrow
+        
+    />
+
+
+                            
+
+        
+    
+        
+            </button>
+        
+
+
+
+                            <!-- Login dropdown menu -->
+                            <ul class="usa-nav__submenu ncbi-header__login-dropdown-menu"
+                                id="login-dropdown-menu"
+                                data-desktop-login-menu-dropdown
+                                hidden>
+                                
+                                    <li class="usa-nav__submenu-item">
+                                        <!-- Uses custom style overrides to render external and document links. -->
+                                        
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/myncbi/" class="usa-link  "  >
+        
+
+        
+            Dashboard
+        
+
+        
+    </a>
+
+
+                                    </li>
+                                
+                                    <li class="usa-nav__submenu-item">
+                                        <!-- Uses custom style overrides to render external and document links. -->
+                                        
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/myncbi/collections/bibliography/" class="usa-link  "  >
+        
+
+        
+            Publications
+        
+
+        
+    </a>
+
+
+                                    </li>
+                                
+                                    <li class="usa-nav__submenu-item">
+                                        <!-- Uses custom style overrides to render external and document links. -->
+                                        
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/account/settings/" class="usa-link  "  >
+        
+
+        
+            Account settings
+        
+
+        
+    </a>
+
+
+                                    </li>
+                                
+                                <li class="usa-nav__submenu-item">
+                                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           usa-button--outline ncbi-header__login-dropdown-logout-button
+           "
+    
+    
+    
+    data-testid="desktopLogoutButton"
+    data-desktop-logout-button
+    >
+    
+        
+
+        Log out
+
+        
+    
+        
+            </button>
+        
+
+
+                                </li>
+                            </ul>
+                        </div>
+                    
+                </div>
+            
+        </div>
+    </div>
+
+    <!-- Search panel -->
+    
+        <div class="ncbi-search-panel ncbi--show-only-at-desktop"
+             data-header-search-panel
+             hidden>
+            <div class="ncbi-search-panel__container">
+                <form action="https://www.ncbi.nlm.nih.gov/search/all/"
+                      
+                      autocomplete="off"
+                      class="usa-search usa-search--big ncbi-search-panel__form"
+                      data-testid="desktop-navigation-search-form"
+                      method="GET"
+                      role="search">
+                    <label class="usa-sr-only" for="search-field-desktop-navigation">
+                        Search…
+                    </label>
+                    <input class="usa-input"
+                           id="search-field-desktop-navigation"
+                           name="term"
+                           
+                               placeholder="Search NCBI"
+                           
+                           type="search"
+                           value="" />
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="submit"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    
+    
+    
+    
+    
+    >
+    
+        
+
+        
+                        <span class="usa-search__submit-text">
+                            Search NCBI
+                        </span>
+                    
+
+        
+    
+        
+            </button>
+        
+
+
+                </form>
+
+                
+            </div>
+        </div>
+    
+
+    <nav aria-label="Primary navigation" class="usa-nav">
+        <p class="usa-sr-only" id="primary-navigation-sr-only-title">
+            Primary site navigation
+        </p>
+
+        <!-- Mobile menu close button -->
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-nav__close ncbi-nav__close-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    
+    
+    aria-label="Close navigation menu"
+    data-testid="navCloseButton"
+    
+    >
+    
+        
+
+        
+            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/usa-icons/close.svg" alt="Close" />
+        
+
+        
+    
+        
+            </button>
+        
+
+
+
+        
+            <!-- Mobile search component -->
+            <form class="usa-search usa-search--small ncbi--hide-at-desktop"
+                  action="https://www.ncbi.nlm.nih.gov/search/all/"
+                  
+                  autocomplete="off"
+                  data-testid="mobile-navigation-search-form"
+                  method="GET"
+                  role="search">
+                <label class="usa-sr-only" for="search-field-mobile-navigation">
+                    Search
+                </label>
+
+                <input class="usa-input"
+                       id="search-field-mobile-navigation"
+                       type="search"
+                       
+                           placeholder="Search NCBI"
+                       
+                       name="term" />
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="submit"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    
+    
+    
+    
+    
+    >
+    
+        
+
+        
+                    <!-- This SVG should be kept inline and not replaced with a link to the icon as otherwise it will render in the wrong color -->
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0Ij48cGF0aCBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTE1LjUgMTRoLS43OWwtLjI4LS4yN0E2LjQ3MSA2LjQ3MSAwIDAgMCAxNiA5LjUgNi41IDYuNSAwIDEgMCA5LjUgMTZjMS42MSAwIDMuMDktLjU5IDQuMjMtMS41N2wuMjcuMjh2Ljc5bDUgNC45OUwyMC40OSAxOWwtNC45OS01em0tNiAwQzcuMDEgMTQgNSAxMS45OSA1IDkuNVM3LjAxIDUgOS41IDUgMTQgNy4wMSAxNCA5LjUgMTEuOTkgMTQgOS41IDE0eiIvPjwvc3ZnPg=="
+                         class="usa-search__submit-icon"
+                         alt="Search" />
+                
+
+        
+    
+        
+            </button>
+        
+
+
+            </form>
+
+            
+        
+
+        <!-- Primary navigation menu items -->
+        <!-- This usa-nav__inner wrapper is required to correctly style the navigation items on Desktop -->
+        
+
+        
+            <div class="ncbi-nav__mobile-login-menu ncbi--hide-at-desktop"
+                 data-mobile-login-menu
+                 hidden>
+                <p class="ncbi-nav__mobile-login-menu-status">
+                    Logged in as:
+                    <strong class="ncbi-nav__mobile-login-menu-email"
+                            data-mobile-login-email-text></strong>
+                </p>
+                <ul class="usa-nav__primary usa-accordion">
+                    
+                        <li class="usa-nav__primary-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/myncbi/" class="usa-link  "  >
+        
+
+        
+            Dashboard
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="usa-nav__primary-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/myncbi/collections/bibliography/" class="usa-link  "  >
+        
+
+        
+            Publications
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="usa-nav__primary-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/account/settings/" class="usa-link  "  >
+        
+
+        
+            Account settings
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                </ul>
+            </div>
+        
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           ncbi-nav__mobile-login-button ncbi--hide-at-desktop
+           "
+    
+    
+    
+    data-testid="mobileLoginButton"
+    data-mobile-login-button
+    >
+    
+        
+
+        Log in
+
+        
+    
+        
+            </button>
+        
+
+
+    </nav>
+</header>
+
+    
+    
+        
+
+<section class="pmc-header pmc-header--basic" aria-label="PMC Header with search box">
+    <div class="pmc-nav-container">
+        <div class="pmc-header__bar">
+           <div class="pmc-header__logo">
+               <a href="/" title="Home" aria-label="PMC Home"></a>
+           </div>
+            <button
+                    type="button"
+                    class="usa-button usa-button--unstyled pmc-header__search__button"
+                    aria-label="Open search"
+                    data-ga-category="search"
+                    data-ga-action="PMC"
+                    data-ga-label="pmc_search_panel_mobile"
+            >
+                <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/search.svg" alt="PMC search open icon" aria-hidden="true" class="usa-icon usa-icon--size-4 pmc-icon__open" />
+                <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/close.svg" alt="PMC search close ison" aria-hidden="true" class="usa-icon usa-icon--size-4 pmc-icon__close" />
+            </button>
+        </div>
+        <div class="pmc-header__search">
+            
+
+
+<form class="usa-search usa-search--extra usa-search--article-right-column  pmc-header__search__form" id="pmc-search-form" autocomplete="off" role="search">
+<label class="usa-sr-only" for="pmc-search">Search PMC Full-Text Archive</label>
+<span class="autoComplete_wrapper flex-1">
+<input class="usa-input width-full maxw-none" required="required" placeholder="Search PMC Full-Text Archive" id="pmc-search"  type="search" name="term" data-autocomplete-url="https://pmc.ncbi.nlm.nih.gov/autocomp/search/autocomp/"/>
+</span>
+<button
+class="usa-button"
+type="submit"
+formaction="https://pmc.ncbi.nlm.nih.gov/search/"
+data-ga-category="search"
+data-ga-action="PMC"
+data-ga-label="PMC_search_button"
+>
+<span class="usa-search__submit-text">Search in PMC</span>
+<img
+src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/usa-icons-bg/search--white.svg"
+class="usa-search__submit-icon"
+alt="Search"
+/>
+</button>
+</form>
+            <div class="display-flex flex-column tablet:flex-row tablet:flex-justify flex-justify-center flex-align-center width-full desktop:maxw-44">
+                <ul class="pmc-header__search__menu">
+                    <li>
+                        
+                            <a class="usa-link" href="/journals/" data-ga-action="featured_link" data-ga-label="journal list">
+                                Journal List
+                            </a>
+                        
+                    </li>
+                    <li>
+                        
+                            <a class="usa-link" href="/about/userguide/" data-ga-action="featured_link"
+                            data-ga-label="user guide">
+                                User Guide
+                            </a>
+                        
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+    
+
+
+        
+        
+
+       
+  <div class="usa-section padding-top-0 desktop:padding-top-6 pmc-article-section" data-article-db="pmc" data-article-id="8014103">
+
+    
+
+   
+
+
+
+<div class="grid-container pmc-actions-bar" aria-label="Actions bar" role="complementary">
+    <div class="grid-row">
+        <div class="grid-col-fill display-flex">
+             <div class="display-flex">
+                <ul class="usa-list usa-list--unstyled usa-list--horizontal">
+                    <li class="margin-right-2 mobile-lg:margin-right-4 display-flex mob">
+                        <button
+                                type="button"
+                                class="usa-button pmc-sidenav__container__open usa-button--unstyled width-auto display-flex"
+                                aria-label="Open resources"
+                                data-extra-class="is-visible-resources"
+                                data-ga-category="resources_accordion"
+                                data-ga-action="click"
+                                data-ga-label="mobile_icon"
+                        >
+                            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/more_vert.svg" alt="Open resources icon" class="usa-icon usa-icon--size-4 usa-icon--link" />
+                        </button>
+                    </li>
+                    
+                    <li class="margin-right-2 mobile-lg:margin-right-4 display-flex mob">
+                        <a
+                                href="https://doi.org/10.1002/hast.1218"
+                                class="usa-link display-flex usa-tooltip"
+                                role="button"
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                title="View on publisher site"
+                                data-position="bottom"
+                                aria-label="View on publisher site"
+                                data-ga-category="actions"
+                                data-ga-action="click"
+                                data-ga-label="publisher_link_mobile"
+                        >
+                                <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/launch.svg" alt="View on publisher site icon" class="usa-icon usa-icon--size-4 usa-icon--link" />
+                        </a>
+                    </li>
+                    
+                    
+                        <li class="margin-right-2 mobile-lg:margin-right-4 display-flex">
+                             <a
+                                     href="pdf/HAST-51-39.pdf"
+                                     class="usa-link display-flex usa-tooltip"
+                                     role="button"
+                                     title="Download PDF"
+                                     data-position="bottom"
+                                     aria-label="Download PDF"
+                                     data-ga-category="actions"
+                                     data-ga-action="click"
+                                     data-ga-label="pdf_download_mobile"
+                             >
+
+                                 <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/file_download.svg" alt="Download PDF icon" aria-hidden="true" class="usa-icon usa-icon--size-4 usa-icon--link" />
+                            </a>
+                        </li>
+                    
+                    <li class="margin-right-2 mobile-lg:margin-right-4 display-flex">
+                        <button
+                            class="usa-button usa-button--unstyled  usa-tooltip collections-dialog-trigger collections-button display-flex collections-button-empty"
+                            title="Add to Collections"
+                            data-position="bottom"
+                            aria-label="Save article in MyNCBI collections."
+                            data-ga-category="actions"
+                            data-ga-action="click"
+                            data-ga-label="collections_button_mobile"
+                            data-collections-open-dialog-enabled="false"
+                            data-collections-open-dialog-url="https://account.ncbi.nlm.nih.gov/?back_url=https%3A%2F%2Fpmc.ncbi.nlm.nih.gov%2Farticles%2FPMC8014103%2F%23open-collections-dialog"
+                            data-in-collections="false"
+                        >
+                            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/action-bookmark-full.svg" alt="Collections icon" aria-hidden="true" class="usa-icon usa-icon--size-4 usa-icon--link usa-icon--bookmark-full" />
+                            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/action-bookmark-empty.svg" alt="Collections icon" aria-hidden="true" class="usa-icon usa-icon--size-4 usa-icon--link usa-icon--bookmark-empty" />
+                        </button>
+                    </li>
+                    
+                    <li class="margin-right-2 mobile-lg:margin-right-4 display-flex">
+                        <button role="button" class="usa-button usa-button--unstyled usa-tooltip citation-dialog-trigger display-flex"
+                            aria-label="Open dialog with citation text in different styles"
+                            title="Cite"
+                            data-position="bottom"
+                            data-ga-category="actions"
+                            data-ga-action="open"
+                            data-ga-label="cite_mobile"
+                            data-all-citations-url="/resources/citations/8014103/"
+                            data-citation-style="nlm"
+                            data-download-format-link="/resources/citations/8014103/export/"
+                        >
+                            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/format_quote.svg" alt="Cite icon" aria-hidden="true" class="usa-icon usa-icon--size-4 usa-icon--link" />
+                        </button>
+                    </li>
+                    
+                    <li class="pmc-permalink display-flex" >
+                         <button
+                                 type="button"
+                                 title="Permalink"
+                                 data-position="bottom"
+                                 class="usa-button usa-button--unstyled display-flex usa-tooltip"
+                                 aria-label="Show article permalink"
+                                 aria-expanded="false"
+                                 aria-haspopup="true"
+                                 data-ga-category="actions"
+                                 data-ga-action="open"
+                                 data-ga-label="permalink_mobile"
+                         >
+                            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/share.svg" alt="Show article permalink icon" aria-hidden="true" class="usa-icon usa-icon--size-4 usa-icon--link" />
+                        </button>
+                        
+
+<div class="pmc-permalink__dropdown" hidden>
+    <div class="pmc-permalink__dropdown__container">
+          <h2 class="usa-modal__heading margin-top-0 margin-bottom-2 text-uppercase font-sans-xs">PERMALINK</h2>
+          <div class="pmc-permalink__dropdown__content">
+              <input type="text" class="usa-input" value="https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/" aria-label="Article permalink">
+              <button class="usa-button display-inline-flex pmc-permalink__dropdown__copy__btn margin-right-0" title="Copy article permalink" data-ga-category="save_share" data-ga-action="link" data-ga-label="copy_link">
+                  <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/content_copy.svg" alt="Copy icon" aria-hidden="true" class="usa-icon usa-icon--white" />
+                  <span class="margin-left-1">Copy</span>
+              </button>
+          </div>
+    </div>
+</div>
+                    </li>
+                </ul>
+            </div>
+            <button
+                    type="button"
+                    class="usa-button pmc-sidenav__container__open usa-button--unstyled width-auto display-flex"
+                    aria-label="Open article navigation"
+                    data-extra-class="is-visible-in-page"
+                    data-ga-category="actions"
+                    data-ga-action="open"
+                    data-ga-label="article_nav_mobile"
+            >
+                <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/list.svg" alt="Open article navigation icon" aria-hidden="true" class="usa-icon usa-icon--size-4 usa-icon--link" />
+            </button>
+        </div>
+    </div>
+</div>
+    <div class="grid-container desktop:padding-left-6">
+      <div id="article-container" class="grid-row grid-gap">
+        <div class="grid-col-12 desktop:grid-col-8 order-2 pmc-layout__content">
+            <div class="grid-container padding-left-0 padding-right-0">
+                <div class="grid-row desktop:margin-left-neg-6">
+                    <div class="grid-col-12">
+                        <div class="pmc-layout__disclaimer" role="complementary" aria-label="Disclaimer note">
+    As a library, NLM provides access to scientific literature. Inclusion in an NLM database does not imply endorsement of, or agreement with,
+    the contents by NLM or the National Institutes of Health.<br/>
+    Learn more:
+    <a class="usa-link" data-ga-category="Link click" data-ga-action="Disclaimer" data-ga-label="New disclaimer box" href="/about/disclaimer/">PMC Disclaimer</a>
+    |
+    <a class="usa-link" data-ga-category="Link click" data-ga-action="PMC Copyright Notice" data-ga-label="New disclaimer box" href="/about/copyright/">
+        PMC Copyright Notice
+    </a>
+</div>
+                    </div>
+                </div>
+                <div class="grid-row pmc-wm desktop:margin-left-neg-6">
+                    <!-- Main content -->
+                    <main
+                      id="main-content"
+                      class="usa-layout-docs__main usa-layout-docs grid-col-12 pmc-layout pmc-prose padding-0"
+                    >
+
+                      
+                        <section class="pmc-journal-banner text-center line-height-none" aria-label="Journal banner"><img src="https://cdn.ncbi.nlm.nih.gov/pmc/banners/logo-pheblackwell.png" alt="Wiley - PMC COVID-19 Collection logo" usemap="#pmc-banner-imagemap" width="500" height="75"><map name="pmc-banner-imagemap"><area alt="Link to Wiley - PMC COVID-19 Collection" title="Link to Wiley - PMC COVID-19 Collection" shape="default" href="https://www.ncbi.nlm.nih.gov/pmc/about/covid-19/" target="_blank" rel="noopener noreferrer"></map></section><article lang="en"><section aria-label="Article citation and metadata"><section class="pmc-layout__citation font-secondary font-xs"><div>
+<div class="display-inline-block"><button type="button" class="cursor-pointer text-no-underline bg-transparent border-0 padding-0 text-left margin-0 text-normal text-primary" aria-controls="journal_context_menu">Hastings Cent Rep</button></div>. 2021 Feb 25;51(1):39–46. doi: <a href="https://doi.org/10.1002/hast.1218" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1002/hast.1218</a>
+</div>
+<nav id="journal_context_menu" hidden="hidden"><ul class="menu-list font-family-ui" role="menu">
+<li role="presentation"><a href='https://pmc.ncbi.nlm.nih.gov/search/?term="Hastings%20Cent%20Rep"[jour]' class="usa-link" role="menuitem">Search in PMC</a></li>
+<li role="presentation"><a href='https://pubmed.ncbi.nlm.nih.gov/?term="Hastings%20Cent%20Rep"[jour]' lang="en" class="usa-link" role="menuitem">Search in PubMed</a></li>
+<li role="presentation"><a href='https://www.ncbi.nlm.nih.gov/nlmcatalog?term="Hastings%20Cent%20Rep"[Title%20Abbreviation]' class="usa-link" role="menuitem">View in NLM Catalog</a></li>
+<li role="presentation"><a href='?term="Hastings%20Cent%20Rep"[jour]' class="usa-link" role="menuitem" data-add-to-search="true">Add to search</a></li>
+</ul></nav></section><section class="front-matter"><div class="ameta p font-secondary font-xs">
+<hgroup><h1>Weighted Lotteries and the Allocation of Scarce Medications for Covid‐19</h1></hgroup><div class="cg p">
+<a href='https://pubmed.ncbi.nlm.nih.gov/?term="Jansen%20LA"[Author]' class="usa-link" aria-describedby="id1"><span class="name western">Lynn A Jansen</span></a><div hidden="hidden" id="id1">
+<h3><span class="name western">Lynn A Jansen</span></h3>
+<div class="p">Find articles by <a href='https://pubmed.ncbi.nlm.nih.gov/?term="Jansen%20LA"[Author]' class="usa-link"><span class="name western">Lynn A Jansen</span></a>
+</div>
+</div>, <a href='https://pubmed.ncbi.nlm.nih.gov/?term="Wall%20S"[Author]' class="usa-link" aria-describedby="id2"><span class="name western">Steven Wall</span></a><div hidden="hidden" id="id2">
+<h3><span class="name western">Steven Wall</span></h3>
+<div class="p">Find articles by <a href='https://pubmed.ncbi.nlm.nih.gov/?term="Wall%20S"[Author]' class="usa-link"><span class="name western">Steven Wall</span></a>
+</div>
+</div>
+</div>
+<ul class="d-buttons inline-list">
+<li><button class="d-button" aria-controls="anp_a" aria-expanded="false">Article notes</button></li>
+<li><button class="d-button" aria-controls="clp_a" aria-expanded="false">Copyright and License information</button></li>
+</ul>
+<div class="d-panels font-secondary-light">
+<div id="anp_a" class="d-panel p" style="display: none"><div class="notes p"><section id="historyarticle-meta1" class="history"><p>Issue date 2021 Jan-Feb.</p></section></div></div>
+<div id="clp_a" class="d-panel p" style="display: none">
+<div>© 2021 The Hastings Center</div>
+<p>This article is being made freely available through PubMed Central as part of the COVID-19 public health emergency response. It can be used for unrestricted research re-use and analysis in any form or by any means with acknowledgement of the original source, for the duration of the public health emergency.</p>
+<div class="p"><a href="/about/copyright/" class="usa-link">PMC Copyright notice</a></div>
+</div>
+</div>
+<div>PMCID: PMC8014103  PMID: <a href="https://pubmed.ncbi.nlm.nih.gov/33630329/" class="usa-link">33630329</a>
+</div>
+</div></section></section><section aria-label="Article content"><section class="body main-article-body"><section class="abstract" id="abstract1"><h2>Abstract</h2>
+<p>
+<em>The allocation of vaccines and therapeutics for Covid‐19 obviously raises ethical questions, and physicians and ethicists have begun to address them. Writers have identified various criteria that should guide allocation decisions, but the criteria often conflict and need to be balanced against one another. This article proposes a model for thinking about how different considerations that are relevant to the distribution of vaccines and scarce treatments for Covid‐19 could be integrated into an allocation procedure. The model employs the construct of a weighted lottery, which is a construct that has been employed in other contexts that involve the distribution of scarce resources. The article highlights the advantages of applying a weighted lottery to the Covid‐19 context and offers an illustration for how it might work in practice. The primary aim of the article is to articulate the structural features of a weighted lottery for this context and to bring out its advantages over other methods for allocating Covid‐19 medications</em>.</p>
+<section id="kwd-group1" class="kwd-group"><p><strong>Keywords:</strong> Covid‐19, vaccines, lotteries, fairness, proceduralism, tiered distribution</p></section></section><section id="hast1218-sec-0010"><h2 class="pmc_sec_title">Article</h2>
+<blockquote class="text-italic"><p>Many different considerations—including a patient's occupation, membership in a disadvantaged group, and potential to benefit from a particular drug—are relevant in allocating scarce Covid‐19 vaccines and therapeutics. But how should these various factors be balanced with one another? A useful model for thinking through this problem employs a weighted lottery.</p></blockquote>
+<p>In response to the Covid‐19 pandemic, researchers across the world worked at breakneck speed to develop therapies to treat the disease and vaccines to prevent its spread. Now that several vaccines have been developed that look to be effective and safe enough for widescale distribution, demand for them has exceeded supply. Efficient and adequate distribution of the drugs has proven to be more challenging than anticipated. Confronted with scarcity in the near term, state and local officials, hospitals, and health care providers all have been forced to think about whom should be given priority in receiving the vaccine. These decisions obviously raise ethical questions, and physicians and ethicists have begun to address them. Recommendations have been advanced, and guidelines have been proposed. Two recent articles from leading medical journals in the United States, for example, called attention to a range of relevant considerations that bear on the just allocation of Covid‐19 vaccines and therapeutics.<a href="#hast1218-bib-0001" class="usa-link" aria-describedby="hast1218-bib-0001">
+<sup>1</sup>
+</a> The authors of both papers acknowledged that different relevant considerations may come into conflict and that, as a result, they may need to be balanced against one another. But they did not provide a method or procedure for how the balancing should be done or how the different considerations should be prioritized.<a href="#hast1218-bib-0002" class="usa-link" aria-describedby="hast1218-bib-0002">
+<sup>2</sup>
+</a> Without an account of these fundamental matters, proposed guidelines for the allocation of Covid‐19 drugs run the risk of being arbitrary.</p>
+<p>Recently developed vaccines may prove to be as effective as hoped for, and improvements in the production and distribution of the vaccines may obviate the need to make difficult allocation decisions. It is also possible that new variants of Covid‐19 will emerge that are resistant to current vaccines and the race to develop new vaccines and therapeutics will begin again. But however matters transpire over the next several months, the allocation issue remains important. Ethicists and health care providers need to think more rigorously and imaginatively about how best to distribute scarce medications under pandemic conditions.</p>
+<p>This article proposes a model for thinking about how different considerations that are relevant to the distribution of vaccines and scarce treatments for Covid‐19 could be integrated into an allocation procedure. The model employs a weighted lottery, which is a construct that has been employed in other contexts that involve the distribution of scarce resources.<a href="#hast1218-bib-0003" class="usa-link" aria-describedby="hast1218-bib-0003">
+<sup>3</sup>
+</a> We highlight the advantages of applying a weighted lottery to the Covid‐19 context and offer an illustration for how it might work in practice. Our primary aim is to articulate the structural features of a weighted lottery for this context and to bring out its advantages over other methods for allocating Covid‐19 medications. But, in addition, we want to discuss some of the formidable challenges its implementation in practice would present. Doing so will lead us to sketch a procedure for its implementation, one that partially addresses the balancing problem. Naturally, many issues of detail will remain open. They will require judgment to resolve, and different resolutions are likely to be acceptable in different contexts. Yet our objective here is not to present a blueprint that solves all the hard problems but, rather, to defend a way of thinking about how the problems might be constructively addressed.</p></section><section id="hast1218-sec-0020"><h2 class="pmc_sec_title">Why Not Maximize Benefit?</h2>
+<p>Lotteries come in two basic varieties. Unweighted, or simple, lotteries give each potential beneficiary an equal chance to benefit, whereas weighted lotteries do not. In weighted lotteries, some potential beneficiaries are given a greater chance to benefit than others. For example, if a lottery gives Allie a three in five chance of benefit and Belinda a two in five chance of benefit, then the lottery is weighted. Weighted lotteries might seem to be unfair on their face, but if there are good reasons for the unequal chances to benefit, then this concern will be muted or offset.<a href="#hast1218-bib-0004" class="usa-link" aria-describedby="hast1218-bib-0004">
+<sup>4</sup>
+</a> For instance, suppose that it is known that the drug being distributed by the lottery will benefit Allie a good deal more than Belinda. Giving the two individuals an equal chance to get it arguably would then not be fair.</p>
+<p>Why should any lottery be employed to resolve a distributive decision involving scarce therapeutics or vaccines in a pandemic? After all, whether weighted or not, all lotteries leave something to chance. Many people find this disturbing; even if there are good reasons to employ a lottery for the distribution of scarce medical interventions, the public might not go for it.<a href="#hast1218-bib-0005" class="usa-link" aria-describedby="hast1218-bib-0005">
+<sup>5</sup>
+</a> Better, it might be said, just to give the medications to those who are sickest or will benefit the most from them. In this way, benefits to patients overall will be maximized. Lotteries are irrational, according to this argument, because securing the optimal result should not be left to chance.</p>
+<p>To take a simple example, suppose that we have only one dose of an effective Covid‐19 vaccine, and suppose that Allie is very likely to benefit from it, while Belinda has only a small chance of doing so. In this case, most will think that Allie should get the vaccine and that we should not leave this decision to chance. Matters are less clear cut, however, if Allie's and Belinda's prospects for benefit differ only modestly. Suppose that Allie has a 60 percent chance of benefiting and that Belinda has 50 percent chance of benefiting. Many will think that Belinda has at least some claim to the vaccine, that she should have a chance to receive it even though her prospects for benefit are not quite as high as Allie's. A simple lottery, which would give both an equal chance of getting the drug, may not seem appropriate, but a lottery that gives Allie a somewhat higher chance to benefit than Belinda respects the fact that Belinda meets the eligibility criteria and so should be given an opportunity to receive the drug while also respecting the fact that Allie has a stronger claim to receive the drug, given her greater likelihood of benefiting from it. A weighted lottery would be responsive to both Belinda's claim of eligibility and Allie's claim to be given priority.</p>
+<p>Now those who favor allocations that maximize prospective benefit would reject the use of lotteries, except perhaps to break ties between potential beneficiaries who have an equal prospect for benefit,<a href="#hast1218-bib-0006" class="usa-link" aria-describedby="hast1218-bib-0006">
+<sup>6</sup>
+</a> but they would agree that, in the example we have been discussing, a weighted lottery would be better than a simple lottery. The case for the weighted lottery becomes stronger, however, when we turn attention from simple numerical differences in prospects for benefit between potential beneficiaries to additional factors that may be correlated with these numerical differences. For example, imagine that prospects for benefit associated with a therapeutic agent for Covid‐19 were found to be correlated with the absence of certain comorbidities and that these comorbidities, in turn, were correlated with membership in demographic groups that have been underserved in the past by the relevant health care system. The maximizing approach now would exacerbate the underlying health care disparities.<a href="#hast1218-bib-0007" class="usa-link" aria-describedby="hast1218-bib-0007">
+<sup>7</sup>
+</a> Continuing with our example, if Belinda has a lower prospect for benefit than Allie does because Belinda has been unjustly denied adequate health care in the past, then there is a reason of health care justice to give her an opportunity to receive the vaccine. When this reason of justice is added to the claim that Belinda has by virtue of meeting the eligibility criteria for receiving the drug, the case for a weighted lottery over a maximizing approach starts to look compelling.<a href="#hast1218-bib-0008" class="usa-link" aria-describedby="hast1218-bib-0008">
+<sup>8</sup>
+</a>
+</p>
+<p>But we are just beginning to scratch the surface. A multitude of other factors also seem relevant to the allocation of Covid‐19 therapeutics and vaccines. Consider the following:<a href="#hast1218-bib-0009" class="usa-link" aria-describedby="hast1218-bib-0009">
+<sup>9</sup>
+</a>
+</p>
+<ol id="hast1218-list-0001" class="list" style="list-style-type:decimal">
+<li><p>Essential workers should be given priority.</p></li>
+<li><p>Patients who have a higher probability of benefiting from the drug should be given priority over patients with a lower probability of benefiting.</p></li>
+<li><p>Patients who stand to benefit more from the drug, as opposed to having a higher probability of benefiting, should be given priority over patients who stand to benefit less.</p></li>
+<li><p>Those who have served others in the past should be given priority.</p></li>
+<li><p>Those who have participated in research that led to the development of the drug being distributed should be given priority.</p></li>
+<li><p>Priority should not be assigned on the basis of arbitrary considerations.</p></li>
+<li><p>Priority should not be assigned on a first‐come, first‐served basis.</p></li>
+<li><p>Priority should be assigned to facilitate the generation of evidence that bears on the drug being allocated.</p></li>
+</ol>
+<p>The first three of these additional factors arguably can be subsumed under a maximizing approach that does not require and arguably is incompatible with a lottery. To maximize societal benefit across time, it may be necessary to prioritize now those who will be needed to help others in the future.<a href="#hast1218-bib-0010" class="usa-link" aria-describedby="hast1218-bib-0010">
+<sup>10</sup>
+</a> And, other things being equal, prioritizing those who would benefit the most from the drug or have the highest prospect for benefit would plainly make sense with a maximizing approach.</p>
+<p>By contrast, the next four considerations, if credited, clearly pull us beyond the maximizing approach. Considerations 4 and 5 are backward looking. They appeal to desert as opposed to what will be best for the future. Suppose, for example, that Allie would benefit more from a medication than would Belinda but that Belinda played a role in the process that established its safety and efficacy. Here, consideration 5 would militate against the forward‐looking 3.</p>
+<p>The final three considerations all speak more directly in favor of random selection. Lotteries do not discriminate. And if first come, first served is rejected as a fair basis for allocation, then some alternative method of allocation, such as a lottery, will be needed. Lotteries also create randomization, which can further the generation of evidence by balancing known and unknown confounding factors across classes of patients eligible for the medication under consideration.<a href="#hast1218-bib-0011" class="usa-link" aria-describedby="hast1218-bib-0011">
+<sup>11</sup>
+</a>
+</p>
+<p>Note, finally, that many of the factors listed here themselves raise complex questions. Exactly who should count as an essential worker? Should some essential workers, such as health care providers, receive greater priority than others, such as transportation workers? Is the size of expected benefit more important than the probability of an expected benefit? What kinds of discrimination are arbitrary? Presumably, race and ethnicity, gender, and sexual orientation qualify, but what about age or perceived quality of life? Addressing these questions requires further judgments of priority.</p></section><section id="hast1218-sec-0030"><h2 class="pmc_sec_title">Tiers and Simple Lotteries</h2>
+<p>The case against the maximizing approach rests on the fact that there are relevant considerations for distributing scarce therapeutics and vaccines for the Covid‐19 disease that go beyond considerations of maximal benefit. There is a plurality of considerations to take into account. This, in turn, raises the problem of balancing; and that is a challenging one.</p>
+<p>Rather than aiming to maximize benefit, an alternative approach would employ simple lotteries. The simplest such approach would fix general criteria for eligibility and then run an unweighted lottery to determine who should receive the medication.<a href="#hast1218-bib-0012" class="usa-link" aria-describedby="hast1218-bib-0012">
+<sup>12</sup>
+</a> This approach would avoid unfair discrimination, but it would be unresponsive to considerations that plausibly give some classes of patients a stronger claim to receive medication than others. Essential workers or those who stand to benefit the most from the medications would not have any greater chance of benefit than others, for example. A better approach would employ simple lotteries but limit them to tie‐breaking contexts. Such an approach could establish tiers of priority.<a href="#hast1218-bib-0013" class="usa-link" aria-describedby="hast1218-bib-0013">
+<sup>13</sup>
+</a> For example, essential workers might be treated first, those who have the highest prospect for benefit next, then those from disadvantaged groups, and so on. At each tier, an unweighted lottery could be employed if scarcity required it, but no lottery would be used to allocate medications among patients occupying different tiers.</p>
+<p>There is much to recommend a tiered simple lottery. Relevant considerations, including the concern to maximize benefits, could be given priority, and lotteries could ensure that all patients at their tier level receive an equal chance to benefit. Further, if lotteries were conducted at each tier, as needed, then the problem of arbitrary discrimination and the potential unfairness involved in first‐come, first‐served allocation would be avoided.</p>
+<p>Attractive as it appears to be, however, this approach is not optimal, for at least two reasons. First, there are overlaps between the relevant priority considerations, and these overlaps are not captured by the tiers. For example, while it may be good to give priority to essential workers, it would be better to give priority to those essential workers who have the greatest prospect for benefit. Or, to take another example, among the tier of patients who are not essential workers but who have the greatest prospect for benefit, perhaps priority should be given to those from disadvantaged backgrounds. True, the problem here could be addressed by constructing ever more fine‐grained tiers of priority. But this brings us to the second and more damaging problem. The tiered simple lottery approach establishes hard cutoffs between classes of eligible patients, with the result that some eligible patients in practice would receive no prospect at all for benefit. And, intuitively, it would be better, other things being equal, to give as many eligible patients as possible some prospect for benefit.</p>
+<p>To see this more clearly, return to the simple world of Allie and Belinda, and suppose now that Allie and Belinda both fall within the tier of patients who are not essential workers but have the greatest prospect for benefit from the therapeutic. However, Allie, unlike Belinda, is a member of a disadvantaged group. Thus, on the fine‐grained tier proposal, Allie would receive a prospect for benefit, but Belinda would not. (Assume here that there is not enough medication to give to patients beyond those at this tier level.) One might think that Allie is entitled to some priority over Belinda, but it would be better to give Allie priority while ensuring that Allie and Belinda both receive some prospect for benefit. This could be accomplished by moving from simple lotteries at tier levels to a weighted lottery.</p>
+<p>The introduction of weighted lotteries removes hard cutoffs. This is a clear advantage. In the tiered approach, within each tier, patients would have equal claims to receive the Covid‐19 medication. But if those with equal claims should receive equal chances, then it is not plausible that slightly stronger claims should completely override or cancel slightly weaker ones.<a href="#hast1218-bib-0014" class="usa-link" aria-describedby="hast1218-bib-0014">
+<sup>14</sup>
+</a> Better to proportion chances to the strengths of patients’ claims, which is exactly what can be accomplished by a weighted lottery.<a href="#hast1218-bib-0015" class="usa-link" aria-describedby="hast1218-bib-0015">
+<sup>15</sup>
+</a> Moreover, the flexibility afforded by the weighted lottery approach over the tiered approach becomes more compelling as the tiers become more fine‐grained. Most likely, patients who occupy adjacent fine‐grained tiers will have claims to benefit that do not differ greatly in strength.</p>
+<p>In pressing this line of argument, we do not wish to claim that no hard cutoff could be reasonable, however. There may be some patients who should receive absolute priority in the allocation of the relevant Covid‐19 medications. The class of patients entitled to this absolute priority could be as fine‐grained as seems appropriate. Perhaps the class of essential health care workers who are needed to help others in the pandemic, who are not easily replaceable given their training, and who have a significant prospect for benefit are an example. The key would be for them to receive the medications before anyone else. And the justification for this absolute priority would be that an outcome that did not secure this absolute priority would be unacceptable and should not be left to chance.</p>
+<p>The introduction of a hard cutoff of this kind is not fundamentally incompatible with the weighted lotteries approach. This approach is committed to two basic claims. First, lotteries should be used to determine allocation decisions for at least some substantial group of patients who could benefit from Covid‐19 therapeutics or vaccines; and second, weighted lotteries are preferable to simple lotteries for this purpose.</p>
+<p>A minimal tiered approach would consist of one hard cutoff point, identifying a class of patients who should receive absolute priority in the allotment of the relevant medications. All other patients who met the eligibility criteria for the therapeutic would then be subject to a weighted lottery that would determine the allocation of the remaining medications. On reflection, this minimal tiered approach might prove to be the best approach for administering scarce Covid‐19 drugs, but it is worth considering briefly what can be said in defense of a pure version of the weighted lottery.</p></section><section id="hast1218-sec-0040"><h2 class="pmc_sec_title">A Pure Weighted Lottery: An Illustration</h2>
+<p>A pure version of the weighted lottery dispenses with all hard cutoffs. No patient is entitled to absolute priority under this approach, even though many patients are entitled to some priority. This pure approach would need to establish criteria for eligibility for the relevant medications. Patients who stood little to no chance of being responsive to a therapeutic would not be eligible to receive it, even if they wanted it. Still, in the pure version of the weighted lottery approach, there is pressure not to set the eligibility criteria too high. The pressure comes from the intuitive thought mentioned above, that it is better for as many patients as possible to have some prospect for benefit, and from the fact that the weights of the lottery can be adjusted to reflect the fact that those who have a higher prospect of benefit should have a higher chance of receiving the benefit. Suppose, for example, that reliable evidence emerges that there is a 75 percent chance that a certain Covid‐19 therapeutic would be effective for Allie, but only a 25 percent chance that it would be effective for Belinda. To reflect this fact, the weighted lottery could give Allie a chance three times higher than Belinda's to receive the therapeutic.</p>
+<p>No doubt, prospects for benefit among different patients will often not be known with the degree of precision assumed in this example. Weighted lotteries are precisely calibrated, but real‐life allocation decisions present challenges that involve vagueness and incomplete information. We will return to this concern shortly; first, we want to present an illustrative model of the kind of lottery that could be proposed for Covid‐19 treatments. For illustrative purposes, the model will involve marbles and urns, but lottery tickets or computer programs could be designed to simulate the same kind of weighted randomization.</p>
+<p>Each patient in our model who both wants to receive a Covid‐19 medication and meets the criteria for eligibility for the medication receives ten marbles, which are then dropped into an urn from which draws will be taken. Each marble is stamped with a unique number that identifies its owner. Each eligible patient receives, at this initial stage in the allocation, the same number of marbles, reflecting the judgment that each person who could benefit from the treatment should have an equal chance of receiving it, other things being equal. Call this the <em>basic fairness claim</em>.</p>
+<p>If basic fairness were all that mattered, then there would be no need for a further stage in the design of the lottery. But, as we have explained, there are considerations that are relevant to the allocation of Covid‐19 medications that compel a departure from basic fairness. For simplicity, imagine that four considerations were judged to be relevant: essential work, prospect for benefit, membership in a disadvantaged socioeconomic group, and past participation in research.</p>
+<p>Essential workers should receive high priority, and let us suppose that this is accomplished by giving them an additional fifty marbles. (The higher the priority we think they should have, the more marbles we would give them.) Those who stand to benefit more from the medication, either because they have a higher chance of being responsive to it or because they would derive a larger benefit from it, also have stronger claims. For simplicity's sake, eligible patients would be divided into three groups based on their prospect for benefit—low, moderate, or high—and given zero, ten, or twenty additional marbles, respectively. All those from disadvantaged economic backgrounds or from racial and ethnic groups that had reduced access to health care resources in the past would be given ten additional marbles. Finally, those who participated in the research that produced the medication would receive an additional ten marbles. With these adjustments in place, marbles would then be drawn from the urn until the supply of medication was exhausted.</p>
+<p>Three noteworthy features about this model should be highlighted. First, the assignment of additional marbles to eligible patients would be transparent and open to debate. Justifications would need to be given for the weights that were assigned to the various criteria. It might be argued, for instance, that essential workers are entitled to their significantly greater chance of receiving the medication than others by virtue of their contribution to vital social needs and their greater exposure to the disease. Second, the different criteria that grant patients additional chances for receiving the medication are cross‐cutting and overlapping, and the marble assignment neatly reflects this fact. To give an example, essential workers who have a high prospect for benefit and are from a disadvantaged background would receive ninety marbles, thereby giving them a ninefold greater chance of receiving the medication compared to those who received only the ten marbles granted to them under the basic fairness claim. Third, the basic fairness claim is honored in the model. No eligible patient would be denied a chance to receive the medication in question.</p>
+<p>Our simple model illustrates an important and intriguing feature of weighted lotteries. When different factors overlap, the significance of assigning one factor greater priority over others diminishes. For example, in our model, essential workers were given an additional fifty marbles, and those from disadvantaged groups were given an additional ten marbles. But if a high proportion of essential workers were also members of disadvantaged groups (as seems to be the case<a href="#hast1218-bib-0016" class="usa-link" aria-describedby="hast1218-bib-0016">
+<sup>16</sup>
+</a>), then a reverse assignment of marbles—fifty marbles for membership in disadvantaged groups and ten marbles for being an essential worker—would yield similar prospects for many of those who intuitively have a very strong claim to receive the medication, namely, essential workers who are also members of a disadvantaged group. In this way, the overlap of factors reduces the significance of the initial weightings.</p>
+<p>The model, as we described it, is very simple, but it could be made more complex as deemed appropriate.<a href="#hast1218-bib-0017" class="usa-link" aria-describedby="hast1218-bib-0017">
+<sup>17</sup>
+</a> Increasing the number of factors that are weighted in the lottery, given plausible empirical assumptions, would increase the degree of overlap between different factors, thereby reducing the significance of the initial weightings overall. Still, there are limits to the complexity that can be achieved. A good model must balance sensitivity to relevant considerations against the need for an allotment process, the workings of which could be understood by the relevant patient population, thereby making it more legitimate in their eyes.</p></section><section id="hast1218-sec-0050"><h2 class="pmc_sec_title">The Importance of Process</h2>
+<p>A weighted lottery, whatever initial weights it assigns to different criteria, will be precisely calibrated in a way that does not reflect the messiness of the allotment decisions that need to be made. We may agree that essential workers should be given some priority in the distribution of Covid‐19 medications, but why a sixfold priority instead of a five‐ or tenfold priority? Obviously, context matters. We need to know more about the properties and quantities of the drug to be allotted.<a href="#hast1218-bib-0018" class="usa-link" aria-describedby="hast1218-bib-0018">
+<sup>18</sup>
+</a> No weights sensibly can be defined in the abstract, except for illustrative purposes. Further, even when context is attended to, in actuality, there will almost certainly be multiple ways of assigning weights to different criteria that are acceptable or reasonable.</p>
+<p>Even if overlaps between different factors reduce the significance of the initial assignment of weights, they by no means eliminate it. Tough decisions regarding the priority of different factors remain. And the problem of balancing these factors cuts deep, for it is plausible to think that there is no uniquely correct assignment of weights for the factors that we have been discussing. A plurality of different weightings is, in all likelihood, equally defensible. Deliberation in a particular context might reveal more determinate rankings of relevant factors, but no uniquely correct assignment of weights is likely to emerge. For this reason, a legitimate implementation of the weighted lottery would need to arise from a fair and open process in which all relevant parties were included.</p>
+<p>We hasten to add that a fair process of this kind would not be unconstrained. For example, if the fair and open process selected a simple lottery, then this would not be, in our view, a fair result. Further, there are some weightings of some factors that plainly would not be acceptable. A weighted lottery might assign substantial priority to a factor, such as ability to pay, that perpetuates unfairness, or it might fail to give enough weight to a factor that is clearly relevant, such as potential to benefit. A fair process in this context, in other words, is not purely procedural; it's an example of constrained procedural justice.<a href="#hast1218-bib-0019" class="usa-link" aria-describedby="hast1218-bib-0019">
+<sup>19</sup>
+</a> It selects a particular profile of weightings from among the set of rationally eligible profiles of such weightings.</p>
+<p>Our simple illustrative model singled out four factors: essential work, prospect for benefit, membership in a disadvantaged socioeconomic group, and past participation in research. We think the first three of these are the least negotiable. A fair weighted lottery should be responsive to them, but the precise weights of these factors cannot be settled by abstract rational argument. Some of the other factors, such as priority to those who have served others in the past or whose participation would facilitate generation of evidence, strike us as more contingent and more negotiable. But, again, context will matter, and we do not think that these matters can be settled rationally in advance. In all likelihood, different groups will legitimately make different decisions on these matters.</p>
+<p>Our brief for the weighted lottery in the Covid‐19 context has defended the proposal on its substantive merits. But what if our proposal were itself rejected by a fair and open process? Even if our argument for the weighted lottery is sound, not everyone will be persuaded. We do not wish to minimize the challenges of putting our proposal into practice. Our primary aim has been to describe the weighted lottery and to make the case for it. We caution against too much skepticism about its practicality, however. Lotteries have been used in a range of contexts for allocating benefits and burdens and have been broadly accepted in a number of these contexts.<a href="#hast1218-bib-0020" class="usa-link" aria-describedby="hast1218-bib-0020">
+<sup>20</sup>
+</a> The public may be receptive to a weighted lottery for Covid‐19 medications, especially if it is given assurance that its operations are transparent and that it arises from a fair process. Still, it is no part of our argument that a weighted lottery provides the only legitimate method for allocating scarce Covid‐19 medications. Any legitimate method, we think, must give appropriate weight to the kinds of factors that we have been discussing, and this might be accomplished by different means, such as the tiered proposal, even if the weighted lottery would provide the best means for allocating the medications.</p>
+<p>In short, our position is that a weighted lottery is the best method for allocating scarce Covid‐19 medications, but for it to be legitimately implemented, it must arise from a fair and open process. This process need not be same process, or consist of the same members, as the process that determines the initial weights in the weighted lottery, and we will not attempt to describe it further here.</p>
+<p>We do wish to identify a few key issues that would need to be addressed in the process internal to the weighted lottery, however.<a href="#hast1218-bib-0021" class="usa-link" aria-describedby="hast1218-bib-0021">
+<sup>21</sup>
+</a> One of these is determining the appropriate site of the lottery. We have been writing as if the lottery would be implemented at the hospital level, but others may think that it would be better administered at the district or state‐wide level.<a href="#hast1218-bib-0022" class="usa-link" aria-describedby="hast1218-bib-0022">
+<sup>22</sup>
+</a> There is here the familiar tension between securing sensitivity to local concerns and establishing uniform treatment across larger populations of patients.</p>
+<p>In addition, deliberative norms that structure discussion about the weights assigned to different factors must be selected. Such norms can be oriented toward achieving consensus or toward encouraging the expression of independent, and likely conflicting, judgments.<a href="#hast1218-bib-0023" class="usa-link" aria-describedby="hast1218-bib-0023">
+<sup>23</sup>
+</a> The latter orientation highlights the important issue of the voting rules and procedures that are appropriate for resolving disagreements that remain after deliberation. Finally, there is the crucial question of who gets included in the fair process. At a minimum, all of the following should be included in the discussion that sets the weights for the lottery—hospital or health center administrators, clinicians, nurses, medical ethicists, infectious disease experts, patient advocates, community leaders, and representatives from groups that have suffered from health care disparities. We think it is important both that the process be fair and that it be perceived as fair by the patient population. In this way, while some judgments of weight will appear arbitrary in one sense (why ten marbles instead of twenty?), they will be nonarbitrary in another sense (we needed to fix the priority weight at some numerical level, and ten marbles is what the committee decided on after appropriate deliberation.)</p>
+<p>The weights established in the lottery have multiple advantages that we have not so far discussed and will mention in closing. First, unlike guidelines that leave it to individuals within the institution to balance different considerations according to their own judgments, the judgments of priority established by the weighted lottery are uniform. Whether or not a patient is denied a Covid‐19 therapeutic or vaccine would not be a function of the idiosyncratic assessments of his or her clinician.<a href="#hast1218-bib-0024" class="usa-link" aria-describedby="hast1218-bib-0024">
+<sup>24</sup>
+</a> Second, the need to assign numerical weights to different criteria of priority forces an institution to take the balancing problem seriously. These hard questions need to be confronted and then resolved in a consistent way. Without a need to reach a determinate balancing of relevant considerations, it is all too easy for institutions to avoid doing so. Third, the weighted lottery has a valuable expressive function. It enables an institution to express in a vivid way its commitment to various considerations, such as the justice of giving priority to those from disadvantaged communities.</p>
+<p>Physicians and public health professionals have done a good job of identifying the kinds of considerations that bear on the just allocation of Covid‐19 medications. They have not done nearly so well at identifying procedures for balancing the different considerations. Taking seriously the construct of a weighted lottery, whether in a pure form or in combination with tiers of priority, forces us to address that difficult problem and so can help with its resolution.</p></section><section id="notes1"><p>
+
+Jansen Lynn A. and Wall Steven, “Weighted Lotteries and the Allocation of Scarce Medications for Covid‐19,” Hastings Center Report
+51 no. 1 (2021): 39–46. DOI: 10.1002/hast.1218
+
+</p></section><section id="hast1218-bibl-0001" class="ref-list"><h2 class="pmc_sec_title">Notes</h2>
+<section id="hast1218-bibl-0001_sec2"><ul class="ref-list font-sm" style="list-style-type:none">
+<li id="hast1218-bib-0001">
+<span class="label">1.</span><cite>
+DeJong C., Chen A., and Lo B.., “An Ethical Framework for Allocating Inpatient Medications for Covid-19 in the US,” Journal of the American Medical Association
+323 (2020): 2367–68, and E. Emanuel et al., “Fair Allocation of Scarce Medical Resources in the Time of Covid-19,” <em>New England Journal of Medicine</em> 382 (2020): 2049-55.32412580</cite> [<a href="https://scholar.google.com/scholar_lookup?journal=Journal%20of%20the%20American%20Medical%20Association&amp;title=An%20Ethical%20Framework%20for%20Allocating%20Inpatient%20Medications%20for%20Covid-19%20in%20the%20US&amp;author=C.%20DeJong&amp;author=A.%20Chen&amp;author=B.%20Lo&amp;volume=323&amp;publication_year=2020&amp;pages=2367-68&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0002">
+<span class="label">2.</span><cite>
+Both papers call for maximizing benefits, but they then go on to list additional factors without confronting the fact that giving weight to these additional factors would probably result in fewer benefits.</cite>
+</li>
+<li id="hast1218-bib-0003">
+<span class="label">3.</span><cite>The classic defense of lotteries, including weighted lotteries, is Broome J., “Fairness,” Proceedings of the Aristotelian Society
+91 (1990-1991): 87–101. See also Ben Saunders, “A Defence of Weighted Lotteries in Life Saving Cases,” <em>Ethical Theory and Moral Practice</em> 12 (2009): 279-90, and M. Peterson, “The Moral Importance of Selecting People Randomly,” <em>Bioethics</em> 22, no. 6 (2008): 321-27. For criticism, see I. Hirose, <em>Moral Aggregation</em> (Oxford: Oxford University Press, 2014).</cite> [<a href="https://scholar.google.com/scholar_lookup?journal=Proceedings%20of%20the%20Aristotelian%20Society&amp;title=Fairness&amp;author=J.%20Broome&amp;volume=91&amp;publication_year=1991&amp;pages=87-101&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0004">
+<span class="label">4.</span><cite>
+Muted, but not necessarily silenced. Weighted lotteries of the kind we will be discussing are responsive to fairness considerations but are responsive to other considerations as well. Hence, there is no guarantee that the best version of a weighted lottery is the fairest version.</cite>
+</li>
+<li id="hast1218-bib-0005">
+<span class="label">5.</span><cite>For critical discussion of public resistance to the use of lotteries, see Elster J., “Taming Chance: Randomization in Individual and Social Relations,” chap. 2 in Solomonic Judgments (Cambridge: Cambridge University Press, 1989). Elster observes that unease about lotteries may stem in part from the fact that human beings seem “to have a strong reluctance to admit uncertainty and indeterminacy into human affairs” (37).</cite> [<a href="https://scholar.google.com/scholar_lookup?title=Solomonic%20Judgments&amp;author=J.%20Elster&amp;publication_year=1989&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0006">
+<span class="label">6.</span><cite>
+It is possible that an indirect maximizing approach, such as that favored by rule utilitarianism, would support a weighted lottery in this context. If so, then those who favor the maximization of benefits could accept our proposal. We cannot explore this interesting possibility here, however.</cite>
+</li>
+<li id="hast1218-bib-0007">
+<span class="label">7.</span><cite>
+Schmidt H., “Vaccine Rationing and the Urgency of Social Justice in the Covid-19 Response,” Hastings Center Report
+50, no. 3 (2020): 46–49.</cite> [<a href="https://doi.org/10.1002/hast.1113" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC7283636/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/32468631/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Hastings%20Center%20Report&amp;title=Vaccine%20Rationing%20and%20the%20Urgency%20of%20Social%20Justice%20in%20the%20Covid-19%20Response&amp;author=H.%20Schmidt&amp;volume=50&amp;issue=3&amp;publication_year=2020&amp;pages=46-49&amp;pmid=32468631&amp;doi=10.1002/hast.1113&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0008">
+<span class="label">8.</span><cite>
+Schmidt notes this, but his considered position is that this factor should not be left to chance. Ibid., 3.</cite>
+</li>
+<li id="hast1218-bib-0009">
+<span class="label">9.</span><cite>The first seven factors are taken from DeJong, Chen, and Lo, “An Ethical Framework for Allocating Inpatient Medications for Covid-19 in the US,” and Emanuel et al., “Fair Allocation of Scarce Medical Resources in the Time of Covid-19.” DeJong et al. mention factors 1, 2, 5, and 6. Emanuel et al. discuss all seven factors. The eighth factor is mentioned in D. White and D. Angus, “A Proposed Lottery System to Allocate Scarce Covid-19 Medications,” Journal of the American Medical Association
+324 (2020): 329–30.32579158</cite> [<a href="https://scholar.google.com/scholar_lookup?journal=Journal%20of%20the%20American%20Medical%20Association&amp;title=An%20Ethical%20Framework%20for%20Allocating%20Inpatient%20Medications%20for%20Covid-19%20in%20the%20US,%E2%80%9D%20and%20Emanuel%20et%20al.,%20%E2%80%9CFair%20Allocation%20of%20Scarce%20Medical%20Resources%20in%20the%20Time%20of%20Covid-19.%E2%80%9D%20DeJong%20et%20al.%20mention%20factors%201,%202,%205,%20and%206.%20Emanuel%20et%20al.%20discuss%20all%20seven%20factors.%20The%20eighth%20factor%20is%20mentioned%20in%20D.%20White%20and%20D.%20Angus,%20%E2%80%9CA%20Proposed%20Lottery%20System%20to%20Allocate%20Scarce%20Covid-19%20Medications&amp;author=%20DeJong&amp;author=%20Chen&amp;author=%20Lo&amp;volume=324&amp;publication_year=2020&amp;pages=329-30&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0010">
+<span class="label">10.</span><cite>
+DeJong, Chen, and Lo, “An Ethical Framework for Allocating Inpatient Medications for Covid-19 in the US,” 2367.</cite> [<a href="https://doi.org/10.1001/jama.2020.8914" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/32412580/" class="usa-link">PubMed</a>]</li>
+<li id="hast1218-bib-0011">
+<span class="label">11.</span><cite>
+White and Angus, “A Proposed Lottery System to Allocate Scarce Covid-19 Medications,” 330.</cite> [<a href="https://doi.org/10.1001/jama.2020.11464" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/32579158/" class="usa-link">PubMed</a>]</li>
+<li id="hast1218-bib-0012">
+<span class="label">12.</span><cite>For a proposal roughly along these lines concerning influenza vaccines, see McLachlan H., “A Proposed Non-consequentialist Policy for the Ethical Distribution of Scarce Vaccinations in the Fact of an Influenza Pandemic,” Journal of Medical Ethics
+38, no. 5 (2012): 317–18.</cite> [<a href="https://doi.org/10.1136/medethics-2011-100031" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/22411748/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Journal%20of%20Medical%20Ethics&amp;title=A%20Proposed%20Non-consequentialist%20Policy%20for%20the%20Ethical%20Distribution%20of%20Scarce%20Vaccinations%20in%20the%20Fact%20of%20an%20Influenza%20Pandemic&amp;author=H.%20McLachlan&amp;volume=38&amp;issue=5&amp;publication_year=2012&amp;pages=317-18&amp;pmid=22411748&amp;doi=10.1136/medethics-2011-100031&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0013">
+<span class="label">13.</span><cite>An approach of this type was adopted by the United Kingdom for allocating vaccines during an influenza epidemic. The government's contingency pandemic plan established seven numerically ranked “priority groups.” See Department of Health, HPIH&amp;SD, and Immunisation Policy, Monitoring &amp; Surveillance
+, UK Health Departments’ Influenza Pandemic Contingency Plan (Department of Health Publications, October 20, 2005), <a href="http://news.bbc.co.uk/2/shared/bsp/hi/pdfs/19_10_05_bird_flu.pdf" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">http://news.bbc.co.uk/2/shared/bsp/hi/pdfs/19_10_05_bird_flu.pdf</a>.</cite> [<a href="https://scholar.google.com/scholar_lookup?title=UK%20Health%20Departments%E2%80%99%20Influenza%20Pandemic%20Contingency%20Plan&amp;publication_year=2005&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0014">
+<span class="label">14.</span><cite>Here we follow Broome J., Weighing Goods (Oxford: Oxford University Press, 1991), 196.</cite> [<a href="https://scholar.google.com/scholar_lookup?title=Weighing%20Goods&amp;author=J.%20Broome&amp;publication_year=1991&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0015">
+<span class="label">15.</span><cite>
+Or, more precisely, this is what can be accomplished by a weighted lottery of a certain type; not every weighted lottery will be proportionately weighted.</cite>
+</li>
+<li id="hast1218-bib-0016">
+<span class="label">16.</span><cite>Assuming, that is, that essential workers are construed broadly to include nursing home aides, garbage collectors, supermarket clerks, and so on; see Schmidt
+, “Vaccine Rationing and the Urgency of Social Justice in the Covid-19 Response,” 49.</cite>
+</li>
+<li id="hast1218-bib-0017">
+<span class="label">17.</span><cite>An important complication that we pass over here is that a weighted lottery for Covid-19 medications would need to be temporally extended, not a one-off event. For discussion of some of the issues raised by temporally extended lotteries see Vong G., “Fairness, Rescue by Lottery, and the Chancey Satisfaction of Moral Claims,” Utilitas
+27, no. 4 (2015): 470–86.</cite> [<a href="https://scholar.google.com/scholar_lookup?journal=Utilitas&amp;title=Fairness,%20Rescue%20by%20Lottery,%20and%20the%20Chancey%20Satisfaction%20of%20Moral%20Claims&amp;author=G.%20Vong&amp;volume=27&amp;issue=4&amp;publication_year=2015&amp;pages=470-86&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0018">
+<span class="label">18.</span><cite>
+For ease of exposition, we have grouped Covid-19 therapeutics and vaccines together, but obviously, the differences between these medications and their respective contributions to public health are relevant to how they should be allotted.</cite>
+</li>
+<li id="hast1218-bib-0019">
+<span class="label">19.</span><cite>The term “constrained procedural justice” is taken from Rid A., “Justice and Procedure: How Does ‘Accountability for Reasonableness’ Result in Fair Limit Setting Decisions?,” Journal of Medical Ethics
+35, no. 1 (2009): 12–16. The idea is that, within the constraints, the procedure determines the fair result.</cite> [<a href="https://doi.org/10.1136/jme.2008.024430" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/19103936/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Journal%20of%20Medical%20Ethics&amp;title=Justice%20and%20Procedure:%20How%20Does%20%E2%80%98Accountability%20for%20Reasonableness%E2%80%99%20Result%20in%20Fair%20Limit%20Setting%20Decisions?&amp;author=A.%20Rid&amp;volume=35&amp;issue=1&amp;publication_year=2009&amp;pages=12-16&amp;pmid=19103936&amp;doi=10.1136/jme.2008.024430&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0020">
+<span class="label">20.</span><cite>
+Elster, Solomonic Judgments.</cite>
+</li>
+<li id="hast1218-bib-0021">
+<span class="label">21.</span><cite>Some guidance for thinking about these procedural issues can be gleaned from discussions of the kinds of fair processes that have been proposed for the allocation of other types of scarce therapies. See, for example, Daniels N. and Sabin J., Setting Limits Fairly: Learning to Share Resources for Health (Oxford: Oxford University Press, 2008), and Rid, “Justice and Procedure.”</cite> [<a href="https://scholar.google.com/scholar_lookup?title=Setting%20Limits%20Fairly:%20Learning%20to%20Share%20Resources%20for%20Health&amp;author=N.%20Daniels&amp;author=J.%20Sabin&amp;publication_year=2008&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0022">
+<span class="label">22.</span><cite>
+White and Angus, “A Proposed Lottery System to Allocate Scarce Covid-19 Medications.”</cite> [<a href="https://doi.org/10.1001/jama.2020.11464" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/32579158/" class="usa-link">PubMed</a>]</li>
+<li id="hast1218-bib-0023">
+<span class="label">23.</span><cite>
+Jansen L. A., “Consensus and Independent Judgment: Or What Can an 18th Century Mathematician Teach Us about Ethics Consultation,” Journal of Clinical Ethics
+20 (2009): 56–63.</cite> [<a href="https://pubmed.ncbi.nlm.nih.gov/19385323/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Journal%20of%20Clinical%20Ethics&amp;title=Consensus%20and%20Independent%20Judgment:%20Or%20What%20Can%20an%2018th%20Century%20Mathematician%20Teach%20Us%20about%20Ethics%20Consultation&amp;author=L.%20A.%20Jansen&amp;volume=20&amp;publication_year=2009&amp;pages=56-63&amp;pmid=19385323&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="hast1218-bib-0024">
+<span class="label">24.</span><cite>
+The same point supports national guidelines rather than leaving these decisions to each institution. But our focus here has been at the institutional level.</cite>
+</li>
+</ul></section></section></section><footer class="p courtesy-note font-secondary font-sm text-center"><hr class="headless">
+<p>Articles from The Hastings Center Report are provided here courtesy of <strong>Wiley</strong></p></footer></section></article>
+
+                      
+
+                    </main>
+                </div>
+            </div>
+        </div>
+
+        
+
+
+
+<!-- Secondary navigation placeholder -->
+<div class="pmc-sidenav desktop:grid-col-4 display-flex">
+    <section class="pmc-sidenav__container" aria-label="Article resources and navigation">
+        <button type="button" class="pmc-sidenav__container__close">
+            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/usa-icons/close.svg" role="img" alt="Close" />
+        </button>
+    <div class="display-none desktop:display-block">
+       <section class="margin-top-4 desktop:margin-top-0">
+              <h2 class="margin-top-0">ACTIONS</h2>
+           <ul class="usa-list usa-list--unstyled usa-list--actions">
+               
+               <li>
+                     <a
+                             href="https://doi.org/10.1002/hast.1218"
+                             class="usa-button usa-button--outline width-24 font-xs display-inline-flex flex-align-center flex-justify-start padding-left-1"
+                             target="_blank"
+                             rel="noreferrer noopener"
+                             data-ga-category="actions"
+                             data-ga-action="click"
+                             data-ga-label="publisher_link_desktop"
+                     >
+                         <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/launch.svg" alt="View on publisher site icon" class="usa-icon usa-icon--size-3 usa-icon--link"/>
+                         <span class="display-inline-flex flex-justify-center flex-1 padding-right-2">View on publisher site</span>
+                     </a>
+               </li>
+               
+               
+               <li>
+                    <a
+                            href="pdf/HAST-51-39.pdf"
+                            class="usa-button usa-button--outline width-24 display-inline-flex flex-align-center flex-justify-start padding-left-1"
+                            data-ga-category="actions"
+                            data-ga-action="click"
+                            data-ga-label="pdf_download_desktop"
+                    >
+                         <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/file_download.svg" alt="Download PDF icon" class="usa-icon usa-icon--size-3 usa-icon--link"/>
+                        <span class="display-inline-flex flex-justify-center flex-1">PDF (148.0 KB)</span>
+                    </a>
+               </li>
+               
+                
+               <li>
+                   <button role="button" class="usa-button width-24 citation-dialog-trigger display-inline-flex flex-align-center flex-justify-start padding-left-1"
+                        aria-label="Open dialog with citation text in different styles"
+                        data-ga-category="actions"
+                        data-ga-action="open"
+                        data-ga-label="cite_desktop"
+                        data-all-citations-url="/resources/citations/8014103/"
+                        data-citation-style="nlm"
+                        data-download-format-link="/resources/citations/8014103/export/"
+                    >
+                       <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/format_quote.svg" alt="Cite icon" class="usa-icon usa-icon--size-3 usa-icon--white"/>
+                       <span class="display-inline-flex flex-justify-center flex-1 button-label">Cite</span>
+                    </button>
+               </li>
+                
+               <li>
+
+                        <button class="usa-button width-24 collections-dialog-trigger collections-button display-inline-flex flex-align-center flex-justify-start padding-left-1 collections-button-empty"
+                              aria-label="Save article in MyNCBI collections."
+                              data-ga-category="actions"
+                              data-ga-action="click"
+                              data-ga-label="collections_button_desktop"
+                              data-collections-open-dialog-enabled="false"
+                              data-collections-open-dialog-url="https://account.ncbi.nlm.nih.gov/?back_url=https%3A%2F%2Fpmc.ncbi.nlm.nih.gov%2Farticles%2FPMC8014103%2F%23open-collections-dialog"
+                              data-in-collections="false">
+                            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/action-bookmark-full.svg" alt="Collections icon" class="usa-icon usa-icon--size-3 usa-icon--white usa-icon--bookmark-full" hidden />
+                            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/action-bookmark-empty.svg" alt="Collections icon" class="usa-icon usa-icon--size-3 usa-icon--white usa-icon--bookmark-empty" hidden />
+                            <span class="display-inline-flex flex-justify-center flex-1">Collections</span>
+                       </button>
+               </li>
+               <li class="pmc-permalink">
+                    <button
+                            type="button"
+                            class="usa-button width-24 display-inline-flex flex-align-center flex-justify padding-left-1 shadow-none"
+                            aria-label="Show article permalink"
+                            aria-expanded="false"
+                            aria-haspopup="true"
+                            data-ga-category="actions"
+                            data-ga-action="open"
+                            data-ga-label="permalink_desktop"
+                    >
+                        <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/share.svg" alt="Permalink icon" class="usa-icon usa-icon--size-3 usa-icon--white"/>
+                        <span class="display-inline-flex flex-justify-center flex-1 button-label">Permalink</span>
+                    </button>
+                   
+
+<div class="pmc-permalink__dropdown" hidden>
+    <div class="pmc-permalink__dropdown__container">
+          <h2 class="usa-modal__heading margin-top-0 margin-bottom-2 text-uppercase font-sans-xs">PERMALINK</h2>
+          <div class="pmc-permalink__dropdown__content">
+              <input type="text" class="usa-input" value="https://pmc.ncbi.nlm.nih.gov/articles/PMC8014103/" aria-label="Article permalink">
+              <button class="usa-button display-inline-flex pmc-permalink__dropdown__copy__btn margin-right-0" title="Copy article permalink" data-ga-category="save_share" data-ga-action="link" data-ga-label="copy_link">
+                  <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/content_copy.svg" alt="Copy icon" aria-hidden="true" class="usa-icon usa-icon--white" />
+                  <span class="margin-left-1">Copy</span>
+              </button>
+          </div>
+    </div>
+</div>
+               </li>
+           </ul>
+       </section>
+     </div>
+
+        <section class="pmc-resources margin-top-6 desktop:margin-top-4" data-page-path="/articles/PMC8014103/">
+            <h2 class="margin-top-0">RESOURCES</h2>
+            
+                <div class="usa-accordion usa-accordion--multiselectable" data-allow-multiple>
+                    <h3 class="usa-accordion__heading">
+                        <button
+                        type="button"
+                        class="usa-accordion__button"
+                        aria-expanded="false"
+                        aria-controls="resources-similar-articles"
+                        data-ga-category="resources_accordion"
+                        data-ga-action="open_similar_articles"
+                        data-ga-label="/articles/PMC8014103/"
+                        data-action-open="open_similar_articles"
+                        data-action-close="close_similar_articles"
+                        >
+                            Similar articles
+                        </button>
+                    </h3>
+                    <div
+                            id="resources-similar-articles"
+                            class="usa-accordion__content usa-prose"
+                            
+                                data-source-url="/resources/similar-article-links/33630329/"
+                            
+                    >
+                        
+                    </div>
+                    <h3 class="usa-accordion__heading">
+                        <button
+                        type="button"
+                        class="usa-accordion__button"
+                        aria-expanded="false"
+                        aria-controls="resources-cited-by-other-articles"
+                        data-ga-category="resources_accordion"
+                        data-ga-action="open_cited_by"
+                        data-ga-label="/articles/PMC8014103/"
+                        data-action-open="open_cited_by"
+                        data-action-close="close_cited_by"
+                        >
+                             Cited by other articles
+                        </button>
+                    </h3>
+                    <div
+                            id="resources-cited-by-other-articles"
+                            class="usa-accordion__content usa-prose"
+                            
+                                data-source-url="/resources/cited-by-links/33630329/"
+                            
+                    >
+                          
+                    </div>
+                    
+                        <h3 class="usa-accordion__heading">
+                            <button
+                            type="button"
+                            class="usa-accordion__button"
+                            aria-expanded="false"
+                            aria-controls="resources-links-to-ncbi-databases"
+                            data-ga-category="resources_accordion"
+                            data-ga-action="open_NCBI_links"
+                            data-ga-label="/articles/PMC8014103/"
+                            data-action-open="open_NCBI_links"
+                            data-action-close="close_NCBI_link"
+                            >
+                                 Links to NCBI Databases
+                            </button>
+                        </h3>
+                        <div
+                                id="resources-links-to-ncbi-databases"
+                                class="usa-accordion__content usa-prose"
+                                data-source-url="/resources/db-links/8014103/"
+                        >
+                        </div>
+                    
+                    
+                </div>
+            
+        </section>
+
+
+        <section
+        class="usa-in-page-nav usa-in-page-nav--wide margin-top-6 desktop:margin-top-4"
+        data-title-text="On this page"
+        data-title-heading-level="h2"
+        data-scroll-offset="0"
+        data-root-margin="-10% 0px -80% 0px"
+        data-main-content-selector="main"
+        data-threshold="1"
+        hidden
+        ></section>
+    </section>
+</div>
+
+        
+
+<div class="overlay" role="dialog" aria-label="Citation Dialog" hidden>
+    <div class="dialog citation-dialog" aria-hidden="true">
+        <div class="display-inline-flex flex-align-center flex-justify width-full margin-bottom-2">
+            <h2 class="usa-modal__heading margin-0">Cite</h2>
+             <button type="button" class="usa-button usa-button--unstyled close-overlay text-black width-auto"  tabindex="1">
+                 <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/close.svg" alt="Close icon" class="usa-icon usa-icon--size-3 usa-icon--button" />
+             </button>
+        </div>
+
+        
+
+<div class="citation-text-block">
+  <div class="citation-text margin-bottom-2"></div>
+  <ul class="usa-list usa-list--unstyled display-inline-flex flex-justify width-full flex-align-center">
+      <li>
+        <button
+          class="usa-button usa-button--unstyled text-no-underline display-flex flex-align-center copy-button dialog-focus"
+          data-ga-category="save_share"
+          data-ga-action="cite"
+          data-ga-label="copy"
+          tabindex="2">
+            <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/content_copy.svg" alt="Copy icon" class="usa-icon usa-icon--size-3 usa-icon--link" />
+            <span>Copy</span>
+        </button>
+      </li>
+      <li>
+          <a
+              href="#"
+              role="button"
+              class="usa-button usa-button--unstyled text-no-underline display-flex flex-align-center export-button"
+              data-ga-category="save_share"
+              data-ga-action="cite"
+              data-ga-label="download"
+              title="Download a file for external citation management software"
+              tabindex="3">
+                <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/file_download.svg" alt="Download icon" aria-hidden="true" class="usa-icon usa-icon--size-3 usa-icon--link" />
+                <span class="display-none mobile-lg:display-inline">Download .nbib</span>
+                <span class="display-inline mobile-lg:display-none">.nbib</span>
+            </a>
+      </li>
+      <li>
+          
+
+<div class="display-inline-flex flex-align-center">
+  <label class="usa-label margin-top-0">Format:</label>
+  <select aria-label="Format" class="usa-select citation-style-selector padding-1 margin-top-0 border-0 padding-right-4" tabindex="4" >
+    
+      <option data-style-url-name="ama"
+              value="AMA"
+              >
+        AMA
+      </option>
+    
+      <option data-style-url-name="apa"
+              value="APA"
+              >
+        APA
+      </option>
+    
+      <option data-style-url-name="mla"
+              value="MLA"
+              >
+        MLA
+      </option>
+    
+      <option data-style-url-name="nlm"
+              value="NLM"
+              selected="selected">
+        NLM
+      </option>
+    
+  </select>
+</div>
+      </li>
+  </ul>
+</div>
+    </div>
+</div>
+
+        <div class="overlay" role="dialog" hidden>
+  <div id="collections-action-dialog" class="dialog collections-dialog" aria-hidden="true">
+   <div class="display-inline-flex flex-align-center flex-justify width-full margin-bottom-2">
+        <h2 class="usa-modal__heading margin-0">Add to Collections</h2>
+    </div>
+    <div class="collections-action-panel action-panel">
+      
+
+
+<form id="collections-action-dialog-form"
+      class="usa-form maxw-full collections-action-panel-form action-panel-content action-form action-panel-smaller-selectors"
+      data-existing-collections-url="/list-existing-collections/"
+      data-add-to-existing-collection-url="/add-to-existing-collection/"
+      data-create-and-add-to-new-collection-url="/create-and-add-to-new-collection/"
+      data-myncbi-max-collection-name-length="100"
+      data-collections-root-url="https://www.ncbi.nlm.nih.gov/myncbi/collections/">
+
+    <input type="hidden" name="csrfmiddlewaretoken" value="VjjSKaoCCPWDW3n5mreisYcIqC40BO7bcUfupaZdW0TfGoR5Yp3eu04KkOmiPgym">
+
+    <fieldset class="usa-fieldset margin-bottom-2">
+        <div class="usa-radio">
+            <input type="radio"
+            id="collections-action-dialog-new"
+            class="usa-radio__input usa-radio__input--tile collections-new  margin-top-0"
+            name="collections"
+            value="new"
+            data-ga-category="collections_button"
+            data-ga-action="click"
+            data-ga-label="collections_radio_new" />
+            <label class="usa-radio__label" for="collections-action-dialog-new">Create a new collection</label>
+        </div>
+        <div class="usa-radio">
+            <input type="radio"
+            id="collections-action-dialog-existing"
+            class="usa-radio__input usa-radio__input--tile collections-existing"
+            name="collections"
+            value="existing"
+            checked="true"
+            data-ga-category="collections_button"
+            data-ga-action="click"
+            data-ga-label="collections_radio_existing" />
+            <label class="usa-radio__label" for="collections-action-dialog-existing">Add to an existing collection</label>
+        </div>
+    </fieldset>
+
+    <fieldset class="usa-fieldset margin-bottom-2">
+        <div class="action-panel-control-wrap new-collections-controls">
+           <label for="collections-action-dialog-add-to-new" class="usa-label margin-top-0">
+                Name your collection
+               <abbr title="required" class="usa-hint usa-hint--required text-no-underline">*</abbr>
+          </label>
+          <input
+            type="text"
+            name="add-to-new-collection"
+            id="collections-action-dialog-add-to-new"
+            class="usa-input collections-action-add-to-new"
+            pattern="[^&quot;&amp;=&lt;&gt;/]*" title="The following characters are not allowed in the Name field: &quot;&amp;=&lt;&gt;/"
+            maxlength=""
+            data-ga-category="collections_button"
+            data-ga-action="create_collection"
+            data-ga-label="non_favorties_collection"
+            required
+          />
+        </div>
+        <div class="action-panel-control-wrap existing-collections-controls">
+             <label for="collections-action-dialog-add-to-existing" class="usa-label margin-top-0">
+                Choose a collection
+              </label>
+              <select id="collections-action-dialog-add-to-existing"
+                      class="usa-select collections-action-add-to-existing"
+                      data-ga-category="collections_button"
+                      data-ga-action="select_collection"
+                      data-ga-label="($('.collections-action-add-to-existing').val() === 'Favorites') ? 'Favorites' : 'non_favorites_collection'">
+              </select>
+              <div class="collections-retry-load-on-error usa-input-error-message selection-validation-message">
+                Unable to load your collection due to an error<br>
+                <a href="#">Please try again</a>
+              </div>
+        </div>
+    </fieldset>
+
+    <div class="display-inline-flex">
+        <button class="usa-button margin-top-0 action-panel-submit"
+            type="submit"
+            data-loading-label="Adding..."
+            data-pinger-ignore
+            data-ga-category="collections_button"
+            data-ga-action="click"
+            data-ga-label="add">
+          Add
+        </button>
+        <button class="usa-button usa-button--outline margin-top-0 action-panel-cancel"
+                aria-label="Close 'Add to Collections' panel"
+                ref="linksrc=close_collections_panel"
+                data-ga-category="collections_button"
+                data-ga-action="click"
+                data-ga-label="cancel">
+          Cancel
+        </button>
+    </div>
+</form>
+    </div>
+  </div>
+</div>
+
+        
+
+      </div>
+    </div>
+  </div>
+
+
+
+        
+    
+    
+
+<footer class="ncbi-footer ncbi-dark-background " >
+    
+        <div class="ncbi-footer__icon-section">
+            <div class="ncbi-footer__social-header">
+                Follow NCBI
+            </div>
+
+            <div class="grid-container ncbi-footer__ncbi-social-icons-container">
+                
+                    <a href="https://twitter.com/ncbi"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="40"
+                             height="40"
+                             viewBox="0 0 40 40"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg"
+                             focusable="false"
+                             aria-hidden="true">
+                            <path d="m6.067 8 10.81 13.9L6 33.2h4.2l8.4-9.1 7.068 9.1H34L22.8 18.5 31.9 8h-3.5l-7.7 8.4L14.401 8H6.067Zm3.6 1.734h3.266l16.8 21.732H26.57L9.668 9.734Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI on X (formerly known as Twitter)</span>
+                    </a>
+                
+
+                
+                    <a href="https://www.facebook.com/ncbi.nlm"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="16"
+                             height="29"
+                             focusable="false"
+                             aria-hidden="true"
+                             viewBox="0 0 16 29"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3.8809 21.4002C3.8809 19.0932 3.8809 16.7876 3.8809 14.478C3.8809 14.2117 3.80103 14.1452 3.54278 14.1492C2.53372 14.1638 1.52334 14.1492 0.514288 14.1598C0.302626 14.1598 0.248047 14.0972 0.248047 13.8936C0.256034 12.4585 0.256034 11.0239 0.248047 9.58978C0.248047 9.37013 0.302626 9.30224 0.528931 9.3049C1.53798 9.31688 2.54837 9.3049 3.55742 9.31555C3.80103 9.31555 3.8809 9.26097 3.87957 9.00272C3.87158 8.00565 3.85428 7.00592 3.90753 6.00884C3.97142 4.83339 4.31487 3.73115 5.04437 2.78467C5.93095 1.63318 7.15699 1.09005 8.56141 0.967577C10.5582 0.79319 12.555 0.982221 14.5518 0.927641C14.7102 0.927641 14.7462 0.99287 14.7449 1.13664C14.7449 2.581 14.7449 4.02668 14.7449 5.47104C14.7449 5.67604 14.6517 5.68669 14.4946 5.68669C13.4523 5.68669 12.4113 5.68669 11.3703 5.68669C10.3506 5.68669 9.92057 6.10868 9.90593 7.13904C9.89661 7.7647 9.91525 8.39303 9.89794 9.01869C9.88995 9.26364 9.96583 9.31822 10.2015 9.31688C11.7204 9.30623 13.2393 9.31688 14.7595 9.3049C15.0257 9.3049 15.0723 9.3728 15.0444 9.62439C14.89 10.9849 14.7515 12.3467 14.6144 13.7085C14.5691 14.1571 14.5785 14.1585 14.1458 14.1585C12.8386 14.1585 11.5313 14.1665 10.2254 14.1518C9.95119 14.1518 9.89794 14.2317 9.89794 14.4899C9.90593 19.0799 9.89794 23.6752 9.91125 28.2612C9.91125 28.5674 9.8407 28.646 9.53186 28.6433C7.77866 28.6273 6.02414 28.6366 4.27094 28.634C3.82499 28.634 3.87158 28.6992 3.87158 28.22C3.87602 25.9472 3.87913 23.6739 3.8809 21.4002Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI on Facebook</span>
+                    </a>
+                
+
+                
+                    <a href="https://www.linkedin.com/company/ncbinlm"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="25"
+                             height="23"
+                             viewBox="0 0 26 24"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg"
+                             focusable="false"
+                             aria-hidden="true">
+                            <path d="M14.6983 9.98423C15.6302 9.24808 16.5926 8.74754 17.6762 8.51991C19.673 8.09126 21.554 8.30824 23.1262 9.7526C24.2351 10.7723 24.7529 12.1115 25.0165 13.5612C25.1486 14.3363 25.2105 15.1218 25.2015 15.9081C25.2015 18.3043 25.2015 20.6898 25.2082 23.0806C25.2082 23.3468 25.1549 23.444 24.8621 23.4414C23.1297 23.4272 21.3992 23.4272 19.6704 23.4414C19.4041 23.4414 19.3429 23.3588 19.3442 23.1019C19.3535 20.5194 19.3442 17.9368 19.3442 15.3543C19.3442 14.0005 18.3258 12.9448 17.0266 12.9488C15.7273 12.9528 14.6983 14.0071 14.6983 15.361C14.6983 17.9328 14.6917 20.5047 14.6983 23.0753C14.6983 23.3708 14.6198 23.444 14.3296 23.4427C12.6185 23.4294 10.9079 23.4294 9.19779 23.4427C8.93155 23.4427 8.86099 23.3735 8.86232 23.1086C8.8783 19.7619 8.88628 16.4144 8.88628 13.066C8.88628 11.5688 8.87874 10.0708 8.86365 8.57182C8.86365 8.3575 8.90758 8.27896 9.14054 8.28029C10.9048 8.29094 12.6687 8.29094 14.4321 8.28029C14.6464 8.28029 14.6983 8.34818 14.6983 8.54653C14.6903 9.00047 14.6983 9.45441 14.6983 9.98423Z">
+                            </path>
+                            <path d="M6.55316 15.8443C6.55316 18.2564 6.55316 20.6699 6.55316 23.082C6.55316 23.3629 6.48127 23.4388 6.19906 23.4374C4.47737 23.4241 2.75568 23.4241 1.03399 23.4374C0.767751 23.4374 0.69986 23.3629 0.701191 23.1006C0.709178 18.2648 0.709178 13.4281 0.701191 8.59053C0.701191 8.34026 0.765089 8.27237 1.01669 8.2737C2.74991 8.28435 4.48048 8.28435 6.20838 8.2737C6.47462 8.2737 6.5465 8.33627 6.54517 8.6065C6.54783 11.0186 6.55316 13.4308 6.55316 15.8443Z">
+                            </path>
+                            <path d="M3.65878 0.243898C5.36804 0.243898 6.58743 1.45529 6.58743 3.1406C6.58743 4.75801 5.32145 5.95742 3.60819 5.96807C3.22177 5.97614 2.83768 5.90639 2.47877 5.76299C2.11985 5.61959 1.79344 5.40546 1.51897 5.13334C1.24449 4.86123 1.02755 4.53668 0.881058 4.17902C0.734563 3.82136 0.661505 3.43788 0.666231 3.05141C0.67555 1.42601 1.9362 0.242566 3.65878 0.243898Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI on LinkedIn</span>
+                    </a>
+                
+
+                
+                    <a href="https://github.com/ncbi"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="28"
+                             height="27"
+                             viewBox="0 0 28 28"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg"
+                             focusable="false"
+                             aria-hidden="true">
+                            <path d="M16.7228 20.6334C17.5057 20.5527 18.2786 20.3944 19.0301 20.1608C21.3108 19.4193 22.5822 17.8259 22.963 15.4909C23.1228 14.5112 23.1814 13.5287 22.9883 12.5437C22.8106 11.6423 22.4013 10.8028 21.8007 10.1076C21.7526 10.0605 21.7197 10 21.7064 9.934C21.6931 9.86799 21.7 9.79952 21.7262 9.73748C22.0856 8.6206 21.9711 7.51969 21.601 6.42677C21.582 6.3497 21.5345 6.2827 21.468 6.23923C21.4016 6.19577 21.3211 6.17906 21.2429 6.19248C20.7329 6.21649 20.2313 6.33051 19.7611 6.52928C19.1103 6.7908 18.4899 7.12198 17.9104 7.51703C17.84 7.56996 17.7581 7.60551 17.6713 7.62078C17.5846 7.63605 17.4954 7.6306 17.4112 7.60489C15.2596 7.05882 13.0054 7.06203 10.8554 7.61421C10.7806 7.63586 10.7018 7.63967 10.6253 7.62534C10.5487 7.611 10.4766 7.57892 10.4148 7.53167C9.64788 7.03247 8.85171 6.58918 7.96368 6.33359C7.65781 6.24338 7.34123 6.19458 7.02239 6.18849C6.94879 6.17986 6.87462 6.19893 6.81432 6.242C6.75402 6.28507 6.71191 6.34904 6.69621 6.42145C6.32342 7.51437 6.2209 8.61527 6.56307 9.73348C6.59635 9.84264 6.64694 9.93316 6.54177 10.0516C5.47666 11.2604 5.09988 12.6834 5.19574 14.2676C5.2663 15.4244 5.46201 16.5466 6.01454 17.5769C6.84399 19.1171 8.21664 19.9119 9.85158 20.3352C10.3938 20.4706 10.9444 20.5698 11.4998 20.632C11.5384 20.7492 11.4506 20.7798 11.408 20.8291C11.1734 21.1179 10.9894 21.4441 10.8634 21.7942C10.7622 22.0458 10.8315 22.4039 10.6065 22.5516C10.263 22.7766 9.83827 22.8485 9.42421 22.8871C8.17936 23.0056 7.26471 22.4877 6.6283 21.4348C6.25552 20.8184 5.76956 20.3325 5.08523 20.0663C4.76981 19.9325 4.42139 19.8967 4.08537 19.9638C3.7898 20.029 3.73788 20.1901 3.93891 20.4111C4.03639 20.5234 4.14989 20.6207 4.27575 20.6999C4.9796 21.1318 5.51717 21.7884 5.80152 22.5636C6.37002 23.9973 7.48039 24.5697 8.93825 24.6323C9.43741 24.6575 9.93768 24.615 10.4254 24.5058C10.5892 24.4672 10.6531 24.4872 10.6517 24.6762C10.6451 25.4936 10.6637 26.3123 10.6517 27.131C10.6517 27.6635 10.1684 27.9297 9.58663 27.7393C8.17396 27.2671 6.84977 26.5631 5.66838 25.656C2.59555 23.2891 0.720966 20.1861 0.217704 16.3376C-0.357453 11.9127 0.911353 8.00824 3.98551 4.73881C6.11909 2.42656 8.99932 0.939975 12.1203 0.540191C16.5351 -0.0601815 20.4347 1.14323 23.7232 4.16373C26.2449 6.47869 27.724 9.37672 28.1048 12.7726C28.5828 17.0325 27.3686 20.7945 24.4768 23.9827C22.9762 25.6323 21.0956 26.8908 18.9982 27.6488C18.8783 27.6927 18.7585 27.738 18.636 27.7726C18.0356 27.9404 17.6189 27.6395 17.6189 27.0098C17.6189 25.7452 17.6308 24.4806 17.6295 23.2159C17.6329 22.9506 17.6128 22.6856 17.5696 22.4238C17.4325 21.6664 17.3419 21.484 16.7228 20.6334Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI on GitHub</span>
+                    </a>
+                
+
+                
+                    <a href="https://ncbiinsights.ncbi.nlm.nih.gov/"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="26"
+                             height="26"
+                             viewBox="0 0 27 27"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg"
+                             focusable="false"
+                             aria-hidden="true">
+                            <path d="M23.7778 26.4574C23.1354 26.3913 22.0856 26.8024 21.636 26.3087C21.212 25.8444 21.4359 24.8111 21.324 24.0347C19.9933 14.8323 14.8727 8.80132 6.09057 5.85008C4.37689 5.28406 2.58381 4.99533 0.779072 4.99481C0.202773 4.99481 -0.0229751 4.83146 0.00455514 4.21479C0.0660406 3.08627 0.0660406 1.95525 0.00455514 0.826734C-0.0413285 0.0815827 0.259669 -0.0193618 0.896534 0.00266238C6.96236 0.222904 12.3693 2.24179 16.9889 6.16209C22.9794 11.2478 26.1271 17.7688 26.4372 25.648C26.4629 26.294 26.3179 26.5271 25.6609 26.4684C25.0827 26.417 24.4991 26.4574 23.7778 26.4574Z">
+                            </path>
+                            <path d="M14.8265 26.441C14.0924 26.441 13.2371 26.6795 12.6626 26.3786C12.0092 26.0372 12.3781 25.0644 12.246 24.378C11.1154 18.5324 6.6849 14.5497 0.74755 14.1001C0.217135 14.0615 -0.0104482 13.9422 0.0134113 13.3659C0.0519536 12.1454 0.0482829 10.9213 0.0134113 9.69524C-0.00127145 9.14464 0.196946 9.03268 0.703502 9.04736C9.21217 9.27128 16.5994 16.2511 17.2804 24.7231C17.418 26.4446 17.418 26.4446 15.6579 26.4446H14.832L14.8265 26.441Z">
+                            </path>
+                            <path d="M3.58928 26.4555C2.64447 26.4618 1.73584 26.0925 1.06329 25.4289C0.39073 24.7653 0.00933763 23.8617 0.0030097 22.9169C-0.00331824 21.9721 0.365937 21.0635 1.02954 20.3909C1.69315 19.7184 2.59675 19.337 3.54156 19.3306C4.48637 19.3243 5.39499 19.6936 6.06755 20.3572C6.7401 21.0208 7.1215 21.9244 7.12782 22.8692C7.13415 23.814 6.7649 24.7226 6.10129 25.3952C5.43768 26.0677 4.53409 26.4491 3.58928 26.4555Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI RSS feed</span>
+                    </a>
+                
+            </div>
+        </div>
+    
+
+    <div data-testid="gridContainer"
+         class="grid-container ncbi-footer__container">
+        <div class="grid-row ncbi-footer__main-content-container"
+             data-testid="grid">
+            
+                <div class="ncbi-footer__column">
+                    
+                        <p class="ncbi-footer__circled-icons-heading">
+                            Connect with NLM
+                        </p>
+                    
+
+                    <div class="ncbi-footer__circled-icons-list">
+                        
+                            <a href=https://twitter.com/nlm_nih class="ncbi-footer__social-icon ncbi-footer__social-icon--circled" target="_blank" rel="noreferrer noopener">
+                                <svg width="32"
+                                     height="32"
+                                     viewBox="0 0 40 40"
+                                     fill="none"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     focusable="false"
+                                     aria-hidden="true">
+                                    <path d="m6.067 8 10.81 13.9L6 33.2h4.2l8.4-9.1 7.068 9.1H34L22.8 18.5 31.9 8h-3.5l-7.7 8.4L14.401 8H6.067Zm3.6 1.734h3.266l16.8 21.732H26.57L9.668 9.734Z">
+                                    </path>
+                                </svg>
+                                <span class="usa-sr-only">NLM on X (formerly known as Twitter)</span>
+                            </a>
+                        
+
+                        
+                            <a href=https://www.facebook.com/nationallibraryofmedicine class="ncbi-footer__social-icon ncbi-footer__social-icon--circled" target="_blank" rel="noreferrer noopener">
+                                <svg width="13"
+                                     height="24"
+                                     viewBox="0 0 13 24"
+                                     fill="none"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     focusable="false"
+                                     aria-hidden="true">
+                                    <path d="M4.11371 23.1369C4.11371 23.082 4.11371 23.0294 4.11371 22.9745V12.9411H0.817305C0.6709 12.9411 0.670898 12.9411 0.670898 12.8016C0.670898 11.564 0.670898 10.3287 0.670898 9.09341C0.670898 8.97903 0.705213 8.95158 0.815017 8.95158C1.8673 8.95158 2.91959 8.95158 3.97417 8.95158H4.12057V8.83263C4.12057 7.8055 4.12057 6.7738 4.12057 5.74897C4.1264 4.92595 4.31387 4.11437 4.66959 3.37217C5.12916 2.38246 5.94651 1.60353 6.95717 1.1921C7.64827 0.905008 8.3913 0.764035 9.13953 0.778051C10.0019 0.791777 10.8644 0.830666 11.7268 0.860404C11.8869 0.860404 12.047 0.894717 12.2072 0.90158C12.2964 0.90158 12.3261 0.940469 12.3261 1.02968C12.3261 1.5421 12.3261 2.05452 12.3261 2.56465C12.3261 3.16857 12.3261 3.7725 12.3261 4.37642C12.3261 4.48165 12.2964 4.51367 12.1912 4.51138C11.5369 4.51138 10.8804 4.51138 10.2261 4.51138C9.92772 4.51814 9.63058 4.5526 9.33855 4.61433C9.08125 4.6617 8.84537 4.78881 8.66431 4.97766C8.48326 5.16652 8.3662 5.40755 8.32972 5.66661C8.28476 5.89271 8.26027 6.1224 8.25652 6.35289C8.25652 7.19014 8.25652 8.02969 8.25652 8.86923C8.25652 8.89439 8.25652 8.91955 8.25652 8.95615H12.0219C12.1797 8.95615 12.182 8.95616 12.1614 9.10714C12.0768 9.76596 11.9876 10.4248 11.9029 11.0813C11.8312 11.6319 11.7626 12.1824 11.697 12.733C11.6719 12.9434 11.6787 12.9434 11.4683 12.9434H8.26338V22.899C8.26338 22.979 8.26338 23.0591 8.26338 23.1392L4.11371 23.1369Z">
+                                    </path>
+                                </svg>
+                                <span class="usa-sr-only">NLM on Facebook</span>
+                            </a>
+                        
+
+                        
+                            <a href=https://www.youtube.com/user/NLMNIH class="ncbi-footer__social-icon ncbi-footer__social-icon--circled" target="_blank" rel="noreferrer noopener">
+                                <svg width="21"
+                                     height="15"
+                                     viewBox="0 0 21 15"
+                                     fill="none"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     focusable="false"
+                                     aria-hidden="true">
+                                    <path d="M19.2561 1.47914C18.9016 1.15888 18.5699 0.957569 17.2271 0.834039C15.5503 0.678484 13.2787 0.655608 11.563 0.65332H9.43556C7.71987 0.65332 5.4483 0.678484 3.77151 0.834039C2.43098 0.957569 2.097 1.15888 1.74242 1.47914C0.813665 2.32097 0.619221 4.62685 0.598633 6.89384C0.598633 7.31781 0.598633 7.74101 0.598633 8.16345C0.626084 10.4121 0.827391 12.686 1.74242 13.521C2.097 13.8412 2.4287 14.0425 3.77151 14.1661C5.4483 14.3216 7.71987 14.3445 9.43556 14.3468H11.563C13.2787 14.3468 15.5503 14.3216 17.2271 14.1661C18.5676 14.0425 18.9016 13.8412 19.2561 13.521C20.1712 12.6929 20.3725 10.451 20.3999 8.22064C20.3999 7.74025 20.3999 7.25986 20.3999 6.77946C20.3725 4.54907 20.1689 2.30724 19.2561 1.47914ZM8.55942 10.5311V4.65201L13.5601 7.50005L8.55942 10.5311Z"
+                                          fill="white" />
+                                </svg>
+                                <span class="usa-sr-only">NLM on YouTube</span>
+                            </a>
+                        
+                    </div>
+                </div>
+            
+
+            
+                <address class="ncbi-footer__address ncbi-footer__column">
+                    
+        <p>
+            <a class="usa-link usa-link--external"
+            href="https://www.google.com/maps/place/8600+Rockville+Pike,+Bethesda,+MD+20894/%4038.9959508,
+            -77.101021,17z/data%3D!3m1!4b1!4m5!3m4!1s0x89b7c95e25765ddb%3A0x19156f88b27635b8!8m2!3d38.9959508!
+            4d-77.0988323"
+            rel="noopener noreferrer" target="_blank">National Library of Medicine
+            <br/> 8600 Rockville Pike<br/> Bethesda, MD 20894</a>
+        </p>
+    
+                </address>
+            
+
+            
+                <ul class="usa-list usa-list--unstyled ncbi-footer__vertical-list ncbi-footer__column">
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nlm.nih.gov/web_policies.html" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            Web Policies
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nih.gov/institutes-nih/nih-office-director/office-communications-public-liaison/freedom-information-act-office" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            FOIA
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.hhs.gov/vulnerability-disclosure-policy/index.html" class="usa-link usa-link--external usa-link--alt ncbi-footer__link" rel="noreferrer noopener" target='_blank' >
+        
+
+        
+            HHS Vulnerability Disclosure
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                </ul>
+            
+
+            
+                <ul class="usa-list usa-list--unstyled ncbi-footer__vertical-list ncbi-footer__column">
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://support.nlm.nih.gov/" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            Help
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nlm.nih.gov/accessibility.html" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            Accessibility
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nlm.nih.gov/careers/careers.html" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            Careers
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                </ul>
+            
+        </div>
+
+        
+            <div class="grid-row grid-col-12" data-testid="grid">
+                <ul class="ncbi-footer__bottom-links-list">
+                    
+                        <li class="ncbi-footer__bottom-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nlm.nih.gov/" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            NLM
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__bottom-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nih.gov/" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            NIH
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__bottom-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.hhs.gov/" class="usa-link usa-link--external usa-link--alt ncbi-footer__link" rel="noreferrer noopener" target='_blank' >
+        
+
+        
+            HHS
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__bottom-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.usa.gov/" class="usa-link usa-link--external usa-link--alt ncbi-footer__link" rel="noreferrer noopener" target='_blank' >
+        
+
+        
+            USA.gov
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                </ul>
+            </div>
+        
+    </div>
+</footer>
+
+    
+
+
+        
+        
+    
+  <script  type="text/javascript" src="https://cdn.ncbi.nlm.nih.gov/core/pinger/pinger.js"> </script>
+
+
+    
+        
+
+<button class="back-to-top" data-ga-category="pagination" data-ga-action="back_to_top">
+    <label>Back to Top</label>
+    <img src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/img/arrow_upward.svg" alt="back to top icon" class="usa-icon usa-icon--size-3 order-0 usa-icon--white" />
+</button>
+    
+
+
+        
+    
+    <div id="icon-container" style="display: none;"></div>
+    
+    
+        
+    <script type="application/javascript">
+    window.ncbi = window.ncbi || {};
+    window.ncbi.pmc = window.ncbi.pmc || {};
+    window.ncbi.pmc.options = {
+        logLevel: 'INFO',
+        
+        staticEndpoint: 'https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/',
+        
+        citeCookieName: 'pmc-cf',
+    };
+</script>
+    <script type="module" crossorigin="" src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/base-Cp_Il6gk.js"></script>
+<link href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/vendor-Co8Vdmw2.js" type="text/javascript" crossorigin="anonymous" rel="modulepreload" as="script" />
+    
+    <script type="text/javascript" src="https://cdn.ncbi.nlm.nih.gov/core/jquery/jquery-3.6.0.min.js">&#xA0;</script>
+    <script type="text/javascript">
+        jQuery.getScript("https://cdn.ncbi.nlm.nih.gov/core/alerts/alerts.js", function () {
+            galert(['div.nav_and_browser', 'div.header', '#universal_header', '.usa-banner', 'body > *:nth-child(1)'])
+        });
+    </script>
+
+
+    <script type="text/javascript">var exports = {};</script>
+     <script src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/CACHE/js/output.4e25b6297b38.js"></script>
+
+    <script type="module" crossorigin="" src="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/article-BxyWTbsj.js"></script>
+<link href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/vendor-Co8Vdmw2.js" type="text/javascript" crossorigin="anonymous" rel="modulepreload" as="script" />
+<link href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/index-DXSA0fsx.js" type="text/javascript" crossorigin="anonymous" rel="modulepreload" as="script" />
+<link href="https://cdn.ncbi.nlm.nih.gov/pmc/pd-medc-pmc-cloudpmc-viewer/production/a2b04810/var/data/static/assets/secure-cookie-Br6x5jtB.js" type="text/javascript" crossorigin="anonymous" rel="modulepreload" as="script" />
+    
+    
+
+    </body>
+</html>

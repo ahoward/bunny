@@ -39,7 +39,7 @@ tmp/
 coverage/
 
 # demo experiments (ephemeral QA output)
-demos/*/
+#demos/*/
 
 # model caches
 .fastembed_cache/
