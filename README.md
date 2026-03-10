@@ -36,30 +36,36 @@ see [demos/](demos/) for full pipeline output — specs, tests, source, knowledg
 
 ## quick start
 
-requires `ANTHROPIC_API_KEY`. add `GEMINI_API_KEY` for adversarial testing (without it, claude flies solo).
+bunny requires both API keys — the adversarial model needs two agents:
 
 ```bash
-# install into any git repo
+export ANTHROPIC_API_KEY="sk-ant-..."   # claude: spec, plan, implement, ruminate
+export GEMINI_API_KEY="..."             # gemini: challenge, test-gen, verify
+```
+
+install into any git repo:
+
+```bash
 cd my-project
 curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
 ```
 
-this drops a single binary at `./bin/bny`. put it somewhere on your PATH — or just run it directly:
+this drops a single binary at `./bin/bny`. run it directly, or copy/symlink it somewhere on your PATH:
 
 ```bash
-# option A: add ./bin to PATH (in your shell profile for permanence)
-export PATH="./bin:$PATH"
-bny init && bny build "add an authentication middleware"
+# scaffold project state (guest mode — won't clobber your files)
+./bin/bny init
 
-# option B: just use the path
-./bin/bny init && ./bin/bny build "add an authentication middleware"
+# give it a task
+./bin/bny build "add an authentication middleware"
 ```
 
 or from source:
 
 ```bash
 git clone https://github.com/ahoward/bunny.git && cd bunny
-./dev/setup && export PATH="./bin:$PATH"
+./dev/setup
+./bin/bny --help
 ```
 
 ### what `bny init` does
@@ -74,7 +80,13 @@ it's a guest, not a landlord — uses marker-delimited blocks so it never clobbe
 
 ### what `bny build` does
 
-`bny build` creates a feature branch and runs the full pipeline. all changes happen on that branch — your main branch is untouched until you merge. the pipeline reads your knowledge graph for context, so builds get smarter over time.
+`bny build` creates a feature branch and runs the full pipeline. all changes happen on that branch — your main branch is untouched until you merge.
+
+the pipeline streams output to your terminal as it runs. when it finishes, you're on the feature branch with passing tests — review the code, run `./dev/test`, and merge when satisfied.
+
+if the pipeline can't pass all tests after 9 attempts (3 rounds × 3 retries), it stops and reports what failed. the branch is left in place so you can inspect or continue manually.
+
+use `--interactive` to pause at checkpoints (after spec, before each narrowing round) for human review.
 
 typical cost: **$0.50–$2.00 per build** depending on spec complexity and retry count. spikes are cheaper (~$0.25). knowledge graph operations (digest, storm, loop) are ~$0.05–$0.20 each.
 
@@ -153,15 +165,15 @@ the fix: two agents with opposed incentives.
 
 | step | agent | what |
 |------|-------|------|
-| **specify** | claude | write spec with acceptance scenarios |
-| **challenge** | gemini | harden spec — find gaps, edge cases, ambiguities |
+| specify | claude | write spec with acceptance scenarios |
+| **challenge** | **gemini** | harden spec — find gaps, edge cases, ambiguities |
 | plan | claude | implementation plan |
 | tasks | claude | implementation tasks (no test tasks) |
-| **narrow** | gemini+claude | 3×3 narrowing: test-gen → implement × 3 rounds |
-| **verify** | gemini | post-implementation — are the tests real? anything missed? |
+| **narrow** | **gemini** writes tests, claude implements | 3×3 narrowing (see below) |
+| **verify** | **gemini** | post-implementation — are the tests real? anything missed? |
 | ruminate | claude | reflect on build, feed knowledge graph |
 
-gemini writes every test. claude writes every line of implementation. claude never sees the test-generation prompt. this is not a rule — it's architecture. the system makes the wrong thing hard.
+**bold = gemini involvement.** gemini writes every test. claude writes every line of implementation. claude never sees the test-generation prompt. this is not a rule — it's architecture. the system makes the wrong thing hard.
 
 ### 3×3 narrowing
 
@@ -173,7 +185,7 @@ instead of generating all tests at once and hoping claude passes them, we narrow
 | 2. **properties** | behavioral invariants | spec + claude's source code | don't break contracts |
 | 3. **boundaries+golden** | edge cases + regression snapshots | spec + source + all tests | don't break anything |
 
-each round: gemini writes tests, claude implements with up to 3 retries. max 9 test runs total. typical: ~4.
+each round: gemini generates tests (`bny build test-gen --round N`), then claude implements (`bny build implement --round N`) with up to 3 retries. max 9 test runs total. typical: ~4.
 
 the key insight: rounds 2-3 include claude's actual source code. gemini doesn't just test the spec — it targets where claude's implementation is weakest. this is adversarial review with teeth.
 
@@ -183,10 +195,6 @@ the key insight: rounds 2-3 include claude's actual source code. gemini doesn't 
 2. **property tests** (round 2) — invariants for all inputs (fast-check, hypothesis, proptest).
 3. **golden file tests** (round 3) — known-good output as fixtures. diff on regression.
 4. **boundary tests** (round 3) — edge cases from the challenge step. empty, max, malformed, unicode.
-
-### graceful degradation
-
-all gemini steps are non-fatal. no gemini key? the factory still runs — claude does everything, with a warning. adversarial testing is the best path, but the factory never stops.
 
 ### language agnostic
 
@@ -205,17 +213,17 @@ bunny auto-detects your project type from config files (`package.json`, `Cargo.t
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `ANTHROPIC_API_KEY` | required | claude (specify, plan, tasks, implement, ruminate) |
-| `GEMINI_API_KEY` | optional | gemini (challenge, test-gen, verify) |
+| `ANTHROPIC_API_KEY` | required | Claude (specify, plan, tasks, implement, ruminate) |
+| `GEMINI_API_KEY` | required | Gemini (challenge, test-gen, verify) |
 | `BNY_MODEL` | — | override LLM model for all subcommands |
 | `BUNNY_LOG` | off | structured JSON logging to stderr |
 
 ## stack
 
 - **runtime:** [bun](https://bun.sh) — fast typescript runtime
-- **language:** typescript (strict mode)
+- **language:** TypeScript (strict mode)
 - **code awareness:** [tree-sitter](https://tree-sitter.github.io/) via WASM
-- **no frameworks.** no orms. no build tools. zero framework dependencies.
+- **no frameworks.** no ORMs. no build tools. zero framework dependencies.
 
 ## dive deeper
 
