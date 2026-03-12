@@ -74,7 +74,7 @@ function scan_worldview(dir: string, base: string): { files: FileEntry[], dirs: 
       if (entry.isDirectory()) {
         dirs.add(relative(base, full))
         walk(full)
-      } else if (entry.name.endsWith(".md") && entry.name !== "index.md") {
+      } else if (entry.name.endsWith(".md") && entry.name !== "README.md" && entry.name !== "index.md") {
         const content = readFileSync(full, "utf-8")
         const rel = relative(base, full)
         const { title, tldr } = extract_tldr(content)

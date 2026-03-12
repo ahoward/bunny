@@ -111,7 +111,7 @@ function read_md_files_recursive(dir: string, base: string): PromptSection[] {
     const full = resolve(dir, entry.name)
     if (entry.isDirectory()) {
       sections.push(...read_md_files_recursive(full, base))
-    } else if (entry.name.endsWith(".md")) {
+    } else if (entry.name.endsWith(".md") && entry.name !== "README.md" && entry.name !== "index.md") {
       const rel = relative(base, full)
       const content = readFileSync(full, "utf-8").trim()
       if (content.length > 0) {
@@ -606,7 +606,7 @@ export async function regenerate_index(root: string): Promise<void> {
   const updated_worldview = load_worldview(root)
   if (updated_worldview.length === 0) return
 
-  const spin = create_spinner("regenerating index")
+  const spin = create_spinner("regenerating README")
 
   const index_prompt = `# Worldview Files
 
@@ -616,7 +616,7 @@ ${updated_worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")}
 
 # Instructions
 
-Generate a concise index.md that summarizes what this knowledge base contains.
+Generate a README.md that summarizes what this knowledge base contains.
 Use markdown headers and bullet points. Link to files using relative paths.
 Keep it scannable — someone should understand the full scope in 30 seconds.
 
@@ -628,10 +628,10 @@ no explanations, no "Here is..." or "It looks like..." — start directly with a
   if (index_raw) {
     const index_content = strip_index_preamble(index_raw)
     if (index_content) {
-      writeFileSync(resolve(worldview_dir(root), "index.md"), index_content + "\n")
-      spin.stop("🐰 regenerated index")
+      writeFileSync(resolve(worldview_dir(root), "README.md"), index_content + "\n")
+      spin.stop("🐰 regenerated README")
     } else {
-      spin.stop("warning: index generation produced no valid markdown")
+      spin.stop("warning: README generation produced no valid markdown")
     }
   } else {
     spin.stop()
