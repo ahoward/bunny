@@ -178,6 +178,20 @@ gh release create "$TAG" \
   $DRAFT_FLAG \
   "${BUILD_DIR}"/bny-*
 
+# -- update local binary --
+
+ARCH=$(uname -m)
+case "$ARCH" in
+  arm64|aarch64) LOCAL_BIN="bny-darwin-arm64" ;;
+  x86_64)        LOCAL_BIN="bny-darwin-x64" ;;
+  *)             LOCAL_BIN="" ;;
+esac
+
+if [ -n "$LOCAL_BIN" ] && [ -f "${BUILD_DIR}/${LOCAL_BIN}" ]; then
+  cp "${BUILD_DIR}/${LOCAL_BIN}" bin/bny
+  echo "  updated bin/bny (${LOCAL_BIN})"
+fi
+
 echo ""
 echo "  release: https://github.com/ahoward/bunny/releases/tag/${TAG}"
 echo ""

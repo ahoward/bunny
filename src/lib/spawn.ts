@@ -7,6 +7,7 @@
 //
 
 import * as assassin from "./assassin.ts"
+import * as progress from "./progress.ts"
 
 // -- agent environment scrubbing --
 //
@@ -94,6 +95,8 @@ export function spawn_sync(opts: SpawnSyncOpts): SpawnResult {
     cmd = [TIMEOUT_CMD, String(opts.timeout), ...cmd]
   }
 
+  const start_ts = progress.spawn_start(opts.cmd, opts.label ?? null)
+
   const stdin_value = typeof opts.stdin === "string" ? Buffer.from(opts.stdin) : opts.stdin
 
   const proc = Bun.spawnSync(cmd, {
@@ -117,14 +120,10 @@ export function spawn_sync(opts: SpawnSyncOpts): SpawnResult {
     detail = `timed out after ${secs}s`
   }
 
-  return {
-    ok: exit_code === 0,
-    exit_code,
-    stdout,
-    stderr,
-    detail,
-    timed_out,
-  }
+  const ok = exit_code === 0
+  progress.spawn_done(opts.cmd, opts.label ?? null, exit_code, ok, timed_out, start_ts, stdout.length)
+
+  return { ok, exit_code, stdout, stderr, detail, timed_out }
 }
 
 // -- spawn_async --
@@ -132,6 +131,8 @@ export function spawn_sync(opts: SpawnSyncOpts): SpawnResult {
 export async function spawn_async(opts: SpawnAsyncOpts): Promise<SpawnAsyncResult> {
   const stdout_mode = opts.stdout || "inherit"
   const stderr_mode = opts.stderr || "inherit"
+
+  const start_ts = progress.spawn_start(opts.cmd, opts.label ?? null)
 
   if (opts.assassin_dir) {
     assassin.install(opts.assassin_dir)
@@ -174,14 +175,10 @@ export async function spawn_async(opts: SpawnAsyncOpts): Promise<SpawnAsyncResul
     detail = (stderr || "") || (stdout || "") || `exit code ${exit_code}`
   }
 
-  return {
-    ok: exit_code === 0,
-    exit_code,
-    stdout,
-    stderr,
-    detail,
-    timed_out: false,
-  }
+  const ok = exit_code === 0
+  progress.spawn_done(opts.cmd, opts.label ?? null, exit_code, ok, false, start_ts, stdout?.length ?? 0)
+
+  return { ok, exit_code, stdout, stderr, detail, timed_out: false }
 }
 
 // -- which_check --
