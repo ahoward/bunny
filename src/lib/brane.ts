@@ -202,7 +202,7 @@ export function usage_summary(root: string): { calls: number, prompt_chars: numb
 
 // -- llm --
 
-const CLAUDE_TIMEOUT_SECS = 300 // 5 minutes default; override with BNY_CLAUDE_TIMEOUT
+const CLAUDE_TIMEOUT_SECS = 600 // 10 minutes default; override with BNY_CLAUDE_TIMEOUT
 
 export function call_claude(prompt: string, root: string): string | null {
   // secret detection

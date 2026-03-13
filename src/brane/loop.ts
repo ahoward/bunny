@@ -22,7 +22,7 @@ import { success, error } from "../lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
   ensure_brane, load_source, load_worldview, load_active_lenses,
-  call_claude, call_claude_with_tools, parse_json, apply_operations,
+  call_claude_structured, call_claude_with_tools, parse_json, apply_operations,
   stash_source, preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
 } from "../lib/brane.ts"
@@ -269,39 +269,36 @@ Analyze the current worldview against the goal. Identify:
 
 Do NOT suggest URLs that are already in the "Already Fetched URLs" list.
 
-Respond with ONLY valid JSON (no markdown fences):
-{
-  "gaps": ["gap description 1", "gap description 2"],
-  "queries": ["search query 1", "search query 2"],
-  "urls": ["https://specific-url.com/page"],
-  "assessment": "brief assessment of current state vs goal",
-  "converging": false,
-  "reasoning": "why these queries and urls were chosen"
-}
+Your response will be validated against a JSON schema.
 
-Set converging to true ONLY if the worldview comprehensively covers the goal
-and additional research would yield diminishing returns.
+Return an object with:
+- "gaps": array of gap description strings
+- "queries": array of search query strings
+- "urls": array of specific URL strings to fetch
+- "assessment": brief assessment of current state vs goal
+- "converging": boolean (true ONLY if worldview comprehensively covers the goal)
+- "reasoning": why these queries and urls were chosen
 `
 
-  const spin_reflect = create_spinner(`round ${round_num}: reflecting`)
-  const reflect_raw = call_claude(reflect_prompt, root)
-  if (!reflect_raw) {
-    spin_reflect.stop()
-    return { journal: empty_journal(round_num), should_stop: true }
+  const REFLECT_SCHEMA = {
+    type: "object",
+    properties: {
+      gaps:       { type: "array", items: { type: "string" } },
+      queries:    { type: "array", items: { type: "string" } },
+      urls:       { type: "array", items: { type: "string" } },
+      assessment: { type: "string" },
+      converging: { type: "boolean" },
+      reasoning:  { type: "string" },
+    },
+    required: ["gaps", "queries", "urls", "assessment", "converging", "reasoning"],
   }
 
-  let reflect = parse_json<ReflectResponse>(reflect_raw)
+  const spin_reflect = create_spinner(`round ${round_num}: reflecting`)
+  const reflect = call_claude_structured<ReflectResponse>(reflect_prompt, root, REFLECT_SCHEMA, "loop-reflect")
+  spin_reflect.stop(reflect ? `round ${round_num}: reflected` : undefined)
+
   if (!reflect) {
-    spin_reflect.stop()
-    process.stderr.write("warning: failed to parse reflect response, retrying...\n")
-    const spin_retry = create_spinner(`round ${round_num}: retrying reflect`)
-    const retry = call_claude(reflect_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
-    spin_retry.stop()
-    if (!retry) return { journal: empty_journal(round_num), should_stop: true }
-    reflect = parse_json<ReflectResponse>(retry)
-    if (!reflect) return { journal: empty_journal(round_num), should_stop: true }
-  } else {
-    spin_reflect.stop(`round ${round_num}: reflected`)
+    return { journal: empty_journal(round_num), should_stop: true }
   }
 
   // normalize
@@ -440,58 +437,60 @@ For each concept worth keeping:
 - Organize into subdirectories by natural topic boundaries
 - Every file MUST start with an H1 heading, then a one-sentence TL;DR on the next line (no blank line between heading and TL;DR).
 
-Respond with ONLY valid JSON (no markdown fences):
-{
-  "operations": [
-    {"action": "create", "path": "relative/path.md", "content": "full markdown content"},
-    {"action": "update", "path": "existing/path.md", "content": "full replacement content"}
-  ],
-  "reasoning": "brief explanation of what was absorbed and what was filtered out"
-}
+Your response will be validated against a JSON schema.
+
+Return an object with:
+- "operations": array of {action: "create"|"update", path: "relative/path.md", content: "full markdown content"}
+- "reasoning": brief explanation of what was absorbed and what was filtered out
 
 Paths are relative to worldview/. Use lowercase-kebab-case for file and directory names.
 If nothing is worth absorbing, return empty operations with reasoning explaining why.
 `
 
-    const spin_digest = create_spinner(`round ${round_num}: digesting ${fetched_contents.length} source(s)`)
-    const digest_raw = call_claude(digest_prompt, root)
+    const DIGEST_SCHEMA = {
+      type: "object",
+      properties: {
+        operations: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              action:  { type: "string", enum: ["create", "update"] },
+              path:    { type: "string" },
+              content: { type: "string" },
+            },
+            required: ["action", "path", "content"],
+          },
+        },
+        reasoning: { type: "string" },
+      },
+      required: ["operations", "reasoning"],
+    }
 
-    if (digest_raw) {
-      let digest_resp = parse_json<DigestResponse>(digest_raw)
-      if (!digest_resp) {
-        spin_digest.stop()
-        process.stderr.write("warning: failed to parse digest response, retrying...\n")
-        const spin_retry = create_spinner(`round ${round_num}: retrying digest`)
-        const retry = call_claude(digest_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
-        spin_retry.stop()
-        if (retry) digest_resp = parse_json<DigestResponse>(retry)
-      } else {
-        spin_digest.stop()
+    const spin_digest = create_spinner(`round ${round_num}: digesting ${fetched_contents.length} source(s)`)
+    const digest_resp = call_claude_structured<DigestResponse>(digest_prompt, root, DIGEST_SCHEMA, "loop-digest")
+    spin_digest.stop()
+
+    if (digest_resp && digest_resp.operations.length > 0) {
+      const diffs = preview_operations(root, digest_resp.operations)
+      print_intake_diff(diffs, digest_resp.reasoning)
+
+      let should_apply = auto_yes
+      if (!auto_yes) {
+        should_apply = confirm_intake()
       }
 
-      if (digest_resp && digest_resp.operations.length > 0) {
-        const diffs = preview_operations(root, digest_resp.operations)
-        print_intake_diff(diffs, digest_resp.reasoning)
-
-        let should_apply = auto_yes
-        if (!auto_yes) {
-          should_apply = confirm_intake()
-        }
-
-        if (should_apply) {
-          apply_operations(root, digest_resp.operations)
-          total_ops = digest_resp.operations.length
-          total_digested = fetched_contents.length
-          process.stderr.write(`  applied ${total_ops} operation(s)\n`)
-          await regenerate_index(root)
-        } else {
-          process.stderr.write("  skipped incorporation\n")
-        }
+      if (should_apply) {
+        apply_operations(root, digest_resp.operations)
+        total_ops = digest_resp.operations.length
+        total_digested = fetched_contents.length
+        process.stderr.write(`  applied ${total_ops} operation(s)\n`)
+        await regenerate_index(root)
       } else {
-        process.stderr.write("  nothing absorbed\n")
+        process.stderr.write("  skipped incorporation\n")
       }
     } else {
-      spin_digest.stop()
+      process.stderr.write("  nothing absorbed\n")
     }
   } else {
     process.stderr.write("  no new content to digest\n")

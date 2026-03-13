@@ -20,7 +20,7 @@ import { success, error } from "../lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
   ensure_brane, load_source, load_worldview, load_active_lenses,
-  call_claude, parse_json, apply_operations,
+  call_claude_structured, apply_operations,
   preview_operations, print_intake_diff, confirm_intake,
   regenerate_index, print_storm_suggestions,
 } from "../lib/brane.ts"
@@ -160,19 +160,12 @@ Every file MUST start with an H1 heading, then a one-sentence TL;DR on the next 
   # Topic Name
   One sentence summarizing this file's core idea.
 
-Respond with ONLY valid JSON (no markdown fences):
-{
-  "operations": [
-    {"action": "create", "path": "relative/path.md", "content": "full markdown content"},
-    {"action": "update", "path": "existing/path.md", "content": "full replacement content"}
-  ],
-  "reasoning": "what new directions you explored and why",
-  "suggestions": [
-    {"kind": "lens", "value": "security-skeptic", "reason": "the worldview assumes trust..."},
-    {"kind": "question", "value": "What happens at 10x scale?", "reason": "..."},
-    {"kind": "source", "value": "https://...", "reason": "this paper covers..."}
-  ]
-}
+Your response will be validated against a JSON schema.
+
+Return an object with:
+- "operations": array of {action: "create"|"update", path: "relative/path.md", content: "full markdown content"}
+- "reasoning": what new directions you explored and why
+- "suggestions": array of {kind: "lens"|"question"|"source", value: "...", reason: "..."}
 
 Paths are relative to worldview/. Use lowercase-kebab-case for file and directory names.
 `
@@ -184,31 +177,48 @@ Paths are relative to worldview/. Use lowercase-kebab-case for file and director
       return 0
     }
 
-    // -- call claude --
+    // -- call claude (structured output) --
+
+    const STORM_SCHEMA = {
+      type: "object",
+      properties: {
+        operations: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              action:  { type: "string", enum: ["create", "update"] },
+              path:    { type: "string" },
+              content: { type: "string" },
+            },
+            required: ["action", "path", "content"],
+          },
+        },
+        reasoning: { type: "string" },
+        suggestions: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              kind:   { type: "string", enum: ["lens", "question", "source"] },
+              value:  { type: "string" },
+              reason: { type: "string" },
+            },
+            required: ["kind", "value", "reason"],
+          },
+        },
+      },
+      required: ["operations", "reasoning", "suggestions"],
+    }
 
     const spin = create_spinner(`storming: ${seed_label}`)
 
-    const raw = call_claude(storm_prompt, root)
-    if (!raw) {
-      spin.stop()
-      return 1
-    }
+    const response = call_claude_structured<StormResponse>(storm_prompt, root, STORM_SCHEMA, "storm")
+    spin.stop(response ? `stormed: ${seed_label}` : undefined)
 
-    let response = parse_json<StormResponse>(raw)
     if (!response) {
-      spin.stop()
-      process.stderr.write("warning: failed to parse response, retrying...\n")
-      const spin2 = create_spinner(`retrying: ${seed_label}`)
-      const retry = call_claude(storm_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
-      spin2.stop()
-      if (!retry) { return 1 }
-      response = parse_json<StormResponse>(retry)
-      if (!response) {
-        process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
-        return 1
-      }
-    } else {
-      spin.stop(`🐰 stormed: ${seed_label}`)
+      process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
+      return 1
     }
 
     // normalize missing suggestions
