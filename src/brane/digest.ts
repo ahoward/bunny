@@ -16,7 +16,7 @@ import { success, error } from "../lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
   ensure_brane, load_source, load_worldview, load_active_lenses,
-  call_claude, parse_json, apply_operations,
+  call_claude_structured, apply_operations,
   stash_source, preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
 } from "../lib/brane.ts"
@@ -132,14 +132,11 @@ For each concept worth keeping:
   # Topic Name
   One sentence summarizing this file's core idea.
 
-Respond with ONLY valid JSON (no markdown fences):
-{
-  "operations": [
-    {"action": "create", "path": "relative/path.md", "content": "full markdown content"},
-    {"action": "update", "path": "existing/path.md", "content": "full replacement content"}
-  ],
-  "reasoning": "brief explanation of what was absorbed and what was filtered out"
-}
+Your response will be validated against a JSON schema.
+
+Return an object with:
+- "operations": array of {action: "create"|"update", path: "relative/path.md", content: "full markdown content"}
+- "reasoning": brief explanation of what was absorbed and what was filtered out
 
 Paths are relative to worldview/. Use lowercase-kebab-case for file and directory names.
 If nothing is worth absorbing, return empty operations with reasoning explaining why.
@@ -159,33 +156,36 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
     return 1
   }
 
-  // -- call claude --
+  // -- call claude (structured output) --
+
+  const DIGEST_SCHEMA = {
+    type: "object",
+    properties: {
+      operations: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            action:  { type: "string", enum: ["create", "update"] },
+            path:    { type: "string" },
+            content: { type: "string" },
+          },
+          required: ["action", "path", "content"],
+        },
+      },
+      reasoning: { type: "string" },
+    },
+    required: ["operations", "reasoning"],
+  }
 
   const spin = create_spinner(`digesting: ${loaded.label}`)
 
-  const raw = call_claude(digest_prompt, root)
-  if (!raw) {
-    spin.stop()
-    return 1
-  }
+  const response = call_claude_structured<DigestResponse>(digest_prompt, root, DIGEST_SCHEMA, "digest")
+  spin.stop(response ? `digested: ${loaded.label}` : undefined)
 
-  let response = parse_json<DigestResponse>(raw)
   if (!response) {
-    spin.stop()
-    process.stderr.write("warning: failed to parse response, retrying...\n")
-    process.stderr.write(`--- raw response (attempt 1) ---\n${raw}\n--- end raw response ---\n`)
-    const spin2 = create_spinner(`retrying: ${loaded.label}`)
-    const retry = call_claude(digest_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
-    spin2.stop()
-    if (!retry) { return 1 }
-    response = parse_json<DigestResponse>(retry)
-    if (!response) {
-      process.stderr.write(`--- raw response (attempt 2) ---\n${retry}\n--- end raw response ---\n`)
-      process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
-      return 1
-    }
-  } else {
-    spin.stop(`🐰 digested: ${loaded.label}`)
+    process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
+    return 1
   }
 
   // -- intake gate --

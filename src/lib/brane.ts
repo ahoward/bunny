@@ -373,6 +373,90 @@ export function call_claude_json<T>(prompt: string, root: string, label: string)
   return parse_json<T>(retry_raw)
 }
 
+// -- call_claude with structured output (json schema) --
+//
+// uses claude CLI --output-format json --json-schema to get API-guaranteed
+// valid JSON. no more parse_json gymnastics. the API enforces the schema.
+//
+// falls back to call_claude_json (text + parse) if structured output fails,
+// so callers that worked before keep working.
+//
+
+export interface ClaudeEnvelope {
+  type:              string
+  subtype:           string
+  is_error:          boolean
+  result:            string
+  structured_output: unknown | null
+}
+
+export function call_claude_structured<T>(prompt: string, root: string, schema: object, label: string): T | null {
+  if (!check_secrets(prompt, "prompt")) return null
+
+  const model = process.env.BNY_MODEL || null
+  const timeout_env = process.env.BNY_CLAUDE_TIMEOUT
+  const timeout_parsed = timeout_env !== undefined ? parseInt(timeout_env, 10) : NaN
+  const timeout_secs = !isNaN(timeout_parsed) ? timeout_parsed : CLAUDE_TIMEOUT_SECS
+
+  const schema_json = JSON.stringify(schema)
+
+  const claude_args: string[] = ["-p", "--output-format", "json", "--json-schema", schema_json]
+  if (model) claude_args.push("--model", model)
+  claude_args.push("-")
+
+  const start = Date.now()
+  const r = spawn_sync({
+    cmd: ["claude", ...claude_args],
+    cwd: root,
+    stdin: prompt,
+    timeout: timeout_secs,
+    label: label || "claude (structured)",
+  })
+  const duration_ms = Date.now() - start
+
+  if (r.timed_out) {
+    process.stderr.write(`error: claude timed out after ${timeout_secs}s\n`)
+    log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
+    return null
+  }
+
+  if (!r.ok) {
+    process.stderr.write(`error: claude failed: ${r.detail}\n`)
+    log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: 0, duration_ms, ok: false })
+    return null
+  }
+
+  log_usage(root, { timestamp: new Date().toISOString(), prompt_chars: prompt.length, response_chars: r.stdout.length, duration_ms, ok: true })
+
+  // parse the envelope
+  let envelope: ClaudeEnvelope
+  try {
+    envelope = JSON.parse(r.stdout) as ClaudeEnvelope
+  } catch {
+    process.stderr.write("warning: could not parse claude envelope, falling back to text parse\n")
+    return parse_json<T>(r.stdout)
+  }
+
+  if (envelope.is_error) {
+    process.stderr.write(`error: claude returned error: ${envelope.result}\n`)
+    return null
+  }
+
+  // structured_output is the API-guaranteed typed response
+  if (envelope.structured_output != null) {
+    return envelope.structured_output as T
+  }
+
+  // fallback: try parsing .result as JSON (older claude versions)
+  if (envelope.result) {
+    const parsed = parse_json<T>(envelope.result)
+    if (parsed) return parsed
+    process.stderr.write(`--- raw result ---\n${envelope.result}\n--- end raw result ---\n`)
+  }
+
+  return null
+}
+
 // -- file operations --
 
 function validate_op_path(wv_dir: string, path: string): string | null {
