@@ -173,12 +173,14 @@ If nothing is worth absorbing, return empty operations with reasoning explaining
   if (!response) {
     spin.stop()
     process.stderr.write("warning: failed to parse response, retrying...\n")
+    process.stderr.write(`--- raw response (attempt 1) ---\n${raw}\n--- end raw response ---\n`)
     const spin2 = create_spinner(`retrying: ${loaded.label}`)
     const retry = call_claude(digest_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
     spin2.stop()
     if (!retry) { return 1 }
     response = parse_json<DigestResponse>(retry)
     if (!response) {
+      process.stderr.write(`--- raw response (attempt 2) ---\n${retry}\n--- end raw response ---\n`)
       process.stdout.write(JSON.stringify(error({ parse: [{ code: "invalid_json", message: "could not get structured response from claude" }] }, meta()), null, 2) + "\n")
       return 1
     }
