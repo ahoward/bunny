@@ -14,3 +14,7 @@ Append-only record of decisions made during development.
 | 2026-03-04 | CLI source moved from `bny/` to `src/` | `bny/` is project state only; `src/` + `bin/` hold all CLI source code |
 | 2026-03-08 | 3×3 narrowing replaces test-gen+review+implement | 3 rounds of increasingly adversarial tests (contracts→properties→boundaries). rounds 2-3 see Claude's source. review absorbed — narrowing IS review with teeth. max 9 test runs, typical ~4. |
 | 2026-03-08 | post_flight scoped to `./tests/` | bare `bun test` was picking up demo test files in `demos/` |
+| 2026-03-14 | `call_claude_structured<T>()` with `--json-schema` | eliminates parse failures — API guarantees valid JSON matching schema, no more retry loops |
+| 2026-03-14 | Claude timeout bumped from 300s to 600s | storm was timing out on large worldviews in real usage |
+| 2026-03-14 | Uniform `read_input()` across all commands | positional = inline text, `-` = stdin, `--input <path>` = file. No `existsSync` guessing. Unix-y and consistent |
+| 2026-03-14 | `--verbose` global flag streams LLM stderr | callers (Claude Code) couldn't tell if bny was hung or thinking. `BNY_VERBOSE=1` inherits subprocess stderr |
