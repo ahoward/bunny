@@ -21,6 +21,7 @@ import {
   ensure_brane, load_state, save_state,
   list_all_lenses, lenses_dir,
 } from "../lib/brane.ts"
+import { read_input } from "../lib/input.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -34,6 +35,11 @@ commands:
   on <name>           activate a lens
   off <name>          deactivate a lens
   rm <name>           delete a lens
+
+input (for add description):
+  <text...>              inline text
+  -                      read from stdin
+  --input <path>         read from file
 `)
     return 0
   }
@@ -69,8 +75,9 @@ commands:
   // -- add --
 
   if (subcmd === "add") {
-    const name = rest[0]
-    const desc = rest.slice(1).join(" ").trim()
+    const { text: input_text, rest_argv: add_rest } = read_input(rest)
+    const name = add_rest[0]
+    const desc = input_text ?? add_rest.slice(1).join(" ").trim()
 
     if (!name) {
       process.stdout.write(JSON.stringify(error({ name: [{ code: "required", message: "lens name is required" }] }, meta()), null, 2) + "\n")

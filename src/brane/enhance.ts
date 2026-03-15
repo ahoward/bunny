@@ -28,8 +28,13 @@ import {
 import type { DigestResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
+import { read_input } from "../lib/input.ts"
 
 export async function main(argv: string[]): Promise<number> {
+  // -- read_input: handle --input <path> and stdin (-) --
+
+  const { text: input_text, rest_argv } = read_input(argv)
+
   // -- parse args --
 
   let dry_run = false
@@ -37,26 +42,30 @@ export async function main(argv: string[]): Promise<number> {
   let rounds = 1
   const input_parts: string[] = []
 
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]
+  for (let i = 0; i < rest_argv.length; i++) {
+    const arg = rest_argv[i]
     if (arg === "--dry-run") {
       dry_run = true
     } else if (arg === "--yes" || arg === "-y") {
       auto_yes = true
-    } else if (arg === "--rounds" && i + 1 < argv.length) {
-      rounds = parseInt(argv[i + 1], 10)
+    } else if (arg === "--rounds" && i + 1 < rest_argv.length) {
+      rounds = parseInt(rest_argv[i + 1], 10)
       if (isNaN(rounds) || rounds < 1) rounds = 1
       i++
     } else if (arg === "--help" || arg === "-h") {
       process.stdout.write(`usage: bny brane enhance [--dry-run] [--yes] [--rounds N] [focus]
 
-focus can be a topic string or a worldview file path.
 if no focus is given, enhances the full worldview.
 
 flags:
   --dry-run      print prompt, don't call claude
   --yes, -y      skip confirmation, apply immediately
   --rounds N     multi-round refinement (default: 1)
+
+input:
+  <text...>              topic focus (inline text)
+  -                      read from stdin
+  --input <path>         read from file
 `)
       return 0
     } else {
@@ -64,7 +73,7 @@ flags:
     }
   }
 
-  const focus_input = input_parts.join(" ").trim() || null
+  const focus_input = input_text ?? (input_parts.join(" ").trim() || null)
 
   function meta() {
     return { path: "/bny/brane/enhance", timestamp: new Date().toISOString(), duration_ms: 0 }
@@ -88,14 +97,7 @@ flags:
   let focus_label: string | null = null
 
   if (focus_input) {
-    // check if it's a worldview file path
-    const as_wv_path = resolve(worldview_dir(root), focus_input)
-    if (existsSync(as_wv_path)) {
-      focus_label = relative(worldview_dir(root), as_wv_path)
-    } else {
-      // treat as a topic string
-      focus_label = focus_input
-    }
+    focus_label = focus_input
   }
 
   // -- check claude --

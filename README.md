@@ -116,6 +116,32 @@ bny brane ask "what are the security risks?"
 
 run `bny --help` for the full command reference.
 
+## input modes
+
+most commands accept text input. the pattern is uniform across the CLI:
+
+```bash
+# inline text (positional args)
+bny build "add user auth"
+bny brane storm "real-time collab?"
+
+# read from file
+bny build --input MVP.md
+bny specify --input requirements.txt
+
+# read from stdin
+cat spec.md | bny build -
+echo "auth strategies" | bny brane storm -
+```
+
+| mode | syntax | when |
+|------|--------|------|
+| inline | `"text here"` | quick one-liners |
+| file | `--input <path>` | feeding docs, specs, PRDs |
+| stdin | `-` | piping from other commands |
+
+`bny digest` is the exception — its positional args are source paths (`bny digest README.md docs/`), not inline text. it still supports `--input` and `-` for explicit file/stdin input.
+
 ## three pillars
 
 ### knowledge graph (brane)

@@ -23,15 +23,20 @@ import {
 import type { DigestResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
+import { read_input } from "../lib/input.ts"
 
 export async function main(argv: string[]): Promise<number> {
+  // -- read_input: handle --input <path> and stdin (-) --
+
+  const { text: input_text, source: input_source, file_path, rest_argv } = read_input(argv)
+
   // -- parse args --
 
   let dry_run = false
   let auto_yes = false
   let source: string | null = null
 
-  for (const arg of argv) {
+  for (const arg of rest_argv) {
     if (arg === "--dry-run") {
       dry_run = true
     } else if (arg === "--yes" || arg === "-y") {
@@ -45,16 +50,16 @@ directories are ingested recursively.
 flags:
   --dry-run    print prompt, don't call claude
   --yes, -y    skip confirmation, apply immediately
+
+input:
+  <path|url>             file, directory, or URL (positional)
+  -                      read from stdin
+  --input <path>         explicit file read
 `)
       return 0
     } else if (!arg.startsWith("-")) {
       source = arg
     }
-  }
-
-  if (!source) {
-    process.stdout.write(JSON.stringify(error({ source: [{ code: "required", message: "source is required (file, directory, or URL)" }] }, meta()), null, 2) + "\n")
-    return 1
   }
 
   function meta() {
@@ -66,11 +71,21 @@ flags:
   const root = find_root()
   ensure_brane(root)
 
-  // -- load source --
+  // -- resolve source --
+  // digest is the one command where bare positional args are source paths.
+  // --input and stdin provide content directly; positional uses load_source().
 
-  const loaded = load_source(source, root)
+  let loaded: { content: string, label: string } | null = null
+
+  if (input_text !== null) {
+    const label = input_source === "file" ? (file_path ?? "file") : "stdin"
+    loaded = { content: input_text, label }
+  } else if (source) {
+    loaded = load_source(source, root)
+  }
+
   if (!loaded) {
-    process.stdout.write(JSON.stringify(error({ source: [{ code: "not_found", message: `could not load source: ${source}` }] }, meta()), null, 2) + "\n")
+    process.stdout.write(JSON.stringify(error({ source: [{ code: "required", message: "source is required (file, directory, URL, --input, or stdin)" }] }, meta()), null, 2) + "\n")
     return 1
   }
 

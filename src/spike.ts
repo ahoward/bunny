@@ -16,6 +16,7 @@
 import { existsSync, openSync, readSync, closeSync } from "node:fs"
 import { resolve } from "node:path"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
+import { read_input } from "./lib/input.ts"
 import { ralph } from "./lib/ralph.ts"
 import { main as specify_main } from "./specify.ts"
 import { main as challenge_main } from "./challenge.ts"
@@ -65,11 +66,20 @@ examples:
   bny spike "prototype oauth"            # full pipeline, no review
   bny spike implement                    # just implement, fast
   bny --effort some spike "websockets"   # with retries
+
+input:
+  <text...>              inline text
+  -                      read from stdin
+  --input <path>         read from file
 `
 
 // -- main --
 
 export async function main(argv: string[]): Promise<number> {
+  // -- read_input: handle --input <path> and stdin (-) --
+
+  const { text: input_text, rest_argv } = read_input(argv)
+
   // -- parse args --
 
   let step: Step | null = null
@@ -77,16 +87,16 @@ export async function main(argv: string[]): Promise<number> {
   let max_iter = 3 // lower default for spikes — fast and loose
   const positional: string[] = []
 
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]
+  for (let i = 0; i < rest_argv.length; i++) {
+    const arg = rest_argv[i]
 
     if (arg === "--help" || arg === "-h") {
       process.stdout.write(HELP)
       return 0
     } else if (arg === "--dry-run") {
       dry_run = true
-    } else if (arg === "--max-iter" && argv[i + 1]) {
-      const val = parseInt(argv[i + 1], 10)
+    } else if (arg === "--max-iter" && rest_argv[i + 1]) {
+      const val = parseInt(rest_argv[i + 1], 10)
       if (!isNaN(val) && val > 0) max_iter = val
       i++
     } else if (!arg.startsWith("-")) {
@@ -101,7 +111,7 @@ export async function main(argv: string[]): Promise<number> {
     }
   }
 
-  const description = positional.join(" ").trim()
+  const description = input_text ?? positional.join(" ").trim()
   const root = find_root()
 
   // -- single step mode --

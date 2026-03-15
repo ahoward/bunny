@@ -24,6 +24,7 @@ import {
 } from "./lib/brane.ts"
 import { create_spinner } from "./lib/spinner.ts"
 import { which_check } from "./lib/spawn.ts"
+import { read_input } from "./lib/input.ts"
 
 // -- types --
 
@@ -129,19 +130,23 @@ ${sketch}
 // -- mode 1: generate proposals --
 
 async function cmd_propose(argv: string[]): Promise<number> {
+  // -- read_input: handle --input <path> and stdin (-) --
+
+  const { text: input_text, rest_argv } = read_input(argv)
+
   let dry_run = false
   let json_mode = false
   let count = 1
   const input_parts: string[] = []
 
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]
+  for (let i = 0; i < rest_argv.length; i++) {
+    const arg = rest_argv[i]
     if (arg === "--dry-run") {
       dry_run = true
     } else if (arg === "--json") {
       json_mode = true
-    } else if (arg === "--count" && i + 1 < argv.length) {
-      const val = parseInt(argv[i + 1], 10)
+    } else if (arg === "--count" && i + 1 < rest_argv.length) {
+      const val = parseInt(rest_argv[i + 1], 10)
       if (isNaN(val) || val < 1) {
         process.stderr.write("bny proposal: invalid --count value\n")
         return 1
@@ -156,7 +161,7 @@ async function cmd_propose(argv: string[]): Promise<number> {
     }
   }
 
-  let topic = input_parts.join(" ").trim()
+  let topic = input_text ?? input_parts.join(" ").trim()
 
   // -- setup --
 
@@ -631,6 +636,11 @@ flags:
   --count N    generate N proposals (default: 1)
   --dry-run    print prompt, don't call claude
   --json       JSON output with Result envelope
+
+input (for topic):
+  <text...>              inline text
+  -                      read from stdin
+  --input <path>         read from file
 `)
 }
 

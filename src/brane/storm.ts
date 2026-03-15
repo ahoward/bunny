@@ -19,16 +19,21 @@
 import { success, error } from "../lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, load_source, load_worldview, load_active_lenses,
+  ensure_brane, load_worldview, load_active_lenses,
   call_claude_structured, apply_operations,
   preview_operations, print_intake_diff, confirm_intake,
   regenerate_index, print_storm_suggestions,
 } from "../lib/brane.ts"
+import { read_input } from "../lib/input.ts"
 import type { StormResponse, StormSuggestion } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
+  // -- read_input: handle --input <path> and stdin (-) --
+
+  const { text: input_text, source: input_source, file_path, rest_argv } = read_input(argv)
+
   // -- parse args --
 
   let dry_run = false
@@ -36,34 +41,36 @@ export async function main(argv: string[]): Promise<number> {
   let rounds = 1
   const input_parts: string[] = []
 
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]
+  for (let i = 0; i < rest_argv.length; i++) {
+    const arg = rest_argv[i]
     if (arg === "--dry-run") {
       dry_run = true
     } else if (arg === "--yes" || arg === "-y") {
       auto_yes = true
-    } else if (arg === "--rounds" && i + 1 < argv.length) {
-      rounds = parseInt(argv[i + 1], 10)
+    } else if (arg === "--rounds" && i + 1 < rest_argv.length) {
+      rounds = parseInt(rest_argv[i + 1], 10)
       if (isNaN(rounds) || rounds < 1) rounds = 1
       i++
     } else if (arg === "--help" || arg === "-h") {
       process.stdout.write(`usage: bny brane storm [--dry-run] [--yes] [--rounds N] [seed]
 
-seed can be inline text, a file path, directory, or URL.
 if no seed is given, storms on the current worldview.
 
 flags:
   --dry-run      print prompt, don't call claude
   --yes, -y      skip confirmation, apply immediately
   --rounds N     multi-round brainstorming (default: 1)
+
+input:
+  <text...>              inline text
+  -                      read from stdin
+  --input <path>         read from file
 `)
       return 0
     } else {
       input_parts.push(arg)
     }
   }
-
-  const seed_input = input_parts.join(" ").trim() || null
 
   function meta() {
     return { path: "/bny/brane/storm", timestamp: new Date().toISOString(), duration_ms: 0 }
@@ -74,18 +81,17 @@ flags:
   const root = find_root()
   ensure_brane(root)
 
-  // -- load seed --
+  // -- resolve seed --
 
   let seed_content: string | null = null
   let seed_label = "(no seed — storming on worldview)"
 
-  if (seed_input) {
-    const loaded = load_source(seed_input, root)
-    if (loaded) {
-      seed_content = loaded.content
-      seed_label = loaded.label
-    } else {
-      // treat as inline text
+  if (input_text !== null) {
+    seed_content = input_text
+    seed_label = input_source === "file" ? (file_path ?? "file") : "stdin"
+  } else {
+    const seed_input = input_parts.join(" ").trim() || null
+    if (seed_input) {
       seed_content = seed_input
       seed_label = "inline"
     }

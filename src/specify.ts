@@ -19,31 +19,42 @@ import {
 } from "./lib/feature.ts"
 import { load_worldview, call_claude, strip_index_preamble } from "./lib/brane.ts"
 import { which_check } from "./lib/spawn.ts"
+import { read_input } from "./lib/input.ts"
 
 export async function main(argv: string[]): Promise<number> {
+  // -- read_input: handle --input <path> and stdin (-) --
+
+  const { text: input_text, rest_argv } = read_input(argv)
+
   // -- parse args --
 
   const args: string[] = []
   let number_override: number | null = null
   let dry_run = false
 
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === "--number") {
+  for (let i = 0; i < rest_argv.length; i++) {
+    if (rest_argv[i] === "--number") {
       i++
-      if (!argv[i]) { process.stderr.write("error: --number requires a value\n"); return 1 }
-      number_override = parseInt(argv[i], 10)
+      if (!rest_argv[i]) { process.stderr.write("error: --number requires a value\n"); return 1 }
+      number_override = parseInt(rest_argv[i], 10)
       if (isNaN(number_override)) { process.stderr.write("error: --number must be a number\n"); return 1 }
-    } else if (argv[i] === "--dry-run") {
+    } else if (rest_argv[i] === "--dry-run") {
       dry_run = true
-    } else if (argv[i] === "--help" || argv[i] === "-h") {
-      process.stdout.write("usage: bny specify [--number N] [--dry-run] <description>\n")
+    } else if (rest_argv[i] === "--help" || rest_argv[i] === "-h") {
+      process.stdout.write(`usage: bny specify [--number N] [--dry-run] <description>
+
+input:
+  <text...>              inline text
+  -                      read from stdin
+  --input <path>         read from file
+`)
       return 0
     } else {
-      args.push(argv[i])
+      args.push(rest_argv[i])
     }
   }
 
-  const description = args.join(" ").trim()
+  const description = input_text ?? args.join(" ").trim()
   if (!description) {
     process.stderr.write("usage: bny specify [--number N] [--dry-run] <description>\n")
     return 1

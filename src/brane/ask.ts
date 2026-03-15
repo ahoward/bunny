@@ -16,27 +16,35 @@
 import { error } from "../lib/result.ts"
 import { find_root } from "../lib/feature.ts"
 import {
-  ensure_brane, load_source, load_worldview, load_active_lenses,
+  ensure_brane, load_worldview, load_active_lenses,
   call_claude, list_sources,
 } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
+import { read_input } from "../lib/input.ts"
 
 export async function main(argv: string[]): Promise<number> {
+  // -- read_input: handle --input <path> and stdin (-) --
+
+  const { text: input_text, source: input_source, file_path, rest_argv } = read_input(argv)
+
   // -- parse args --
 
   let dry_run = false
   const input_parts: string[] = []
 
-  for (const arg of argv) {
+  for (const arg of rest_argv) {
     if (arg === "--dry-run") {
       dry_run = true
     } else if (arg === "--help" || arg === "-h") {
-      process.stdout.write(`usage: bny brane ask [--dry-run] <question or source>
+      process.stdout.write(`usage: bny brane ask [--dry-run] <question>
 
-if the input is a file path or URL, reviews it against the worldview.
-if the input is a plain string, answers from the worldview.
-the brane is not modified.
+answers from the worldview. the brane is not modified.
+
+input:
+  <text...>              inline text (question)
+  -                      read from stdin
+  --input <path>         read from file (reviews file against worldview)
 `)
       return 0
     } else {
@@ -44,34 +52,29 @@ the brane is not modified.
     }
   }
 
-  const input = input_parts.join(" ").trim()
+  // -- resolve input --
 
-  if (!input) {
-    const meta = { path: "/bny/brane/ask", timestamp: new Date().toISOString(), duration_ms: 0 }
-    process.stdout.write(JSON.stringify(error({ input: [{ code: "required", message: "question or source is required" }] }, meta), null, 2) + "\n")
-    return 1
+  let input_content: string
+  let input_label: string
+
+  if (input_text !== null) {
+    input_content = input_text
+    input_label = input_source === "file" ? `Source: ${file_path}` : "Source: stdin"
+  } else {
+    const inline = input_parts.join(" ").trim()
+    if (!inline) {
+      const meta = { path: "/bny/brane/ask", timestamp: new Date().toISOString(), duration_ms: 0 }
+      process.stdout.write(JSON.stringify(error({ input: [{ code: "required", message: "question or source is required" }] }, meta), null, 2) + "\n")
+      return 1
+    }
+    input_content = inline
+    input_label = "Question"
   }
 
   // -- setup --
 
   const root = find_root()
   ensure_brane(root)
-
-  // -- detect input type --
-
-  let input_content: string
-  let input_label: string
-
-  const loaded = load_source(input, root)
-  if (loaded) {
-    // it's a file, directory, or URL
-    input_content = loaded.content
-    input_label = `Source: ${loaded.label}`
-  } else {
-    // treat as a question
-    input_content = input
-    input_label = "Question"
-  }
 
   // -- load context --
 

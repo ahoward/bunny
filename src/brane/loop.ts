@@ -29,6 +29,7 @@ import {
 import type { DigestResponse } from "../lib/brane.ts"
 import { create_spinner } from "../lib/spinner.ts"
 import { which_check } from "../lib/spawn.ts"
+import { read_input } from "../lib/input.ts"
 import { main as proposal_main } from "../proposal.ts"
 
 // -- types --
@@ -533,6 +534,11 @@ flags:
   --propose [N]   generate N proposals after loop completes (default: 1)
   --dry-run       print reflect prompt, don't execute
   --json          JSON output
+
+input:
+  <text...>              inline text (goal)
+  -                      read from stdin
+  --input <path>         read from file
 `)
 }
 
@@ -544,6 +550,10 @@ export async function main(argv: string[]): Promise<number> {
     return cmd_list(argv.slice(1))
   }
 
+  // -- read_input: handle --input <path> and stdin (-) --
+
+  const { text: input_text, rest_argv } = read_input(argv)
+
   // -- parse args --
 
   let dry_run = false
@@ -554,8 +564,8 @@ export async function main(argv: string[]): Promise<number> {
   let propose_count = 0 // 0 = disabled, >0 = generate N proposals after loop
   const input_parts: string[] = []
 
-  for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i]
+  for (let i = 0; i < rest_argv.length; i++) {
+    const arg = rest_argv[i]
     if (arg === "--dry-run") {
       dry_run = true
     } else if (arg === "--yes" || arg === "-y") {
@@ -564,20 +574,20 @@ export async function main(argv: string[]): Promise<number> {
       json_mode = true
     } else if (arg === "--propose") {
       // --propose or --propose N
-      const next = argv[i + 1]
+      const next = rest_argv[i + 1]
       if (next && /^\d+$/.test(next)) {
         propose_count = parseInt(next, 10)
         i++
       } else {
         propose_count = 1
       }
-    } else if (arg === "--rounds" && i + 1 < argv.length) {
-      const val = parseInt(argv[i + 1], 10)
+    } else if (arg === "--rounds" && i + 1 < rest_argv.length) {
+      const val = parseInt(rest_argv[i + 1], 10)
       if (isNaN(val) || val < 1) rounds = 1
       else rounds = val
       i++
-    } else if (arg === "--resume" && i + 1 < argv.length) {
-      resume_slug = argv[i + 1]
+    } else if (arg === "--resume" && i + 1 < rest_argv.length) {
+      resume_slug = rest_argv[i + 1]
       i++
     } else if (arg === "--help" || arg === "-h") {
       show_help()
@@ -587,7 +597,7 @@ export async function main(argv: string[]): Promise<number> {
     }
   }
 
-  const goal_input = input_parts.join(" ").trim()
+  const goal_input = input_text ?? input_parts.join(" ").trim()
 
   // -- setup --
 
