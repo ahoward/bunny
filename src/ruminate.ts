@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
 //
-// bny ruminate — reflect on what was built, feed insights into the brane
+// bny ruminate — deep worldview integration
 //
-// after implementing a feature, ruminate gathers the spec, plan, tasks,
-// and git diff, then asks claude to extract durable knowledge.
-// insights are applied to the worldview using the same machinery as brane digest.
+// loads entire worldview + lenses, reflects on what was built,
+// extracts durable insights, applies operations to worldview files. slow.
+//
+// for a quick retrospective, use `bny retro` instead.
 //
 // usage:
 //   bny ruminate                    # ruminate on current feature
@@ -19,13 +20,35 @@ import { success, error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import {
   ensure_brane, load_worldview, load_active_lenses,
-  call_claude, parse_json, apply_operations,
+  call_claude_structured, apply_operations,
   preview_operations, print_intake_diff, confirm_intake,
   regenerate_index,
 } from "./lib/brane.ts"
 import type { DigestResponse } from "./lib/brane.ts"
 import { create_spinner } from "./lib/spinner.ts"
 import { spawn_sync, which_check } from "./lib/spawn.ts"
+
+// -- schema --
+
+const RUMINATE_SCHEMA = {
+  type: "object",
+  properties: {
+    operations: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          action:  { type: "string", enum: ["create", "update"] },
+          path:    { type: "string" },
+          content: { type: "string" },
+        },
+        required: ["action", "path", "content"],
+      },
+    },
+    reasoning: { type: "string" },
+  },
+  required: ["operations", "reasoning"],
+}
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -42,12 +65,15 @@ export async function main(argv: string[]): Promise<number> {
     } else if (arg === "--help" || arg === "-h") {
       process.stdout.write(`usage: bny ruminate [--dry-run] [--yes] [feature-name]
 
-reflects on what was built and feeds insights into the brane.
-gathers spec, plan, tasks, and git changes as context.
+deep worldview integration. loads entire worldview + lenses,
+reflects on what was built, extracts durable insights,
+applies operations to worldview files. slow.
+
+for a quick retrospective, use 'bny retro' instead.
 
 flags:
   --dry-run    print prompt, don't call claude
-  --yes, -y    skip confirmation, apply immediately
+  --yes, -y    skip confirmation
 `)
       return 0
     } else if (!arg.startsWith("-")) {
@@ -62,7 +88,6 @@ flags:
   // -- setup --
 
   const root = find_root()
-  ensure_brane(root)
 
   // -- resolve feature --
 
@@ -75,14 +100,6 @@ flags:
   }
 
   const paths = feature_paths(root, feature)
-
-  // guard: spec must exist (minimum context)
-  if (!existsSync(paths.spec)) {
-    process.stdout.write(JSON.stringify(error({
-      spec: [{ code: "not_found", message: `no spec found at ${paths.spec}` }]
-    }, meta()), null, 2) + "\n")
-    return 1
-  }
 
   process.stderr.write(`[ruminate] feature: ${feature}\n`)
 
@@ -104,17 +121,13 @@ flags:
 
   const sections: string[] = []
 
-  // spec (required)
+  // spec (optional context for rumination)
   const spec_section = read_section("Specification", paths.spec)
   if (spec_section) sections.push(spec_section)
 
   // plan (optional)
   const plan_section = read_section("Implementation Plan", paths.plan)
   if (plan_section) sections.push(plan_section)
-
-  // tasks (optional)
-  const tasks_section = read_section("Task List", paths.tasks)
-  if (tasks_section) sections.push(tasks_section)
 
   // git summary
   const diff_stat = git_output(["diff", "main...HEAD", "--stat"])
@@ -132,7 +145,20 @@ flags:
     sections.push(`## Full Diff\n\n\`\`\`diff\n${full_diff}\n\`\`\``)
   }
 
-  // -- load brane context --
+  const feature_context = sections.join("\n\n---\n\n")
+
+  // -- check claude --
+
+  if (!dry_run && !which_check("claude")) {
+    process.stdout.write(JSON.stringify(error({
+      claude: [{ code: "not_found", message: "claude CLI not found on PATH" }]
+    }, meta()), null, 2) + "\n")
+    return 1
+  }
+
+  // -- load worldview + lenses --
+
+  ensure_brane(root)
 
   const lenses = load_active_lenses(root)
   const worldview = load_worldview(root)
@@ -145,9 +171,7 @@ flags:
     ? worldview.map(w => `## ${w.heading}\n\n${w.content}`).join("\n\n")
     : "(empty worldview)"
 
-  // -- build prompt --
-
-  const ruminate_prompt = `# Active Lenses
+  const prompt = `# Active Lenses
 
 ${lens_block}
 
@@ -163,7 +187,7 @@ ${worldview_block}
 
 Feature: ${feature}
 
-${sections.join("\n\n---\n\n")}
+${feature_context}
 
 ---
 
@@ -193,62 +217,30 @@ For each insight worth keeping:
   # Topic Name
   One sentence summarizing this file's core idea.
 
-Respond with ONLY valid JSON (no markdown fences):
-{
-  "operations": [
-    {"action": "create", "path": "relative/path.md", "content": "full markdown content"},
-    {"action": "update", "path": "existing/path.md", "content": "full replacement content"}
-  ],
-  "reasoning": "brief explanation of what was extracted and what was skipped"
-}
+Your response will be validated against a JSON schema.
+
+Return an object with:
+- "operations": array of {action: "create"|"update", path: "relative/path.md", content: "full markdown content"}
+- "reasoning": brief explanation of what was extracted and what was skipped
 
 Paths are relative to worldview/. Use lowercase-kebab-case for file and directory names.
 If nothing durable emerged, return empty operations with reasoning explaining why.
 `
 
-  // -- dry run --
-
   if (dry_run) {
-    process.stdout.write(ruminate_prompt + "\n")
+    process.stdout.write(prompt + "\n")
     return 0
   }
 
-  // -- check claude --
+  const spin = create_spinner(`ruminating: ${feature}`)
+  const response = call_claude_structured<DigestResponse>(prompt, root, RUMINATE_SCHEMA, "ruminate")
+  spin.stop(response ? `ruminated: ${feature}` : undefined)
 
-  if (!which_check("claude")) {
+  if (!response) {
     process.stdout.write(JSON.stringify(error({
-      claude: [{ code: "not_found", message: "claude CLI not found on PATH" }]
+      parse: [{ code: "invalid_json", message: "could not get structured response from claude" }]
     }, meta()), null, 2) + "\n")
     return 1
-  }
-
-  // -- call claude --
-
-  const spin = create_spinner(`ruminating on: ${feature}`)
-
-  const raw = call_claude(ruminate_prompt, root)
-  if (!raw) {
-    spin.stop()
-    return 1
-  }
-
-  let response = parse_json<DigestResponse>(raw)
-  if (!response) {
-    spin.stop()
-    process.stderr.write("warning: failed to parse response, retrying...\n")
-    const spin2 = create_spinner(`retrying: ${feature}`)
-    const retry = call_claude(ruminate_prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences.", root)
-    spin2.stop()
-    if (!retry) { return 1 }
-    response = parse_json<DigestResponse>(retry)
-    if (!response) {
-      process.stdout.write(JSON.stringify(error({
-        parse: [{ code: "invalid_json", message: "could not get structured response from claude" }]
-      }, meta()), null, 2) + "\n")
-      return 1
-    }
-  } else {
-    spin.stop(`🐰 ruminated on: ${feature}`)
   }
 
   // -- intake gate --
@@ -264,8 +256,6 @@ If nothing durable emerged, return empty operations with reasoning explaining wh
       }
     }
 
-    // -- apply operations --
-
     apply_operations(root, response.operations)
     process.stderr.write(`applied ${response.operations.length} operation(s)\n`)
 
@@ -276,13 +266,12 @@ If nothing durable emerged, return empty operations with reasoning explaining wh
 
   // -- output --
 
-  const result_data = {
+  process.stdout.write(JSON.stringify(success({
     feature,
+    mode: "ruminate",
     operations: response.operations.map(op => ({ action: op.action, path: op.path })),
     reasoning: response.reasoning,
-  }
-
-  process.stdout.write(JSON.stringify(success(result_data, meta()), null, 2) + "\n")
+  }, meta()), null, 2) + "\n")
   return 0
 }
 

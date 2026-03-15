@@ -36,7 +36,7 @@ describe("bny build", () => {
     expect(r.stderr).toContain("test-gen:boundaries+golden")
     expect(r.stderr).toContain("implement:boundaries+golden")
     expect(r.stderr).toContain("verify")
-    expect(r.stderr).toContain("ruminate")
+    expect(r.stderr).toContain("retro")
   })
 
   test("step --dry-run prints step name", () => {
@@ -94,7 +94,7 @@ describe("bny spike", () => {
     expect(r.stderr).toContain("test-gen:contracts")
     expect(r.stderr).toContain("implement:contracts")
     expect(r.stderr).toContain("verify")
-    expect(r.stderr).toContain("ruminate")
+    expect(r.stderr).toContain("retro")
   })
 
   test("specify step requires description", () => {

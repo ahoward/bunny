@@ -26,6 +26,7 @@ import { main as challenge_main } from "../src/challenge.ts"
 import { main as testgen_main } from "../src/test-gen.ts"
 import { main as verify_main } from "../src/verify.ts"
 import { main as ruminate_main } from "../src/ruminate.ts"
+import { main as retro_main } from "../src/retro.ts"
 import { main as status_main } from "../src/status.ts"
 import { main as ps_main } from "../src/ps.ts"
 import { main as map_main } from "../src/map.ts"
@@ -68,6 +69,7 @@ const COMMANDS: Record<string, CommandFn> = {
   "test-gen":       testgen_main,
   "verify":         verify_main,
   "ruminate":       ruminate_main,
+  "retro":          retro_main,
   "status":         status_main,
   "ps":             ps_main,
   "map":            map_main,
@@ -119,7 +121,8 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "challenge":       { desc: "adversary hardens the spec (gemini)", group: "workflow" },
   "test-gen":        { desc: "generate test suite from spec (gemini)", group: "workflow" },
   "verify":          { desc: "post-implementation adversary review (gemini)", group: "workflow" },
-  "ruminate":        { desc: "reflect on build, feed brane",       group: "workflow" },
+  "retro":           { desc: "quick retrospective (git diff + state)", group: "workflow" },
+  "ruminate":        { desc: "deep worldview integration (slow)",  group: "workflow" },
   "digest":          { desc: "ingest file/dir/URL into brane",    group: "knowledge" },
   "brane/ask":       { desc: "query the brane (read-only)",       group: "knowledge" },
   "brane/storm":     { desc: "divergent brainstorming",            group: "knowledge" },

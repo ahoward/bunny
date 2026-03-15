@@ -2,7 +2,7 @@
 //
 // bny build — the dark factory
 //
-// full pipeline: specify → challenge → plan → tasks → narrow[1→2→3] → verify → ruminate
+// full pipeline: specify → challenge → plan → tasks → narrow[1→2→3] → verify → retro
 // or run a single step: bny build specify "desc", bny build implement, etc.
 //
 // narrowing (3×3): 3 rounds of increasingly adversarial tests, each followed
@@ -38,12 +38,13 @@ import { main as testgen_main } from "./test-gen.ts"
 import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
+import { main as retro_main } from "./retro.ts"
 import { init_state, update_state, write_state, load_constraints } from "./lib/state.ts"
 import type { BuildState } from "./lib/state.ts"
 
 // -- constants --
 
-const STEPS = ["specify", "challenge", "plan", "tasks", "narrow", "verify", "ruminate"] as const
+const STEPS = ["specify", "challenge", "plan", "tasks", "narrow", "verify", "retro", "ruminate"] as const
 
 const NARROW_ROUNDS = [
   { round: 1, label: "contracts" },
@@ -65,7 +66,8 @@ steps:
   test-gen         generate test suite — all layers (gemini)
   implement        make tests pass (claude)
   verify           post-implementation review (gemini)
-  ruminate         reflect on build, feed brane (claude)
+  retro            quick retrospective (claude)
+  ruminate         deep worldview integration (claude, slow)
 
 narrowing (3×3):
   round 1: contracts        — gemini writes spec-as-code tests
@@ -204,6 +206,8 @@ async function run_step(
       return 0
     case "verify":
       return verify_main(description ? [description] : [])
+    case "retro":
+      return retro_main(description ? [description] : [])
     case "ruminate": {
       const args: string[] = []
       if (!opts.interactive) args.push("--yes")
@@ -301,7 +305,7 @@ async function run_pipeline(
       process.stderr.write(`     ${round}b. implement:${label} (claude, ralph)\n`)
     }
     process.stderr.write(`  6. verify (gemini)\n`)
-    process.stderr.write(`  7. ruminate (claude)\n`)
+    process.stderr.write(`  7. retro (claude)\n`)
     return 0
   }
 
@@ -420,13 +424,12 @@ async function run_pipeline(
     build_state = { ...build_state, warnings: [...build_state.warnings, "verify"] }
   }
 
-  // -- 7. ruminate (claude) --
+  // -- 7. retro (claude — quick retrospective) --
 
-  const ruminate_args = !opts.interactive ? ["--yes"] : []
-  if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
-    process.stderr.write("warning: ruminate failed, continuing...\n")
-    warnings.push("ruminate")
-    build_state = { ...build_state, warnings: [...build_state.warnings, "ruminate"] }
+  if (!await run_fn(() => retro_main([]), "retro")) {
+    process.stderr.write("warning: retro failed, continuing...\n")
+    warnings.push("retro")
+    build_state = { ...build_state, warnings: [...build_state.warnings, "retro"] }
   }
 
   // -- done --

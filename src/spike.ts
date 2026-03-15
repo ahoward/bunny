@@ -27,11 +27,12 @@ import { main as testgen_main } from "./test-gen.ts"
 import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
+import { main as retro_main } from "./retro.ts"
 import { init_state, update_state, write_state, load_constraints } from "./lib/state.ts"
 
 // -- constants --
 
-const STEPS = ["specify", "challenge", "plan", "tasks", "narrow", "verify", "ruminate"] as const
+const STEPS = ["specify", "challenge", "plan", "tasks", "narrow", "verify", "retro", "ruminate"] as const
 
 const NARROW_ROUNDS = [
   { round: 1, label: "contracts" },
@@ -57,7 +58,8 @@ steps:
   test-gen         generate test suite — all layers (gemini)
   implement        make tests pass (claude)
   verify           post-implementation review (gemini)
-  ruminate         reflect on build, feed brane (claude)
+  retro            quick retrospective (claude)
+  ruminate         deep worldview integration (claude, slow)
 
 flags:
   --dry-run        show what would run, don't execute
@@ -167,6 +169,8 @@ async function run_step(
       return 0
     case "verify":
       return verify_main(description ? [description] : [])
+    case "retro":
+      return retro_main(description ? [description] : [])
     case "ruminate":
       // spikes auto-yes ruminate — knowledge is never disposable
       return ruminate_main(["--yes", ...(description ? [description] : [])])
@@ -262,7 +266,7 @@ async function run_pipeline(
       process.stderr.write(`     ${round}b. implement:${label} (claude, ralph)\n`)
     }
     process.stderr.write(`  6. verify (gemini)\n`)
-    process.stderr.write(`  7. ruminate (claude, auto-yes)\n`)
+    process.stderr.write(`  7. retro (claude)\n`)
     return 0
   }
 
@@ -336,10 +340,10 @@ async function run_pipeline(
     process.stderr.write("warning: verify failed, continuing...\n")
   }
 
-  // -- 7. ruminate (claude, auto-yes — knowledge is never disposable) --
+  // -- 7. retro (claude — quick retrospective) --
 
-  if (!await run_fn(() => ruminate_main(["--yes"]), "ruminate")) {
-    process.stderr.write("warning: ruminate failed\n")
+  if (!await run_fn(() => retro_main([]), "retro")) {
+    process.stderr.write("warning: retro failed\n")
   }
 
   // -- done --

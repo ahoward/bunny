@@ -4,7 +4,7 @@
 //
 // reads bny/roadmap.md, extracts the first unchecked item,
 // and orchestrates: specify → challenge → (human reviews spec) → plan → tasks →
-// narrow[1→2→3] → verify → ruminate → post_flight → update roadmap + decisions
+// narrow[1→2→3] → verify → retro → post_flight → update roadmap + decisions
 //
 // usage:
 //   bny next                    # run the pipeline
@@ -25,6 +25,7 @@ import { main as testgen_main } from "./test-gen.ts"
 import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
+import { main as retro_main } from "./retro.ts"
 import { spawn_sync } from "./lib/spawn.ts"
 import { init_state, update_state, write_state, load_constraints } from "./lib/state.ts"
 
@@ -63,7 +64,7 @@ picks the next roadmap item and runs the full pipeline:
   6. tasks (claude)
   7. narrow 3×3 (test-gen → implement × 3 rounds)
   8. verify (gemini — post-implementation review)
-  9. ruminate (claude — reflect + feed brane)
+  9. retro (claude — quick retrospective)
   10. post_flight
   11. update roadmap + decisions
 
@@ -128,7 +129,7 @@ flags:
       process.stderr.write(`     ${round}b. implement:${label} (claude, ralph)\n`)
     }
     process.stderr.write(`  8. bny verify (gemini)\n`)
-    process.stderr.write(`  9. bny ruminate (claude)\n`)
+    process.stderr.write(`  9. bny retro (claude)\n`)
     process.stderr.write(` 10. ./dev/post_flight\n`)
     process.stderr.write(` 11. update roadmap + decisions\n`)
     return 0
@@ -324,11 +325,10 @@ flags:
     process.stderr.write("warning: verify failed, continuing...\n")
   }
 
-  // -- 9. ruminate (reflect + feed brane) --
+  // -- 9. retro (claude — quick retrospective) --
 
-  const ruminate_args = interactive ? [] : ["--yes"]
-  if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
-    process.stderr.write("warning: ruminate failed, continuing...\n")
+  if (!await run_fn(() => retro_main([]), "retro")) {
+    process.stderr.write("warning: retro failed, continuing...\n")
   }
 
   // -- 10. post_flight (external project script) --
