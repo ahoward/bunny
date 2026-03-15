@@ -52,6 +52,7 @@ import { main as proposal_main } from "../src/proposal.ts"
 import { main as build_main } from "../src/build.ts"
 import { main as spike_main } from "../src/spike.ts"
 import { main as init_main } from "../src/init.ts"
+import { main as state_main } from "../src/state.ts"
 
 // -- command registry --
 
@@ -94,6 +95,7 @@ const COMMANDS: Record<string, CommandFn> = {
   "dev/health":     dev_health_main,
   "dev/setup":      dev_setup_main,
   "init":           init_main,
+  "state":          state_main,
 }
 
 // -- command metadata --
@@ -138,6 +140,7 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "map":             { desc: "structural codebase map + index (tree-sitter)", group: "plumbing" },
   "init":            { desc: "scaffold a project for bny (guest mode)", group: "plumbing" },
   "uninit":          { desc: "cleanly remove all bny traces",          group: "plumbing" },
+  "state":           { desc: "show current build pipeline state",      group: "plumbing" },
 }
 
 const GROUP_ORDER = ["development", "workflow", "knowledge", "orchestration", "chores", "plumbing"]

@@ -324,6 +324,7 @@ commands:
 - \`bny proposal "topic"\` — generate proposals from the graph
 
 workflow:
+- read \`bny/state.md\` if it exists — shows current build pipeline state
 - tests are written by the antagonist agent — do NOT modify test files during implementation
 - run \`./dev/test\` after code changes — all tests must pass
 - run \`./dev/post_flight\` before commits
@@ -392,7 +393,8 @@ const GUARDRAILS = `{
 
   "protected_files": [
     "bny/guardrails.json",
-    "bny/decisions.md"
+    "bny/decisions.md",
+    "bny/state.md"
   ],
 
   "blast_radius": {

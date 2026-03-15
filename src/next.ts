@@ -26,6 +26,7 @@ import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
 import { spawn_sync } from "./lib/spawn.ts"
+import { init_state, update_state, write_state, load_constraints } from "./lib/state.ts"
 
 const NARROW_ROUNDS = [
   { round: 1, label: "contracts" },
@@ -133,6 +134,15 @@ flags:
     return 0
   }
 
+  // -- durable state --
+  let build_state = init_state({
+    feature: item_name,
+    description: item_desc,
+    pipeline: "next",
+    constraints: load_constraints(root),
+  })
+  write_state(root, build_state)
+
   // -- helpers --
 
   function run_ext(cmd: string[], label: string): boolean {
@@ -146,8 +156,15 @@ flags:
   }
 
   async function run_fn(fn: () => Promise<number>, label: string): Promise<boolean> {
+    build_state = update_state(build_state, label, "in_progress")
+    write_state(root, build_state)
+
     process.stderr.write(`\n--- ${label} ---\n`)
     const code = await fn()
+
+    build_state = update_state(build_state, label, code === 0 ? "completed" : "failed")
+    write_state(root, build_state)
+
     if (code !== 0) {
       process.stderr.write(`\nerror: ${label} failed (exit ${code})\n`)
       return false
@@ -240,19 +257,32 @@ flags:
 
   // -- 7. narrow (3×3: test-gen → implement × 3 rounds) --
 
+  build_state = update_state(build_state, "narrow", "in_progress")
+  write_state(root, build_state)
+
   process.stderr.write(`\n--- narrow 3×3 (max-iter ${max_iter} per round) ---\n`)
   let narrow_failed = false
 
   for (const { round, label } of NARROW_ROUNDS) {
     // test-gen for this round
+    build_state = update_state(build_state, `test-gen:${label}`, "in_progress", round)
+    write_state(root, build_state)
+
     process.stderr.write(`\n--- test-gen:${label} (gemini, round ${round}) ---\n`)
     const tg_code = await testgen_main(["--round", String(round)])
     if (tg_code !== 0) {
+      build_state = update_state(build_state, `test-gen:${label}`, "failed", round)
+      write_state(root, build_state)
       process.stderr.write(`warning: test-gen:${label} failed (exit ${tg_code}), skipping round\n`)
       continue
     }
+    build_state = update_state(build_state, `test-gen:${label}`, "completed", round)
+    write_state(root, build_state)
 
     // implement with retries
+    build_state = update_state(build_state, `implement:${label}`, "in_progress", round)
+    write_state(root, build_state)
+
     process.stderr.write(`\n--- implement:${label} (claude, ralph, max-iter ${max_iter}) ---\n`)
     const result = await ralph({
       fn:         () => implement_main(["--round", String(round)]),
@@ -263,6 +293,8 @@ flags:
     })
 
     if (result.status !== "complete") {
+      build_state = update_state(build_state, `implement:${label}`, "failed", round)
+      write_state(root, build_state)
       process.stderr.write(`\nerror: implement:${label} ${result.status} after ${result.iterations} iterations\n`)
       narrow_failed = true
       if (interactive) {
@@ -273,9 +305,14 @@ flags:
       }
       break
     }
+    build_state = update_state(build_state, `implement:${label}`, "completed", round)
+    write_state(root, build_state)
 
     process.stderr.write(`\n--- round ${round} (${label}) complete ---\n`)
   }
+
+  build_state = update_state(build_state, "narrow", narrow_failed ? "failed" : "completed")
+  write_state(root, build_state)
 
   if (narrow_failed) {
     process.stderr.write("warning: narrowing did not complete cleanly\n")

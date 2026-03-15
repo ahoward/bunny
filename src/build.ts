@@ -38,6 +38,8 @@ import { main as testgen_main } from "./test-gen.ts"
 import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
 import { main as ruminate_main } from "./ruminate.ts"
+import { init_state, update_state, write_state, load_constraints } from "./lib/state.ts"
+import type { BuildState } from "./lib/state.ts"
 
 // -- constants --
 
@@ -216,19 +218,23 @@ async function run_step(
 
 // -- narrowing loop --
 
-async function run_narrowing(root: string, opts: Opts): Promise<number> {
+async function run_narrowing(root: string, opts: Opts, on_step?: (step: string, status: string, round: number) => void): Promise<number> {
   process.stderr.write(`\n--- narrow 3×3 (max-iter ${opts.max_iter} per round) ---\n`)
 
   for (const { round, label } of NARROW_ROUNDS) {
     // test-gen for this round
+    on_step?.(`test-gen:${label}`, "in_progress", round)
     process.stderr.write(`\n--- test-gen:${label} (gemini, round ${round}) ---\n`)
     const tg_code = await testgen_main(["--round", String(round)])
     if (tg_code !== 0) {
+      on_step?.(`test-gen:${label}`, "failed", round)
       process.stderr.write(`warning: test-gen:${label} failed (exit ${tg_code}), skipping round\n`)
       continue
     }
+    on_step?.(`test-gen:${label}`, "completed", round)
 
     // implement with retries
+    on_step?.(`implement:${label}`, "in_progress", round)
     process.stderr.write(`\n--- implement:${label} (claude, ralph, max-iter ${opts.max_iter}) ---\n`)
     const result = await ralph({
       fn:         () => implement_main(["--round", String(round)]),
@@ -239,9 +245,11 @@ async function run_narrowing(root: string, opts: Opts): Promise<number> {
     })
 
     if (result.status !== "complete") {
+      on_step?.(`implement:${label}`, "failed", round)
       process.stderr.write(`\nerror: implement:${label} ${result.status} after ${result.iterations} iterations\n`)
       return 1
     }
+    on_step?.(`implement:${label}`, "completed", round)
 
     process.stderr.write(`\n--- round ${round} (${label}) complete ---\n`)
   }
@@ -268,6 +276,15 @@ async function run_pipeline(
   process.stderr.write(`\n[bny build] ${label}\n`)
   process.stderr.write(`  max-iter: ${opts.max_iter}\n\n`)
 
+  // -- durable state --
+  let build_state = init_state({
+    feature: feature || description,
+    description,
+    pipeline: "build",
+    constraints: load_constraints(root),
+  })
+  write_state(root, build_state)
+
   if (opts.dry_run) {
     process.stderr.write(`would run:\n`)
     if (need_specify) {
@@ -291,8 +308,15 @@ async function run_pipeline(
   // -- helpers --
 
   async function run_fn(fn: () => Promise<number>, step_label: string): Promise<boolean> {
+    build_state = update_state(build_state, step_label, "in_progress")
+    write_state(root, build_state)
+
     process.stderr.write(`\n--- ${step_label} ---\n`)
     const code = await fn()
+
+    build_state = update_state(build_state, step_label, code === 0 ? "completed" : "failed")
+    write_state(root, build_state)
+
     if (code !== 0) {
       process.stderr.write(`\nerror: ${step_label} failed (exit ${code})\n`)
       return false
@@ -350,6 +374,7 @@ async function run_pipeline(
   if (!await run_fn(() => challenge_main([]), "challenge (gemini)")) {
     process.stderr.write("warning: challenge failed, continuing without spec hardening\n")
     warnings.push("challenge")
+    build_state = { ...build_state, warnings: [...build_state.warnings, "challenge"] }
   }
 
   // -- 3. plan (claude) --
@@ -366,13 +391,25 @@ async function run_pipeline(
 
   // -- 5. narrow (3×3: test-gen → implement × 3 rounds) --
 
-  const narrow_code = await run_narrowing(root, opts)
+  build_state = update_state(build_state, "narrow", "in_progress")
+  write_state(root, build_state)
+
+  const narrow_code = await run_narrowing(root, opts, (step, status, round) => {
+    build_state = update_state(build_state, step, status, round)
+    write_state(root, build_state)
+  })
   if (narrow_code !== 0) {
+    build_state = update_state(build_state, "narrow", "failed")
+    write_state(root, build_state)
     if (!confirm("narrowing did not complete cleanly. continue anyway? [y/N] ")) {
       process.stderr.write("stopped at narrow\n")
       return 1
     }
     warnings.push("narrow")
+    build_state = { ...build_state, warnings: [...build_state.warnings, "narrow"] }
+  } else {
+    build_state = update_state(build_state, "narrow", "completed")
+    write_state(root, build_state)
   }
 
   // -- 6. verify (gemini) --
@@ -380,6 +417,7 @@ async function run_pipeline(
   if (!await run_fn(() => verify_main([]), "verify (gemini)")) {
     process.stderr.write("warning: verify failed, continuing...\n")
     warnings.push("verify")
+    build_state = { ...build_state, warnings: [...build_state.warnings, "verify"] }
   }
 
   // -- 7. ruminate (claude) --
@@ -388,6 +426,7 @@ async function run_pipeline(
   if (!await run_fn(() => ruminate_main(ruminate_args), "ruminate")) {
     process.stderr.write("warning: ruminate failed, continuing...\n")
     warnings.push("ruminate")
+    build_state = { ...build_state, warnings: [...build_state.warnings, "ruminate"] }
   }
 
   // -- done --
