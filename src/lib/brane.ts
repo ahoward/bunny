@@ -218,6 +218,8 @@ export function call_claude(prompt: string, root: string): string | null {
   if (model) claude_args.push("--model", model)
   claude_args.push("-")
 
+  const verbose = process.env.BNY_VERBOSE === "1"
+
   const start = Date.now()
   const r = spawn_sync({
     cmd: ["claude", ...claude_args],
@@ -225,6 +227,7 @@ export function call_claude(prompt: string, root: string): string | null {
     stdin: prompt,
     timeout: timeout_secs,
     label: "claude",
+    stderr: verbose ? "inherit" : "pipe",
   })
   const duration_ms = Date.now() - start
 
@@ -251,6 +254,8 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
   const base_timeout = process.env.BNY_CLAUDE_TIMEOUT !== undefined ? parseInt(process.env.BNY_CLAUDE_TIMEOUT, 10) : CLAUDE_TIMEOUT_SECS
   const timeout_secs = (isNaN(base_timeout) ? CLAUDE_TIMEOUT_SECS : base_timeout) * 2
 
+  const verbose = process.env.BNY_VERBOSE === "1"
+
   const claude_args: string[] = ["-p"]
   if (model) claude_args.push("--model", model)
   for (const tool of allowed_tools) claude_args.push("--allowedTools", tool)
@@ -263,6 +268,7 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
     stdin: prompt,
     timeout: timeout_secs,
     label: "claude (with tools)",
+    stderr: verbose ? "inherit" : "pipe",
   })
   const duration_ms = Date.now() - start
 
@@ -398,6 +404,7 @@ export function call_claude_structured<T>(prompt: string, root: string, schema: 
   const timeout_parsed = timeout_env !== undefined ? parseInt(timeout_env, 10) : NaN
   const timeout_secs = !isNaN(timeout_parsed) ? timeout_parsed : CLAUDE_TIMEOUT_SECS
 
+  const verbose = process.env.BNY_VERBOSE === "1"
   const schema_json = JSON.stringify(schema)
 
   const claude_args: string[] = ["-p", "--output-format", "json", "--json-schema", schema_json]
@@ -411,6 +418,7 @@ export function call_claude_structured<T>(prompt: string, root: string, schema: 
     stdin: prompt,
     timeout: timeout_secs,
     label: label || "claude (structured)",
+    stderr: verbose ? "inherit" : "pipe",
   })
   const duration_ms = Date.now() - start
 

@@ -197,6 +197,7 @@ usage: bny <command> [args...]
 
   process.stdout.write(`
 options:
+  --verbose           stream LLM subprocess output to stderr
   --model MODEL       model to use for LLM calls (or set BNY_MODEL env var)
   --effort LEVEL      retry with canned limits (little, some, full, max)
   --ralph             wrap command in ralph retry loop
@@ -274,6 +275,7 @@ const EFFORT_PRESETS: Record<string, EffortPreset> = {
 
 interface ParsedArgs {
   ralph:       boolean
+  verbose:     boolean
   max_iter:    number
   max_budget:  number
   timeout_ms:  number
@@ -286,6 +288,7 @@ interface ParsedArgs {
 function parse_args(argv: string[]): ParsedArgs {
   const result: ParsedArgs = {
     ralph:      false,
+    verbose:    false,
     max_iter:   0,
     max_budget: 0,
     timeout_ms: 0,
@@ -302,6 +305,12 @@ function parse_args(argv: string[]): ParsedArgs {
 
     if (arg === "--ralph") {
       result.ralph = true
+      i++
+      continue
+    }
+
+    if (arg === "--verbose") {
+      result.verbose = true
       i++
       continue
     }
@@ -467,6 +476,11 @@ async function main(): Promise<void> {
   // model version pinning: --model flag sets env for all subcommands
   if (args.model) {
     process.env.BNY_MODEL = args.model
+  }
+
+  // verbose: stream LLM subprocess stderr to terminal
+  if (args.verbose) {
+    process.env.BNY_VERBOSE = "1"
   }
 
   // install assassin — pidfile at bny/bny.pid, signal handlers

@@ -43,6 +43,27 @@ describe("spawn_sync", () => {
     expect(r.ok).toBe(true)
     expect(r.stdout).toBe("buffer input")
   })
+
+  test("stderr: 'inherit' returns empty stderr string", () => {
+    const r = spawn_sync({ cmd: ["bash", "-c", "echo err >&2; echo out"], stderr: "inherit" })
+    expect(r.ok).toBe(true)
+    expect(r.stdout).toBe("out")
+    expect(r.stderr).toBe("")
+  })
+
+  test("stderr defaults to pipe when not specified", () => {
+    const r = spawn_sync({ cmd: ["bash", "-c", "echo captured >&2; exit 1"] })
+    expect(r.ok).toBe(false)
+    expect(r.stderr).toBe("captured")
+    expect(r.detail).toBe("captured")
+  })
+
+  test("stderr: 'inherit' still produces detail from stdout on failure", () => {
+    const r = spawn_sync({ cmd: ["bash", "-c", "echo fallback; exit 1"], stderr: "inherit" })
+    expect(r.ok).toBe(false)
+    expect(r.stderr).toBe("")
+    expect(r.detail).toBe("fallback")
+  })
 })
 
 describe("spawn_async", () => {

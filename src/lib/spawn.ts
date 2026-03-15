@@ -1,7 +1,7 @@
 //
 // spawn.ts — centralized process spawning
 //
-// ONE way to spawn processes. always captures stdout+stderr.
+// ONE way to spawn processes. captures stdout+stderr by default.
 // always produces perfect error messages. handles assassin tracking
 // and timeout wrapping.
 //
@@ -55,6 +55,7 @@ export interface SpawnSyncOpts {
   stdin?: Buffer | string
   timeout?: number           // seconds — wraps with timeout/gtimeout if available
   label?: string             // for context in error messages
+  stderr?: "pipe" | "inherit" // default: "pipe"
 }
 
 export interface SpawnResult {
@@ -99,9 +100,11 @@ export function spawn_sync(opts: SpawnSyncOpts): SpawnResult {
 
   const stdin_value = typeof opts.stdin === "string" ? Buffer.from(opts.stdin) : opts.stdin
 
+  const stderr_mode = opts.stderr || "pipe"
+
   const proc = Bun.spawnSync(cmd, {
     stdout: "pipe",
-    stderr: "pipe",
+    stderr: stderr_mode,
     stdin: stdin_value,
     cwd: opts.cwd,
     env: opts.env ? scrub_agent_env(opts.env) : scrub_agent_env(),
@@ -109,7 +112,7 @@ export function spawn_sync(opts: SpawnSyncOpts): SpawnResult {
 
   const exit_code = proc.exitCode ?? 1
   const stdout = new TextDecoder().decode(proc.stdout).trim()
-  const stderr = new TextDecoder().decode(proc.stderr).trim()
+  const stderr = stderr_mode === "inherit" ? "" : new TextDecoder().decode(proc.stderr).trim()
   const timed_out = exit_code === 124
 
   let detail = ""
