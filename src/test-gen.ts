@@ -23,7 +23,7 @@ import { success, error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { read_section, build_prompt } from "./lib/prompt.ts"
 import { parse_json, strip_index_preamble } from "./lib/brane.ts"
-import { spawn_async, which_check } from "./lib/spawn.ts"
+import { spawn_async, which_check, create_sandbox } from "./lib/spawn.ts"
 import { detect_project_type } from "./lib/project.ts"
 
 // -- types --
@@ -327,13 +327,15 @@ context and gets more adversarial.
 
   process.stderr.write(`[test-gen${round_label}] generating tests for: ${name} (${project.type}/${project.test_framework})\n`)
 
+  const sandbox = create_sandbox(root)
   const model = process.env.BNY_MODEL || null
   const cmd: string[] = ["gemini", "-p", prompt]
   if (model) cmd.push("--model", model)
 
   const r = await spawn_async({
     cmd,
-    cwd: root,
+    cwd: sandbox.cwd,
+    env: sandbox.env,
     stdout: "pipe",
     stderr: "inherit",
     assassin_dir: resolve(root, "bny"),
@@ -355,7 +357,8 @@ context and gets more adversarial.
     if (model) retry_cmd.push("--model", model)
     const r2 = await spawn_async({
       cmd: retry_cmd,
-      cwd: root,
+      cwd: sandbox.cwd,
+      env: sandbox.env,
       stdout: "pipe",
       stderr: "inherit",
       assassin_dir: resolve(root, "bny"),
