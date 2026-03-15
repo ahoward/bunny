@@ -9,13 +9,101 @@
 import * as assassin from "./assassin.ts"
 import * as progress from "./progress.ts"
 
-// -- agent environment scrubbing --
+// -- subprocess sandbox --
 //
-// when bny runs inside an AI agent (claude code, gemini cli, copilot cli),
-// the agent injects sentinel env vars that break nested subprocess spawning.
-// example: CLAUDECODE=1 causes `claude -p` to refuse to start.
+// create_sandbox() builds an isolated environment for subprocess spawning.
+// default strategy: deny-list known-dangerous vars, pass everything else.
+// optional: explicit allowlist for paranoid/production pipelines.
 //
-// scrub_agent_env() strips these before spawning any child process.
+// the deny-list covers:
+//   - agent sentinels that break nested sessions (CLAUDECODE, GEMINI_CLI, etc.)
+//   - session/conversation state that causes session bleed
+//   - CI write tokens that subprocesses shouldn't use
+//   - container internals that leak into nested spawns
+//
+
+export interface Sandbox {
+  env:        Record<string, string>
+  cwd:        string
+  session_id: string | null
+  root:       string
+  worktree:   string | null  // reserved for future worktree isolation
+}
+
+export interface SandboxOpts {
+  session_id?: string
+  cwd?:        string
+  // if set, ONLY these vars pass through (paranoid mode)
+  allowlist?:  string[]
+}
+
+const ENV_DENYLIST: (string | RegExp)[] = [
+  // agent sentinels — block nested session detection
+  "CLAUDECODE",
+  /^CLAUDE_CODE_/,
+  /^CLAUDE_AGENT_/,
+  /^GEMINI_CLI/,
+  /^COPILOT_CLI/,
+  /^CURSOR_/,
+  /^WINDSURF_/,
+
+  // session/conversation state — the session bleed vector
+  /^CLAUDE_SESSION/,
+  /^CLAUDE_CONVERSATION/,
+
+  // CI write tokens — subprocess shouldn't push/deploy
+  "GITHUB_TOKEN",
+  "CI_JOB_TOKEN",
+  "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+
+  // container internals
+  /^KUBERNETES_/,
+  /^DOCKER_/,
+]
+
+function is_denied(key: string): boolean {
+  return ENV_DENYLIST.some(pattern =>
+    typeof pattern === "string"
+      ? key === pattern
+      : pattern.test(key)
+  )
+}
+
+export function create_sandbox(root: string, opts?: SandboxOpts): Sandbox {
+  const base = process.env
+  const env: Record<string, string> = {}
+
+  if (opts?.allowlist) {
+    for (const key of opts.allowlist) {
+      if (base[key] !== undefined) env[key] = base[key]!
+    }
+  } else {
+    for (const [key, val] of Object.entries(base)) {
+      if (val === undefined) continue
+      if (!is_denied(key)) env[key] = val
+    }
+  }
+
+  return {
+    env,
+    cwd:        opts?.cwd ?? root,
+    session_id: opts?.session_id ?? null,
+    root,
+    worktree:   null,
+  }
+}
+
+// generate a deterministic session id scoped to feature + step + optional round
+export function session_id_for(feature: string, step: string, round?: number): string {
+  const parts = ["bny", feature, step]
+  if (round !== undefined) parts.push(`r${round}`)
+  return parts.join("-")
+}
+
+// -- legacy: scrub_agent_env --
+//
+// deprecated — use create_sandbox() for new code.
+// kept for backward compat: same deny-list behavior as create_sandbox default mode.
 //
 
 const AGENT_ENV_PREFIXES = [

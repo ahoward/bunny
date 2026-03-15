@@ -10,7 +10,7 @@ import { resolve, relative, dirname } from "node:path"
 import type { PromptSection } from "./prompt.ts"
 import { create_spinner } from "./spinner.ts"
 import { check_secrets } from "./secrets.ts"
-import { spawn_sync } from "./spawn.ts"
+import { spawn_sync, create_sandbox } from "./spawn.ts"
 
 // -- types --
 
@@ -208,6 +208,8 @@ export function call_claude(prompt: string, root: string): string | null {
   // secret detection
   if (!check_secrets(prompt, "prompt")) return null
 
+  const sandbox = create_sandbox(root)
+
   // model version pinning: --model flag or BNY_MODEL env var
   const model = process.env.BNY_MODEL || null
   const timeout_env = process.env.BNY_CLAUDE_TIMEOUT
@@ -223,7 +225,8 @@ export function call_claude(prompt: string, root: string): string | null {
   const start = Date.now()
   const r = spawn_sync({
     cmd: ["claude", ...claude_args],
-    cwd: root,
+    cwd: sandbox.cwd,
+    env: sandbox.env,
     stdin: prompt,
     timeout: timeout_secs,
     label: "claude",
@@ -249,6 +252,8 @@ export function call_claude(prompt: string, root: string): string | null {
 export function call_claude_with_tools(prompt: string, root: string, allowed_tools: string[], max_turns: number = 3): string | null {
   if (!check_secrets(prompt, "prompt")) return null
 
+  const sandbox = create_sandbox(root)
+
   const model = process.env.BNY_MODEL || null
   // tool use gets more time: 2x the normal timeout
   const base_timeout = process.env.BNY_CLAUDE_TIMEOUT !== undefined ? parseInt(process.env.BNY_CLAUDE_TIMEOUT, 10) : CLAUDE_TIMEOUT_SECS
@@ -264,7 +269,8 @@ export function call_claude_with_tools(prompt: string, root: string, allowed_too
   const start = Date.now()
   const r = spawn_sync({
     cmd: ["claude", ...claude_args],
-    cwd: root,
+    cwd: sandbox.cwd,
+    env: sandbox.env,
     stdin: prompt,
     timeout: timeout_secs,
     label: "claude (with tools)",
@@ -399,6 +405,8 @@ export interface ClaudeEnvelope {
 export function call_claude_structured<T>(prompt: string, root: string, schema: object, label: string): T | null {
   if (!check_secrets(prompt, "prompt")) return null
 
+  const sandbox = create_sandbox(root)
+
   const model = process.env.BNY_MODEL || null
   const timeout_env = process.env.BNY_CLAUDE_TIMEOUT
   const timeout_parsed = timeout_env !== undefined ? parseInt(timeout_env, 10) : NaN
@@ -414,7 +422,8 @@ export function call_claude_structured<T>(prompt: string, root: string, schema: 
   const start = Date.now()
   const r = spawn_sync({
     cmd: ["claude", ...claude_args],
-    cwd: root,
+    cwd: sandbox.cwd,
+    env: sandbox.env,
     stdin: prompt,
     timeout: timeout_secs,
     label: label || "claude (structured)",

@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test"
-import { spawn_sync, spawn_async, which_check, scrub_agent_env } from "../src/lib/spawn.ts"
+import { spawn_sync, spawn_async, which_check, scrub_agent_env, create_sandbox, session_id_for } from "../src/lib/spawn.ts"
 
 describe("spawn_sync", () => {
   test("captures stdout from successful command", () => {
@@ -190,6 +190,191 @@ describe("spawn_sync scrubs agent env", () => {
     } finally {
       if (old !== undefined) process.env.GEMINI_CLI = old
       else delete process.env.GEMINI_CLI
+    }
+  })
+})
+
+// -- sandbox --
+
+describe("create_sandbox", () => {
+  test("strips agent sentinels by default", () => {
+    const old_claude = process.env.CLAUDECODE
+    const old_gemini = process.env.GEMINI_CLI
+    process.env.CLAUDECODE = "1"
+    process.env.GEMINI_CLI = "1"
+    try {
+      const sb = create_sandbox("/tmp/test")
+      expect(sb.env.CLAUDECODE).toBeUndefined()
+      expect(sb.env.GEMINI_CLI).toBeUndefined()
+    } finally {
+      if (old_claude !== undefined) process.env.CLAUDECODE = old_claude
+      else delete process.env.CLAUDECODE
+      if (old_gemini !== undefined) process.env.GEMINI_CLI = old_gemini
+      else delete process.env.GEMINI_CLI
+    }
+  })
+
+  test("strips CLAUDE_CODE_ prefixed vars", () => {
+    const old = process.env.CLAUDE_CODE_REMOTE
+    process.env.CLAUDE_CODE_REMOTE = "1"
+    try {
+      const sb = create_sandbox("/tmp/test")
+      expect(sb.env.CLAUDE_CODE_REMOTE).toBeUndefined()
+    } finally {
+      if (old !== undefined) process.env.CLAUDE_CODE_REMOTE = old
+      else delete process.env.CLAUDE_CODE_REMOTE
+    }
+  })
+
+  test("strips CI write tokens", () => {
+    const old = process.env.GITHUB_TOKEN
+    process.env.GITHUB_TOKEN = "ghp_secret"
+    try {
+      const sb = create_sandbox("/tmp/test")
+      expect(sb.env.GITHUB_TOKEN).toBeUndefined()
+    } finally {
+      if (old !== undefined) process.env.GITHUB_TOKEN = old
+      else delete process.env.GITHUB_TOKEN
+    }
+  })
+
+  test("strips container internals", () => {
+    const old = process.env.KUBERNETES_SERVICE_HOST
+    process.env.KUBERNETES_SERVICE_HOST = "10.0.0.1"
+    try {
+      const sb = create_sandbox("/tmp/test")
+      expect(sb.env.KUBERNETES_SERVICE_HOST).toBeUndefined()
+    } finally {
+      if (old !== undefined) process.env.KUBERNETES_SERVICE_HOST = old
+      else delete process.env.KUBERNETES_SERVICE_HOST
+    }
+  })
+
+  test("strips CURSOR_ and WINDSURF_ vars", () => {
+    const old_c = process.env.CURSOR_SESSION
+    const old_w = process.env.WINDSURF_IDE
+    process.env.CURSOR_SESSION = "abc"
+    process.env.WINDSURF_IDE = "1"
+    try {
+      const sb = create_sandbox("/tmp/test")
+      expect(sb.env.CURSOR_SESSION).toBeUndefined()
+      expect(sb.env.WINDSURF_IDE).toBeUndefined()
+    } finally {
+      if (old_c !== undefined) process.env.CURSOR_SESSION = old_c
+      else delete process.env.CURSOR_SESSION
+      if (old_w !== undefined) process.env.WINDSURF_IDE = old_w
+      else delete process.env.WINDSURF_IDE
+    }
+  })
+
+  test("preserves API keys and user vars", () => {
+    const sb = create_sandbox("/tmp/test")
+    // PATH and HOME are always in the real env
+    expect(sb.env.PATH).toBeDefined()
+    expect(sb.env.HOME).toBeDefined()
+  })
+
+  test("preserves arbitrary user env vars", () => {
+    const old = process.env.MY_CUSTOM_APP_VAR
+    process.env.MY_CUSTOM_APP_VAR = "hello"
+    try {
+      const sb = create_sandbox("/tmp/test")
+      expect(sb.env.MY_CUSTOM_APP_VAR).toBe("hello")
+    } finally {
+      if (old !== undefined) process.env.MY_CUSTOM_APP_VAR = old
+      else delete process.env.MY_CUSTOM_APP_VAR
+    }
+  })
+
+  test("allowlist mode only keeps listed vars", () => {
+    const old = process.env.MY_CUSTOM_APP_VAR
+    process.env.MY_CUSTOM_APP_VAR = "hello"
+    try {
+      const sb = create_sandbox("/tmp/test", { allowlist: ["PATH", "HOME"] })
+      expect(sb.env.PATH).toBeDefined()
+      expect(sb.env.HOME).toBeDefined()
+      expect(sb.env.MY_CUSTOM_APP_VAR).toBeUndefined()
+    } finally {
+      if (old !== undefined) process.env.MY_CUSTOM_APP_VAR = old
+      else delete process.env.MY_CUSTOM_APP_VAR
+    }
+  })
+
+  test("sets cwd and root from arguments", () => {
+    const sb = create_sandbox("/my/project")
+    expect(sb.cwd).toBe("/my/project")
+    expect(sb.root).toBe("/my/project")
+  })
+
+  test("cwd can be overridden via opts", () => {
+    const sb = create_sandbox("/my/project", { cwd: "/my/project/sub" })
+    expect(sb.cwd).toBe("/my/project/sub")
+    expect(sb.root).toBe("/my/project")
+  })
+
+  test("session_id defaults to null", () => {
+    const sb = create_sandbox("/tmp/test")
+    expect(sb.session_id).toBeNull()
+  })
+
+  test("session_id passed through from opts", () => {
+    const sb = create_sandbox("/tmp/test", { session_id: "bny-auth-implement-r1" })
+    expect(sb.session_id).toBe("bny-auth-implement-r1")
+  })
+
+  test("worktree is null (reserved for future)", () => {
+    const sb = create_sandbox("/tmp/test")
+    expect(sb.worktree).toBeNull()
+  })
+
+  test("env values are strings, not string|undefined", () => {
+    const sb = create_sandbox("/tmp/test")
+    for (const val of Object.values(sb.env)) {
+      expect(typeof val).toBe("string")
+    }
+  })
+})
+
+describe("session_id_for", () => {
+  test("feature + step", () => {
+    expect(session_id_for("001-auth", "implement")).toBe("bny-001-auth-implement")
+  })
+
+  test("feature + step + round", () => {
+    expect(session_id_for("001-auth", "implement", 2)).toBe("bny-001-auth-implement-r2")
+  })
+
+  test("round 0 is included", () => {
+    expect(session_id_for("feat", "step", 0)).toBe("bny-feat-step-r0")
+  })
+})
+
+describe("sandbox env in subprocess", () => {
+  test("sandbox env strips CLAUDECODE from child processes", () => {
+    const old = process.env.CLAUDECODE
+    process.env.CLAUDECODE = "1"
+    try {
+      const sb = create_sandbox("/tmp/test")
+      const r = spawn_sync({ cmd: ["bash", "-c", "echo ${CLAUDECODE:-unset}"], env: sb.env })
+      expect(r.ok).toBe(true)
+      expect(r.stdout).toBe("unset")
+    } finally {
+      if (old !== undefined) process.env.CLAUDECODE = old
+      else delete process.env.CLAUDECODE
+    }
+  })
+
+  test("sandbox env preserves GEMINI_API_KEY in child processes", () => {
+    const old = process.env.GEMINI_API_KEY
+    process.env.GEMINI_API_KEY = "test-key-123"
+    try {
+      const sb = create_sandbox("/tmp/test")
+      const r = spawn_sync({ cmd: ["bash", "-c", "echo $GEMINI_API_KEY"], env: sb.env })
+      expect(r.ok).toBe(true)
+      expect(r.stdout).toBe("test-key-123")
+    } finally {
+      if (old !== undefined) process.env.GEMINI_API_KEY = old
+      else delete process.env.GEMINI_API_KEY
     }
   })
 })

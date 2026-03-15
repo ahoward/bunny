@@ -16,7 +16,7 @@ import { resolve } from "node:path"
 import { error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { read_section, build_prompt } from "./lib/prompt.ts"
-import { spawn_async, which_check } from "./lib/spawn.ts"
+import { spawn_async, which_check, create_sandbox, session_id_for } from "./lib/spawn.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -126,14 +126,21 @@ export async function main(argv: string[]): Promise<number> {
   const prompt_tmp = resolve(root, `bny/implement-prompt-${process.pid}.tmp`)
   await Bun.write(prompt_tmp, prompt)
 
+  // sandbox: isolated env + scoped session (no --continue, no session bleed)
+  const sandbox = create_sandbox(root, {
+    session_id: session_id_for(name, "implement", round || undefined),
+  })
+
   // model version pinning — array spawn, no shell interpolation
   const model = process.env.BNY_MODEL || null
-  const cmd: string[] = ["claude", "-p", "--continue", "--dangerously-skip-permissions"]
+  const cmd: string[] = ["claude", "-p", "--dangerously-skip-permissions"]
+  if (sandbox.session_id) cmd.push("--session-id", sandbox.session_id)
   if (model) cmd.push("--model", model)
 
   const r = await spawn_async({
     cmd,
-    cwd: root,
+    cwd: sandbox.cwd,
+    env: sandbox.env,
     stdin: Bun.file(prompt_tmp),
     stdout: "inherit",
     stderr: "inherit",

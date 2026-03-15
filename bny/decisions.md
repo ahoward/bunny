@@ -18,3 +18,4 @@ Append-only record of decisions made during development.
 | 2026-03-14 | Claude timeout bumped from 300s to 600s | storm was timing out on large worldviews in real usage |
 | 2026-03-14 | Uniform `read_input()` across all commands | positional = inline text, `-` = stdin, `--input <path>` = file. No `existsSync` guessing. Unix-y and consistent |
 | 2026-03-14 | `--verbose` global flag streams LLM stderr | callers (Claude Code) couldn't tell if bny was hung or thinking. `BNY_VERBOSE=1` inherits subprocess stderr |
+| 2026-03-15 | Subprocess sandbox: deny-list env, `--session-id` replaces `--continue` | `--continue` caused session bleed (subprocess wrote to host session). Deny-list is default-open (pass everything, strip known-bad); optional allowlist for paranoid mode. Sandbox is a POD value, not a container. |
