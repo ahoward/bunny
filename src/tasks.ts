@@ -51,13 +51,14 @@ export async function main(argv: string[]): Promise<number> {
     return 1
   }
 
-  // guard: tasks.md already exists and is non-empty
+  // guard: tasks.md already exists and is non-empty — skip (idempotent)
   if (existsSync(paths.tasks)) {
     const existing = readFileSync(paths.tasks, "utf-8").trim()
     if (existing.length > 0) {
-      const result = error({ tasks: [{ code: "exists", message: `${paths.tasks} already exists` }] })
+      process.stderr.write(`[tasks] ${paths.tasks} already exists, skipping\n`)
+      const result = success({ feature: name, tasks_file: paths.tasks })
       process.stdout.write(JSON.stringify(result, null, 2) + "\n")
-      return 1
+      return 0
     }
   }
 

@@ -35,6 +35,7 @@ import { main as todo_main } from "../src/todo.ts"
 import { main as close_issue_main } from "../src/close-issue.ts"
 import { main as ipm_main } from "../src/ipm.ts"
 import { main as uninit_main } from "../src/uninit.ts"
+import { main as version_main } from "../src/version.ts"
 import { main as brane_digest_main } from "../src/brane/digest.ts"
 import { main as brane_ask_main } from "../src/brane/ask.ts"
 import { main as brane_rebuild_main } from "../src/brane/rebuild.ts"
@@ -98,6 +99,7 @@ const COMMANDS: Record<string, CommandFn> = {
   "dev/setup":      dev_setup_main,
   "init":           init_main,
   "state":          state_main,
+  "version":        version_main,
 }
 
 // -- command metadata --
@@ -144,6 +146,7 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "init":            { desc: "scaffold a project for bny (guest mode)", group: "plumbing" },
   "uninit":          { desc: "cleanly remove all bny traces",          group: "plumbing" },
   "state":           { desc: "show current build pipeline state",      group: "plumbing" },
+  "version":         { desc: "print version, git sha, runtime info",   group: "plumbing" },
 }
 
 const GROUP_ORDER = ["development", "workflow", "knowledge", "orchestration", "chores", "plumbing"]
@@ -489,9 +492,15 @@ async function main(): Promise<void> {
     process.env.BNY_VERBOSE = "1"
   }
 
+  // commands that don't need a project root
+  const NO_ROOT_COMMANDS = ["version"]
+  const needs_root = !NO_ROOT_COMMANDS.includes(args.command)
+
   // install assassin — pidfile at bny/bny.pid, signal handlers
-  const root = get_root()
-  assassin.install(resolve(root, "bny"))
+  if (needs_root) {
+    const root = get_root()
+    assassin.install(resolve(root, "bny"))
+  }
 
   const cmd_key = resolve_command(args.command, args.subcommand)
 

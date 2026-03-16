@@ -19,3 +19,6 @@ Append-only record of decisions made during development.
 | 2026-03-14 | Uniform `read_input()` across all commands | positional = inline text, `-` = stdin, `--input <path>` = file. No `existsSync` guessing. Unix-y and consistent |
 | 2026-03-14 | `--verbose` global flag streams LLM stderr | callers (Claude Code) couldn't tell if bny was hung or thinking. `BNY_VERBOSE=1` inherits subprocess stderr |
 | 2026-03-15 | Subprocess sandbox: deny-list env, `--session-id` replaces `--continue` | `--continue` caused session bleed (subprocess wrote to host session). Deny-list is default-open (pass everything, strip known-bad); optional allowlist for paranoid mode. Sandbox is a POD value, not a container. |
+| 2026-03-16 | plan/tasks return 0 when artifact exists (idempotent) | `bny build` resume was broken because plan/tasks errored on existing files. Idempotent steps enable re-running the pipeline after interruption. |
+| 2026-03-16 | `bny version` skips project root requirement | version reports the tool's own info, not the project's. Works from any directory. `NO_ROOT_COMMANDS` list in dispatcher. |
+| 2026-03-16 | version handler resolves own package.json via import.meta.dir | Avoids reading CWD's package.json when run from a different directory. Uses Bun.spawnSync directly (not spawn_sync) to avoid progress logging to stderr. |

@@ -31,3 +31,11 @@ export type Params = unknown
 export type Emit = (event: string, data?: unknown) => void
 
 export type Handler = (params: Params, emit?: Emit) => Promise<Result>
+
+export interface VersionInfo {
+  version:     string
+  git_sha:     string | null
+  bun_version: string
+  platform:    string
+  arch:        string
+}
