@@ -11,6 +11,7 @@ bny-snapshot
 bny/*
 !bny/decisions.md
 !bny/guardrails.md
+!bny/roadmap.md
 
 # env
 .env
