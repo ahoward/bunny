@@ -36,11 +36,11 @@ the dark factory. 4 phases, one command:
   phase 3: test     3×3 narrowing — test-gen (gemini) + implement (claude)
   phase 4: build    implement (claude) + verify (gemini) + retro + ruminate
 
-auto-detects greenfield vs iteration based on codebase context.
+default mode is evolve — every hop is evolution. use --force-new for blank-slate.
 
 flags:
   --force-new       force greenfield mode
-  --force-evolve    force iteration mode
+  --force-evolve    force iteration mode (default)
   --dry-run         show what would run, don't execute
   --interactive, -i pause for human review at phase boundaries
   --max-iter N      retries per narrowing round (default: 3)
@@ -62,7 +62,7 @@ examples:
 export async function main(argv: string[]): Promise<number> {
   const { text: input_text, rest_argv } = read_input(argv)
 
-  let mode: SpecMode = "auto"
+  let mode: SpecMode = "evolve"
   let dry_run = false
   let interactive = false
   let max_iter = 3
@@ -74,9 +74,9 @@ export async function main(argv: string[]): Promise<number> {
       process.stdout.write(HELP)
       return 0
     } else if (arg === "--force-new") {
-      mode = "greenfield"
+      mode = "new"
     } else if (arg === "--force-evolve") {
-      mode = "iteration"
+      mode = "evolve"
     } else if (arg === "--dry-run") {
       dry_run = true
     } else if (arg === "--interactive" || arg === "-i") {

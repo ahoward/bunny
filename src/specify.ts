@@ -17,9 +17,10 @@ import {
   find_root, current_feature, next_feature_number, generate_branch_name,
   feature_paths,
 } from "./lib/feature.ts"
-import { load_worldview, call_claude, strip_index_preamble } from "./lib/brane.ts"
+import { call_claude, strip_index_preamble } from "./lib/brane.ts"
 import { which_check } from "./lib/spawn.ts"
 import { read_input } from "./lib/input.ts"
+import { load_boot_context_async, render_boot_context, is_zero_state } from "./lib/context.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- read_input: handle --input <path> and stdin (-) --
@@ -93,27 +94,20 @@ input:
   const paths = feature_paths(root, feature_name)
   mkdirSync(paths.dir, { recursive: true })
 
-  // -- build prompt from worldview --
+  // -- build prompt with boot context --
 
-  const worldview = load_worldview(root)
-  const worldview_block = worldview.length > 0
-    ? worldview.map(s => `## ${s.heading}\n\n${s.content}`).join("\n\n---\n\n")
-    : "(no worldview yet)"
+  const boot_ctx = await load_boot_context_async(root, "specify")
+  const force_zero = mode === "new"
+  const zero = force_zero || is_zero_state(root, boot_ctx)
+  const boot_block = render_boot_context(root, force_zero
+    ? { ...boot_ctx, recent_specs: [], feature_history: null }
+    : boot_ctx)
 
   const today = new Date().toISOString().slice(0, 10)
 
-  const prompt = [
-    "You are writing a feature specification for a software project.",
-    "",
-    "# Project Knowledge (from the brane/worldview)",
-    "",
-    worldview_block,
-    "",
-    "---",
-    "",
-    `# Feature to Specify: "${description}"`,
-    `Feature branch: \`${feature_name}\``,
-    `Date: ${today}`,
+  const task_instructions = zero ? [
+    "You are writing a feature specification for a NEW software project.",
+    "This is a greenfield project — establish the foundation.",
     "",
     "Write a complete feature specification in markdown. Include:",
     "",
@@ -122,9 +116,49 @@ input:
     "3. **Requirements** — Functional requirements (FR-001, FR-002, etc.) with MUST/SHOULD language. Mark unclear items with [NEEDS CLARIFICATION].",
     "4. **Key Entities** — Core data types and their relationships.",
     "5. **Success Criteria** — Measurable outcomes.",
+  ] : [
+    "You are writing a CHANGE SPEC for an existing software project.",
+    "Given the project context above, describe what changes to implement the user's request.",
     "",
-    "Be specific and concrete. Use the worldview knowledge to inform the design.",
+    "This is NOT a greenfield spec. The codebase already exists. Your spec must:",
+    "- Reference existing files, modules, and patterns from the codebase map",
+    "- Describe the DELTA — what changes, what's added, what's modified",
+    "- Respect existing project decisions and guardrails",
+    "- Build on prior features listed in recent specs",
+    "",
+    "Write a change specification in markdown. Include:",
+    "",
+    "1. **Change Summary** — What changes and why. Reference existing code.",
+    "2. **User Scenarios & Testing** — Prioritized user stories (P1, P2, P3) with acceptance scenarios (Given/When/Then). Each story must be independently testable.",
+    "3. **Affected Files** — Which existing files are modified, which new files are created.",
+    "4. **Edge Cases** — Boundary conditions and error scenarios, especially interactions with existing code.",
+    "5. **Requirements** — Functional requirements (FR-001, FR-002, etc.) with MUST/SHOULD language.",
+    "6. **Success Criteria** — Measurable outcomes.",
+  ]
+
+  const prompt = [
+    boot_block,
+    "",
+    "---",
+    "",
+    "# Task",
+    "",
+    ...task_instructions,
+    "",
+    `# Feature to Specify: "${description}"`,
+    `Feature branch: \`${feature_name}\``,
+    `Date: ${today}`,
+    "",
+    "Be specific and concrete. Use the project context above to inform the design.",
     "Output ONLY the markdown content, no preamble or commentary.",
+    "",
+    "---",
+    "",
+    "# Reminder",
+    "",
+    zero
+      ? "Write a complete feature specification for this new project."
+      : "Write a change spec: given the project context above, describe what changes to implement the user's request.",
   ].join("\n")
 
   if (dry_run) {
