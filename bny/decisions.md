@@ -29,3 +29,4 @@ Append-only record of decisions made during development.
 | 2026-03-25 | test-gen.ts uses temp file + stdin for gemini prompts | CLI arg delivery hit ARG_MAX with large prompts. Now uses same temp file pattern as implement.ts. |
 | 2026-03-25 | load_constraints() reads guardrails.md, not guardrails.json | guardrails.json never existed. guardrails.md is the real file. Fallback to .json preserved for legacy. |
 | 2026-03-25 | format_compact() added to map.ts | File-paths-only codebase map for token-budgeted contexts. Used by boot context for implement phase. |
+| 2026-03-25 | Boot context engine: load_boot_context(root, phase) | Phase-aware context assembly. test-gen rejected (throws). Token-budgeted map (80k char threshold). Zero-state = no specs + ≤2 decision rows. |
