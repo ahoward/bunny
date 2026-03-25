@@ -22,6 +22,65 @@ specify → challenge → plan → tasks → narrow[1→2→3] → verify → ru
 claude    gemini      claude  claude   gemini+claude    gemini   claude
 ```
 
+## greenfield vs brownfield
+
+bunny works for both new projects and existing codebases. the experience is different.
+
+### greenfield — from zero to shipping code
+
+start with a blank repo (or any repo without a `bny/` directory). `bny init` scaffolds the project state, then `bny build` takes a single sentence and produces tested, working code on a feature branch.
+
+```bash
+cd my-new-project
+bny init
+bny build "a library that parses semver ranges"
+```
+
+the pipeline creates a feature branch, writes a spec, generates adversarial tests, implements code to pass them, and feeds everything into the knowledge graph. you review the branch and merge when satisfied. typical greenfield builds produce 100-500 lines of tested code from a one-line prompt.
+
+### brownfield — evolving an existing codebase
+
+install bunny into an existing project. the knowledge graph starts empty but accumulates understanding fast — feed it your docs, your README, your architecture decisions. every build after that benefits from what the graph already knows.
+
+```bash
+cd my-existing-project
+bny init                                    # guest mode — won't clobber your files
+bny digest README.md docs/ src/             # teach the graph your codebase
+bny build "add rate limiting to the API"    # builds on what exists
+```
+
+brownfield builds are context-aware: the spec step reads your codebase structure (via tree-sitter), the plan step accounts for existing architecture, and the implementation modifies your code rather than generating from scratch. the knowledge graph compounds — the fifth feature knows what the first four learned about your codebase.
+
+key differences from greenfield:
+
+- **specs reference existing code** — the specify step reads your codebase map and writes specs that integrate with what's already there
+- **tests run against your test framework** — bunny auto-detects your project type and uses your existing test setup
+- **implementation modifies, not creates** — claude edits your files, adds to your modules, follows your patterns
+- **the graph matters more** — in greenfield the graph is nice-to-have; in brownfield it's the difference between a useful change and a naive one
+
+### feeding the graph for brownfield
+
+before your first brownfield build, prime the knowledge graph:
+
+```bash
+# ingest your documentation
+bny digest README.md docs/ ARCHITECTURE.md
+
+# ingest key source files
+bny digest src/
+
+# ingest external docs your project depends on
+bny digest https://example.com/api-docs
+
+# let it think about your domain
+bny brane storm "what are the architectural patterns in this codebase?"
+
+# autonomous research loop
+bny brane loop "authentication strategies for this API"
+```
+
+the more context the graph has, the better brownfield builds will be. this is a one-time investment — the graph persists across builds.
+
 ## proof
 
 each of these was built from a single sentence. zero human intervention:
@@ -84,11 +143,11 @@ it's a guest, not a landlord — uses marker-delimited blocks so it never clobbe
 
 the pipeline streams output to your terminal as it runs. when it finishes, you're on the feature branch with passing tests — review the code, run `./dev/test`, and merge when satisfied.
 
-if the pipeline can't pass all tests after 9 attempts (3 rounds × 3 retries), it stops and reports what failed. the branch is left in place so you can inspect or continue manually.
+if the pipeline can't pass all tests after 9 attempts (3 rounds x 3 retries), it stops and reports what failed. the branch is left in place so you can inspect or continue manually.
 
 use `--interactive` to pause at checkpoints (after spec, before each narrowing round) for human review.
 
-typical cost: **$0.50–$2.00 per build** depending on spec complexity and retry count. spikes are cheaper (~$0.25). knowledge graph operations (digest, storm, loop) are ~$0.05–$0.20 each.
+typical cost: **$0.50-$2.00 per build** depending on spec complexity and retry count. spikes are cheaper (~$0.25). knowledge graph operations (digest, storm, loop) are ~$0.05-$0.20 each.
 
 ## the core loop
 
@@ -171,7 +230,7 @@ bny map                                              # generate structural codeb
 
 ### dark factory (build)
 
-the 7-step pipeline (with 3×3 narrowing), or one step at a time:
+the 7-step pipeline (with 3x3 narrowing), or one step at a time:
 
 ```bash
 bny build "add user auth"                            # full pipeline
@@ -195,13 +254,13 @@ the fix: two agents with opposed incentives.
 | **challenge** | **gemini** | harden spec — find gaps, edge cases, ambiguities |
 | plan | claude | implementation plan |
 | tasks | claude | implementation tasks (no test tasks) |
-| **narrow** | **gemini** writes tests, claude implements | 3×3 narrowing (see below) |
+| **narrow** | **gemini** writes tests, claude implements | 3x3 narrowing (see below) |
 | **verify** | **gemini** | post-implementation — are the tests real? anything missed? |
 | ruminate | claude | reflect on build, feed knowledge graph |
 
 **bold = gemini involvement.** gemini writes every test. claude writes every line of implementation. claude never sees the test-generation prompt. this is not a rule — it's architecture. the system makes the wrong thing hard.
 
-### 3×3 narrowing
+### 3x3 narrowing
 
 instead of generating all tests at once and hoping claude passes them, we narrow in 3 rounds — each more adversarial than the last:
 
@@ -234,6 +293,14 @@ bunny auto-detects your project type from config files (`package.json`, `Cargo.t
 | go | `testing` | `rapid` |
 | python | `pytest` | `hypothesis` |
 | ruby | `rspec` | `rantly` |
+
+## subprocess sandbox
+
+bunny spawns claude and gemini as subprocesses. to prevent session bleed and credential leakage, every subprocess runs inside a sandbox:
+
+- **deny-list env** — strips agent sentinels (`CLAUDE_CODE_*`, `GEMINI_CLI_*`, `CURSOR_*`, etc.), CI tokens (`GITHUB_TOKEN`, `CI_JOB_TOKEN`), and container internals (`KUBERNETES_*`, `DOCKER_*`). everything else passes through.
+- **session isolation** — each pipeline step gets a scoped `--session-id` (e.g. `bny-auth-implement-r2`), preventing one step from reading or writing another step's conversation history.
+- **optional allowlist** — for paranoid mode, pass only explicitly named env vars.
 
 ## environment
 
