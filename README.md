@@ -18,8 +18,12 @@ the factory runs a single, observable pipeline — you can watch each step, inte
 code ships when claude beats gemini's tests. then both agents feed the knowledge graph.
 
 ```
-specify → challenge → plan → tasks → narrow[1→2→3] → verify → ruminate
-claude    gemini      claude  claude   gemini+claude    gemini   claude
+bny hop "description"
+
+  phase 1: spec     specify (claude) + challenge (gemini)
+  phase 2: plan     plan (claude) + tasks (claude)
+  phase 3: test     3×3 narrowing — test-gen (gemini) + implement (claude)
+  phase 4: build    implement (claude) + verify (gemini) + retro + ruminate
 ```
 
 ## greenfield vs brownfield
@@ -33,7 +37,7 @@ start with a blank repo (or any repo without a `bny/` directory). `bny init` sca
 ```bash
 cd my-new-project
 bny init
-bny build "a library that parses semver ranges"
+bny hop "a library that parses semver ranges"
 ```
 
 the pipeline creates a feature branch, writes a spec, generates adversarial tests, implements code to pass them, and feeds everything into the knowledge graph. you review the branch and merge when satisfied. typical greenfield builds produce 100-500 lines of tested code from a one-line prompt.
@@ -46,7 +50,7 @@ install bunny into an existing project. the knowledge graph starts empty but acc
 cd my-existing-project
 bny init                                    # guest mode — won't clobber your files
 bny digest README.md docs/ src/             # teach the graph your codebase
-bny build "add rate limiting to the API"    # builds on what exists
+bny hop "add rate limiting to the API"      # builds on what exists
 ```
 
 brownfield builds are context-aware: the spec step reads your codebase structure (via tree-sitter), the plan step accounts for existing architecture, and the implementation modifies your code rather than generating from scratch. the knowledge graph compounds — the fifth feature knows what the first four learned about your codebase.
@@ -116,7 +120,7 @@ this drops a single binary at `./bin/bny`. run it directly, or copy/symlink it s
 ./bin/bny init
 
 # give it a task
-./bin/bny build "add an authentication middleware"
+./bin/bny hop "add an authentication middleware"
 ```
 
 or from source:
@@ -137,15 +141,29 @@ git clone https://github.com/ahoward/bunny.git && cd bunny
 
 it's a guest, not a landlord — uses marker-delimited blocks so it never clobbers your existing files. idempotent on re-run. `bny uninit --force` removes all traces.
 
-### what `bny build` does
+### what `bny hop` does
 
-`bny build` creates a feature branch and runs the full pipeline. all changes happen on that branch — your main branch is untouched until you merge.
+`bny hop` creates a feature branch and runs the full 4-phase pipeline. all changes happen on that branch — your main branch is untouched until you merge.
 
-the pipeline streams output to your terminal as it runs. when it finishes, you're on the feature branch with passing tests — review the code, run `./dev/test`, and merge when satisfied.
+```
+bny hop "add user auth"              # all 4 phases
+bny hop --force-new "..."            # force greenfield mode
+bny hop --force-evolve "..."         # force iteration mode
+bny hop --interactive "..."          # pause at phase boundaries
+```
+
+or run phases individually:
+
+```
+bny spec "add user auth"             # phase 1: specify + challenge
+bny plan                             # phase 2: plan + tasks
+bny test                             # phase 3: 3×3 narrowing
+bny build                            # phase 4: implement + verify + retro + ruminate
+```
+
+the pipeline auto-detects greenfield vs iteration. use `--force-new` or `--force-evolve` to override.
 
 if the pipeline can't pass all tests after 9 attempts (3 rounds x 3 retries), it stops and reports what failed. the branch is left in place so you can inspect or continue manually.
-
-use `--interactive` to pause at checkpoints (after spec, before each narrowing round) for human review.
 
 typical cost: **$0.50-$2.00 per build** depending on spec complexity and retry count. spikes are cheaper (~$0.25). knowledge graph operations (digest, storm, loop) are ~$0.05-$0.20 each.
 
@@ -163,8 +181,8 @@ bny brane loop "auth strategies"                     # autonomous: search → fe
 bny proposal "auth system"
 bny proposal accept auth-system                      # → appends to bny/roadmap.md
 
-# 4. build (2 agents, 7 steps, tested code)
-bny build "add user auth"
+# 4. build (2 agents, 4 phases, tested code)
+bny hop "add user auth"
 
 # 5. or prototype without guardrails
 bny spike "prototype oauth flow"
@@ -181,15 +199,15 @@ most commands accept text input. the pattern is uniform across the CLI:
 
 ```bash
 # inline text (positional args)
-bny build "add user auth"
+bny hop "add user auth"
 bny brane storm "real-time collab?"
 
 # read from file
-bny build --input MVP.md
-bny specify --input requirements.txt
+bny hop --input MVP.md
+bny spec --input requirements.txt
 
 # read from stdin
-cat spec.md | bny build -
+cat spec.md | bny hop -
 echo "auth strategies" | bny brane storm -
 ```
 
@@ -228,16 +246,18 @@ structural codebase awareness via tree-sitter. functions, classes, imports, expo
 bny map                                              # generate structural codebase map
 ```
 
-### dark factory (build)
+### dark factory (hop)
 
-the 7-step pipeline (with 3x3 narrowing), or one step at a time:
+the 4-phase pipeline, or one phase at a time:
 
 ```bash
-bny build "add user auth"                            # full pipeline
-bny build specify "add user auth"                    # just one step
-bny build challenge                                  # just one step
+bny hop "add user auth"                              # all 4 phases
+bny spec "add user auth"                             # phase 1: specify + challenge
+bny plan                                             # phase 2: plan + tasks
+bny test                                             # phase 3: 3×3 narrowing
+bny build                                            # phase 4: implement + verify + retro
 bny next                                             # pick next roadmap item, run pipeline
-bny --effort full build                              # more retries per round
+bny --effort full hop "add user auth"                # more retries per round
 ```
 
 ## adversarial TDD

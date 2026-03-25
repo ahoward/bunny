@@ -123,7 +123,7 @@ describe("command registry consistency", () => {
     const r = bny("help", "--json")
     const parsed = JSON.parse(r.stdout)
     const groups = new Set(parsed.commands.map((c: any) => c.group))
-    const known = new Set(["development", "workflow", "knowledge", "orchestration", "chores", "plumbing"])
+    const known = new Set(["pipeline", "development", "knowledge", "chores", "plumbing"])
     for (const g of groups) {
       expect(known.has(g as string)).toBe(true)
     }

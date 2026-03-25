@@ -3,52 +3,32 @@ import { bny, ensure_bny_project } from "./helpers.ts"
 
 beforeAll(() => ensure_bny_project())
 
-describe("bny build", () => {
-  test("--help exits 0 and shows usage", () => {
+describe("bny build (phase 4)", () => {
+  test("--help exits 0 and shows phase 4 usage", () => {
     const r = bny("build", "--help")
     expect(r.exit).toBe(0)
     expect(r.stdout).toContain("usage")
-    expect(r.stdout).toContain("build")
-    expect(r.stdout).toContain("specify")
+    expect(r.stdout).toContain("phase 4")
     expect(r.stdout).toContain("implement")
+    expect(r.stdout).toContain("verify")
     expect(r.stdout).toContain("--dry-run")
   })
 
-  test("no description and no feature exits 1", () => {
-    const r = bny("build")
-    expect(r.exit).toBe(1)
-    expect(r.stderr).toContain("no current feature")
-  })
-
-  test("--dry-run prints pipeline steps with narrowing", () => {
-    const r = bny("build", "--dry-run", "test feature for dry run")
-    expect(r.exit).toBe(0)
-    expect(r.stderr).toContain("would run")
-    expect(r.stderr).toContain("specify")
-    expect(r.stderr).toContain("challenge")
-    expect(r.stderr).toContain("plan")
-    expect(r.stderr).toContain("tasks")
-    expect(r.stderr).toContain("narrow 3×3")
-    expect(r.stderr).toContain("test-gen:contracts")
-    expect(r.stderr).toContain("implement:contracts")
-    expect(r.stderr).toContain("test-gen:properties")
-    expect(r.stderr).toContain("implement:properties")
-    expect(r.stderr).toContain("test-gen:boundaries+golden")
-    expect(r.stderr).toContain("implement:boundaries+golden")
-    expect(r.stderr).toContain("verify")
-    expect(r.stderr).toContain("retro")
-  })
-
-  test("step --dry-run prints step name", () => {
-    const r = bny("build", "implement", "--dry-run")
+  test("--dry-run prints phase 4 steps", () => {
+    const r = bny("build", "--dry-run")
     expect(r.exit).toBe(0)
     expect(r.stderr).toContain("implement")
+    expect(r.stderr).toContain("verify")
+    expect(r.stderr).toContain("retro")
+    expect(r.stderr).toContain("ruminate")
   })
 
-  test("specify step requires description", () => {
-    const r = bny("build", "specify")
-    expect(r.exit).toBe(1)
-    expect(r.stderr).toContain("requires a description")
+  test("build with description prints deprecation and delegates to hop", () => {
+    const r = bny("build", "--dry-run", "test feature for dry run")
+    expect(r.exit).toBe(0)
+    expect(r.stderr).toContain("deprecated")
+    // delegates to hop --dry-run
+    expect(r.stderr).toContain("phase 1")
   })
 
   test("build appears in bny help", () => {
@@ -66,41 +46,53 @@ describe("bny build", () => {
   })
 })
 
-describe("bny spike", () => {
+describe("bny build-legacy (old full pipeline)", () => {
+  test("--help exits 0 and shows old pipeline usage", () => {
+    const r = bny("build-legacy", "--help")
+    expect(r.exit).toBe(0)
+    expect(r.stdout).toContain("dark factory")
+    expect(r.stdout).toContain("specify")
+    expect(r.stdout).toContain("implement")
+  })
+
+  test("step --dry-run prints step name", () => {
+    const r = bny("build-legacy", "implement", "--dry-run")
+    expect(r.exit).toBe(0)
+    expect(r.stderr).toContain("implement")
+  })
+
+  test("specify step requires description", () => {
+    const r = bny("build-legacy", "specify")
+    expect(r.exit).toBe(1)
+    expect(r.stderr).toContain("requires a description")
+  })
+})
+
+describe("bny spike (refactored)", () => {
   test("--help exits 0 and shows usage", () => {
     const r = bny("spike", "--help")
     expect(r.exit).toBe(0)
     expect(r.stdout).toContain("usage")
     expect(r.stdout).toContain("spike")
     expect(r.stdout).toContain("guardrails")
-    expect(r.stdout).toContain("implement")
   })
 
-  test("no description and no feature exits 1", () => {
-    const r = bny("spike")
-    expect(r.exit).toBe(1)
-    expect(r.stderr).toContain("no current feature")
+  test("--dry-run with description shows 4-phase pipeline", () => {
+    const r = bny("spike", "--dry-run", "test spike feature")
+    expect(r.exit).toBe(0)
+    expect(r.stderr).toContain("phase 1")
+    expect(r.stderr).toContain("phase 2")
+    expect(r.stderr).toContain("phase 3")
+    expect(r.stderr).toContain("phase 4")
   })
 
-  test("--dry-run prints full pipeline steps with narrowing", () => {
+  test("--dry-run prints 4-phase pipeline", () => {
     const r = bny("spike", "--dry-run", "test spike dry run")
     expect(r.exit).toBe(0)
-    expect(r.stderr).toContain("would run")
-    expect(r.stderr).toContain("specify")
-    expect(r.stderr).toContain("challenge")
-    expect(r.stderr).toContain("plan")
-    expect(r.stderr).toContain("tasks")
-    expect(r.stderr).toContain("narrow 3×3")
-    expect(r.stderr).toContain("test-gen:contracts")
-    expect(r.stderr).toContain("implement:contracts")
-    expect(r.stderr).toContain("verify")
-    expect(r.stderr).toContain("retro")
-  })
-
-  test("specify step requires description", () => {
-    const r = bny("spike", "specify")
-    expect(r.exit).toBe(1)
-    expect(r.stderr).toContain("requires a description")
+    expect(r.stderr).toContain("phase 1")
+    expect(r.stderr).toContain("phase 2")
+    expect(r.stderr).toContain("phase 3")
+    expect(r.stderr).toContain("phase 4")
   })
 
   test("spike appears in bny help", () => {

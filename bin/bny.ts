@@ -55,14 +55,26 @@ import { main as build_main } from "../src/build.ts"
 import { main as spike_main } from "../src/spike.ts"
 import { main as init_main } from "../src/init.ts"
 import { main as state_main } from "../src/state.ts"
+import { main as hop_main } from "../src/hop.ts"
+import { main as spec_main } from "../src/spec.ts"
+import { main as plan_phase_main } from "../src/plan-phase.ts"
+import { main as test_phase_main } from "../src/test-phase.ts"
+import { main as build_phase_main } from "../src/build-phase.ts"
 
 // -- command registry --
 
 type CommandFn = (argv: string[]) => Promise<number>
 
 const COMMANDS: Record<string, CommandFn> = {
+  // -- phase commands (the 4-phase pipeline) --
+  "hop":            hop_main,
+  "spec":           spec_main,
+  "plan":           plan_phase_main,
+  "test":           test_phase_main,
+  "build":          build_phase_main,
+  // -- plumbing (individual steps) --
   "specify":        specify_main,
-  "plan":           plan_main,
+  "plan-only":      plan_main,
   "tasks":          tasks_main,
   "implement":      implement_main,
   "review":         review_main,
@@ -79,7 +91,7 @@ const COMMANDS: Record<string, CommandFn> = {
   "close-issue":    close_issue_main,
   "ipm":            ipm_main,
   "proposal":       proposal_main,
-  "build":          build_main,
+  "build-legacy":   build_main,
   "spike":          spike_main,
   "uninit":         uninit_main,
   "digest":         digest_main,
@@ -110,21 +122,21 @@ interface CommandInfo {
 }
 
 const COMMAND_META: Record<string, CommandInfo> = {
+  // -- pipeline (the 4 phases + orchestrators) --
+  "hop":             { desc: "the dark factory — full 4-phase pipeline",    group: "pipeline" },
+  "spec":            { desc: "phase 1: specify (claude) + challenge (gemini)", group: "pipeline" },
+  "plan":            { desc: "phase 2: plan (claude) + tasks (claude)",     group: "pipeline" },
+  "test":            { desc: "phase 3: 3×3 narrowing (gemini + claude)",    group: "pipeline" },
+  "build":           { desc: "phase 4: implement + verify + retro + ruminate", group: "pipeline" },
+  "next":            { desc: "pick next roadmap item, run full pipeline",   group: "pipeline" },
+  "spike":           { desc: "exploratory build, guardrails off",           group: "pipeline" },
+  // -- development --
   "dev/pre-flight":  { desc: "run pre-flight checks",              group: "development" },
   "dev/post-flight": { desc: "run post-flight checks",             group: "development" },
   "dev/test":        { desc: "run tests",                          group: "development" },
   "dev/health":      { desc: "check system health",                group: "development" },
   "dev/setup":       { desc: "install deps, configure hooks",      group: "development" },
-  "specify":         { desc: "create feature spec",                 group: "workflow" },
-  "plan":            { desc: "create implementation plan",         group: "workflow" },
-  "tasks":           { desc: "generate task list",                 group: "workflow" },
-  "implement":       { desc: "drive AI implementation loop",       group: "workflow" },
-  "review":          { desc: "antagonist review (gemini)",         group: "workflow" },
-  "challenge":       { desc: "adversary hardens the spec (gemini)", group: "workflow" },
-  "test-gen":        { desc: "generate test suite from spec (gemini)", group: "workflow" },
-  "verify":          { desc: "post-implementation adversary review (gemini)", group: "workflow" },
-  "retro":           { desc: "quick retrospective (git diff + state)", group: "workflow" },
-  "ruminate":        { desc: "deep worldview integration (slow)",  group: "workflow" },
+  // -- knowledge --
   "digest":          { desc: "ingest file/dir/URL into brane",    group: "knowledge" },
   "brane/ask":       { desc: "query the brane (read-only)",       group: "knowledge" },
   "brane/storm":     { desc: "divergent brainstorming",            group: "knowledge" },
@@ -133,13 +145,23 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "brane/rebuild":   { desc: "rebuild worldview from all sources", group: "knowledge" },
   "brane/lens":      { desc: "manage worldview lenses",            group: "knowledge" },
   "brane/loop":      { desc: "autonomous goal-directed thought loop", group: "knowledge" },
-  "next":            { desc: "full pipeline for next roadmap item", group: "orchestration" },
+  // -- chores --
   "todo":            { desc: "manage project todos",               group: "chores" },
   "close-issue":     { desc: "close github issue",                 group: "chores" },
   "ipm":             { desc: "iteration planning meeting",         group: "chores" },
-  "proposal":        { desc: "generate proposals from brane, accept into roadmap", group: "workflow" },
-  "build":           { desc: "the dark factory (full pipeline or per-step)", group: "orchestration" },
-  "spike":           { desc: "exploratory build, guardrails off",           group: "orchestration" },
+  "proposal":        { desc: "generate proposals from brane, accept into roadmap", group: "chores" },
+  // -- plumbing (individual pipeline steps) --
+  "specify":         { desc: "create feature spec (claude)",        group: "plumbing" },
+  "plan-only":       { desc: "create implementation plan only (claude)", group: "plumbing" },
+  "tasks":           { desc: "generate task list (claude)",         group: "plumbing" },
+  "implement":       { desc: "drive AI implementation loop (claude)", group: "plumbing" },
+  "challenge":       { desc: "adversary hardens the spec (gemini)", group: "plumbing" },
+  "test-gen":        { desc: "generate test suite from spec (gemini)", group: "plumbing" },
+  "verify":          { desc: "post-implementation review (gemini)", group: "plumbing" },
+  "retro":           { desc: "quick retrospective (claude)",        group: "plumbing" },
+  "ruminate":        { desc: "deep worldview integration (claude)", group: "plumbing" },
+  "review":          { desc: "antagonist review (gemini)",          group: "plumbing" },
+  "build-legacy":    { desc: "old full pipeline (deprecated, use hop)", group: "plumbing" },
   "status":          { desc: "show current feature state",         group: "plumbing" },
   "ps":              { desc: "show running bny processes",         group: "plumbing" },
   "map":             { desc: "structural codebase map + index (tree-sitter)", group: "plumbing" },
@@ -149,7 +171,7 @@ const COMMAND_META: Record<string, CommandInfo> = {
   "version":         { desc: "print version, git sha, runtime info",   group: "plumbing" },
 }
 
-const GROUP_ORDER = ["development", "workflow", "knowledge", "orchestration", "chores", "plumbing"]
+const GROUP_ORDER = ["pipeline", "development", "knowledge", "chores", "plumbing"]
 
 const NAMESPACES = new Set(
   Object.keys(COMMANDS)

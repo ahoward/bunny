@@ -77,7 +77,12 @@ src/              # CLI source code (the dark factory)
   brane/          # knowledge commands (digest, ask, storm, enhance, rebuild, lens, tldr, loop)
   dev/            # wrappers for ./dev/* scripts
   templates/      # spec, plan, tasks templates
-  build.ts        # the dark factory (full pipeline or per-step)
+  hop.ts          # the dark factory — unified 4-phase pipeline
+  spec.ts         # phase 1: specify + challenge
+  plan-phase.ts   # phase 2: plan + tasks
+  test-phase.ts   # phase 3: 3×3 narrowing
+  build-phase.ts  # phase 4: implement + verify + retro + ruminate
+  build.ts        # legacy full pipeline (deprecated, use hop)
   init.ts         # scaffold a project (guest mode)
   uninit.ts       # cleanly remove all bny traces
   ...             # specify, plan, tasks, implement, review, ruminate, etc.
@@ -98,9 +103,9 @@ dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 1. Run `./dev/pre_flight` — confirm environment is ready
 2. Read `bny/roadmap.md` — find "Next" item
 3. Read `bny/guardrails.md` — know the constraints
-4. Run `bny build "description"` — full pipeline (specify → plan → tasks → review → implement → ruminate)
-5. Or run steps individually: `bny build specify "desc"`, `bny build plan`, etc.
-6. For exploratory work: `bny spike "description"` — same steps, no review
+4. Run `bny hop "description"` — full 4-phase pipeline (spec → plan → test → build)
+5. Or run phases individually: `bny spec "desc"`, `bny plan`, `bny test`, `bny build`
+6. For exploratory work: `bny spike "description"` — same phases, guardrails off
 7. Run `./dev/test` after every change
 8. Run `./dev/post_flight` before committing
 9. If stuck (tests won't pass) → Human checkpoint
