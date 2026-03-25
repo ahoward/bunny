@@ -22,7 +22,7 @@ import { init_state, update_state, write_state, load_constraints } from "./lib/s
 
 // -- types --
 
-export type SpecMode = "auto" | "greenfield" | "iteration"
+export type SpecMode = "evolve" | "new"
 
 // -- help --
 
@@ -30,12 +30,12 @@ const HELP = `usage: bny spec [--force-new|--force-evolve] [--dry-run] [--intera
 
 phase 1: specify + challenge.
 
-creates a feature spec (claude) then hardens it with adversarial review (gemini).
-auto-detects greenfield vs iteration based on codebase context.
+creates a change spec (claude) then hardens it with adversarial review (gemini).
+default mode is evolve — every hop is evolution. use --force-new for blank-slate.
 
 flags:
   --force-new       force greenfield mode (ignore existing code)
-  --force-evolve    force iteration mode (change spec, not new spec)
+  --force-evolve    force iteration mode (default — change spec, not new spec)
   --dry-run         show what would run, don't execute
   --interactive, -i pause for human review after spec, before challenge
 
@@ -55,7 +55,7 @@ examples:
 export async function main(argv: string[]): Promise<number> {
   const { text: input_text, rest_argv } = read_input(argv)
 
-  let mode: SpecMode = "auto"
+  let mode: SpecMode = "evolve"
   let dry_run = false
   let interactive = false
   const positional: string[] = []
@@ -66,9 +66,9 @@ export async function main(argv: string[]): Promise<number> {
       process.stdout.write(HELP)
       return 0
     } else if (arg === "--force-new") {
-      mode = "greenfield"
+      mode = "new"
     } else if (arg === "--force-evolve") {
-      mode = "iteration"
+      mode = "evolve"
     } else if (arg === "--dry-run") {
       dry_run = true
     } else if (arg === "--interactive" || arg === "-i") {
@@ -119,8 +119,8 @@ export async function run_spec(
 
   process.stderr.write(`\n--- specify ---\n`)
   const specify_args = [description]
-  if (opts.mode === "greenfield") specify_args.push("--force-new")
-  if (opts.mode === "iteration") specify_args.push("--force-evolve")
+  if (opts.mode === "new") specify_args.push("--force-new")
+  // evolve is default, no flag needed
 
   const specify_code = await specify_main(specify_args)
   if (specify_code !== 0) {

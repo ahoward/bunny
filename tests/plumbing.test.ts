@@ -7,17 +7,20 @@ describe("specify.ts arg parsing (PR 1 fix)", () => {
   test("--force-new is not eaten as description text", () => {
     const r = bny("specify", "--force-new", "--dry-run", "--number", "999", "add user auth")
     expect(r.exit).toBe(0)
-    // --force-new should NOT appear in the prompt output
     const out = r.stdout
-    expect(out).not.toContain("--force-new")
+    // the flag should not appear in the feature name/branch
+    expect(out).not.toContain("999---force-new")
     expect(out).toContain("add user auth")
+    // --force-new triggers greenfield mode
+    expect(out).toContain("establish the foundation")
   })
 
   test("--force-evolve is not eaten as description text", () => {
     const r = bny("specify", "--force-evolve", "--dry-run", "--number", "998", "add rate limiting")
     expect(r.exit).toBe(0)
     const out = r.stdout
-    expect(out).not.toContain("--force-evolve")
+    // the flag should not appear in the feature name/branch
+    expect(out).not.toContain("998---force-evolve")
     expect(out).toContain("add rate limiting")
   })
 

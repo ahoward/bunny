@@ -15,8 +15,9 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { success, error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
-import { load_worldview, call_claude, strip_index_preamble } from "./lib/brane.ts"
+import { call_claude, strip_index_preamble } from "./lib/brane.ts"
 import { which_check } from "./lib/spawn.ts"
+import { load_boot_context_async, render_boot_context } from "./lib/context.ts"
 
 export async function main(argv: string[]): Promise<number> {
   let target: string | null = null
@@ -62,25 +63,22 @@ export async function main(argv: string[]): Promise<number> {
     }
   }
 
-  // -- build prompt --
+  // -- build prompt with boot context --
 
   const spec_content = readFileSync(paths.spec, "utf-8").trim()
-
-  const worldview = load_worldview(root)
-  const worldview_block = worldview.length > 0
-    ? worldview.map(s => `## ${s.heading}\n\n${s.content}`).join("\n\n---\n\n")
-    : "(no worldview)"
+  const boot_ctx = await load_boot_context_async(root, "plan")
+  const boot_block = render_boot_context(root, boot_ctx)
 
   const today = new Date().toISOString().slice(0, 10)
 
   const prompt = [
-    "You are writing an implementation plan for a software feature.",
-    "",
-    "# Project Knowledge (from the brane/worldview)",
-    "",
-    worldview_block,
+    boot_block,
     "",
     "---",
+    "",
+    "# Task",
+    "",
+    "You are writing an implementation plan for a software feature.",
     "",
     "# Feature Specification",
     "",
@@ -95,13 +93,19 @@ export async function main(argv: string[]): Promise<number> {
     "",
     "1. **Summary** — Primary requirement + technical approach.",
     "2. **Technical Context** — Language, dependencies, testing framework, target platform.",
-    "3. **Project Structure** — Concrete file/directory layout with real paths.",
+    "3. **Project Structure** — Concrete file/directory layout with real paths. Reference the codebase map above to identify existing files to modify vs new files to create.",
     "4. **Implementation Phases** — Ordered steps, each with clear deliverables.",
     "5. **Dependencies & Execution Order** — What blocks what, parallel opportunities.",
     "",
     "Be specific: use real file paths, real module names, real function signatures.",
     "The plan should be actionable enough that a developer (or AI agent) can follow it step by step.",
     "Output ONLY the markdown content, no preamble or commentary.",
+    "",
+    "---",
+    "",
+    "# Reminder",
+    "",
+    "Output a structured implementation plan and task list that accounts for existing code and project decisions.",
   ].join("\n")
 
   if (dry_run) {
