@@ -169,13 +169,32 @@ export function read_state(root: string): BuildState | null {
   }
 }
 
-// -- load constraints from guardrails.json --
+// -- load constraints from guardrails.md --
 
 export function load_constraints(root: string): string[] {
-  const path = resolve(root, "bny/guardrails.json")
-  if (!existsSync(path)) return []
+  // prefer guardrails.md (prose, the file that actually exists)
+  const md_path = resolve(root, "bny/guardrails.md")
+  if (existsSync(md_path)) {
+    try {
+      const content = readFileSync(md_path, "utf-8").trim()
+      if (content.length === 0) return []
+      // extract bullet points as constraint lines
+      const constraints: string[] = []
+      for (const line of content.split("\n")) {
+        const bullet = line.match(/^[-*]\s+(.+)$/)
+        if (bullet) constraints.push(bullet[1])
+      }
+      return constraints.length > 0 ? constraints : [content.slice(0, 200)]
+    } catch {
+      return []
+    }
+  }
+
+  // fallback: try guardrails.json (legacy, may not exist)
+  const json_path = resolve(root, "bny/guardrails.json")
+  if (!existsSync(json_path)) return []
   try {
-    const g = JSON.parse(readFileSync(path, "utf-8"))
+    const g = JSON.parse(readFileSync(json_path, "utf-8"))
     const c: string[] = []
     if (g.blast_radius && typeof g.blast_radius === "object") {
       for (const [k, v] of Object.entries(g.blast_radius)) {

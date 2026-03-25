@@ -25,3 +25,7 @@ Append-only record of decisions made during development.
 | 2026-03-25 | `bny hop` replaces `bny build` as the top-level pipeline command | 4-phase model (spec/plan/test/build) is simpler to remember and supports both greenfield and iteration. Old `bny build "desc"` delegates to hop with deprecation warning. Phases are individually runnable: `bny spec`, `bny plan`, `bny test`, `bny build`. |
 | 2026-03-25 | Auto-detect greenfield vs iteration in spec phase | `--force-new` / `--force-evolve` overrides. Default is auto. Detection heuristic lives in the specify step — claude reads codebase context and decides. |
 | 2026-03-25 | next.ts and spike.ts refactored to use phase functions | Eliminated duplicated pipeline orchestration. Both now call `run_spec()`, `run_plan_phase()`, `run_test_phase()`, `run_build_phase()` from phase modules. |
+| 2026-03-25 | specify.ts parses --force-new/--force-evolve explicitly | Previously flags were eaten as positional args, corrupting feature names. Prerequisite for boot context (#18). |
+| 2026-03-25 | test-gen.ts uses temp file + stdin for gemini prompts | CLI arg delivery hit ARG_MAX with large prompts. Now uses same temp file pattern as implement.ts. |
+| 2026-03-25 | load_constraints() reads guardrails.md, not guardrails.json | guardrails.json never existed. guardrails.md is the real file. Fallback to .json preserved for legacy. |
+| 2026-03-25 | format_compact() added to map.ts | File-paths-only codebase map for token-budgeted contexts. Used by boot context for implement phase. |

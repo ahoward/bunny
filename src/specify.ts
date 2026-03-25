@@ -31,6 +31,7 @@ export async function main(argv: string[]): Promise<number> {
   const args: string[] = []
   let number_override: number | null = null
   let dry_run = false
+  let mode: "evolve" | "new" = "evolve"
 
   for (let i = 0; i < rest_argv.length; i++) {
     if (rest_argv[i] === "--number") {
@@ -40,8 +41,16 @@ export async function main(argv: string[]): Promise<number> {
       if (isNaN(number_override)) { process.stderr.write("error: --number must be a number\n"); return 1 }
     } else if (rest_argv[i] === "--dry-run") {
       dry_run = true
+    } else if (rest_argv[i] === "--force-new") {
+      mode = "new"
+    } else if (rest_argv[i] === "--force-evolve") {
+      mode = "evolve"
     } else if (rest_argv[i] === "--help" || rest_argv[i] === "-h") {
-      process.stdout.write(`usage: bny specify [--number N] [--dry-run] <description>
+      process.stdout.write(`usage: bny specify [--number N] [--force-new|--force-evolve] [--dry-run] <description>
+
+flags:
+  --force-new       force greenfield mode
+  --force-evolve    force iteration mode (default)
 
 input:
   <text...>              inline text

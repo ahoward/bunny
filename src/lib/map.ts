@@ -982,6 +982,14 @@ export function format_markdown(map: CodebaseMap): string {
   return lines.join("\n")
 }
 
+export function format_compact(map: CodebaseMap): string {
+  const lines: string[] = [`${map.stats.total_files} files`]
+  for (const file of map.files) {
+    lines.push(file.path)
+  }
+  return lines.join("\n")
+}
+
 export function format_json(map: CodebaseMap): string {
   return JSON.stringify(map, null, 2)
 }
