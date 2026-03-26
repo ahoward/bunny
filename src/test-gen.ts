@@ -17,7 +17,7 @@
 //   bny test-gen --dry-run              # show what would run
 //
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from "node:fs"
 import { resolve, dirname } from "node:path"
 import { success, error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
@@ -329,13 +329,19 @@ context and gets more adversarial.
 
   const sandbox = create_sandbox(root)
   const model = process.env.BNY_MODEL || null
-  const cmd: string[] = ["gemini", "-p", prompt]
+
+  // write prompt to temp file to avoid ARG_MAX limits
+  const prompt_tmp = resolve(root, `bny/test-gen-prompt-${process.pid}.tmp`)
+  await Bun.write(prompt_tmp, prompt)
+
+  const cmd: string[] = ["gemini", "-p", ""]
   if (model) cmd.push("--model", model)
 
   const r = await spawn_async({
     cmd,
     cwd: sandbox.cwd,
     env: sandbox.env,
+    stdin: Bun.file(prompt_tmp),
     stdout: "pipe",
     stderr: "inherit",
     assassin_dir: resolve(root, "bny"),
@@ -343,6 +349,7 @@ context and gets more adversarial.
   })
 
   if (!r.ok || !r.stdout) {
+    try { unlinkSync(prompt_tmp) } catch {}
     process.stderr.write(`error: gemini test-gen${round_label} failed: ${r.detail}\n`)
     return r.exit_code
   }
@@ -353,12 +360,16 @@ context and gets more adversarial.
   if (!response) {
     // retry with a nudge
     process.stderr.write("warning: failed to parse test-gen response, retrying...\n")
-    const retry_cmd: string[] = ["gemini", "-p", prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences."]
+    const retry_prompt = prompt + "\n\nYour last response was not valid JSON. Try again. Raw JSON only, no markdown fences."
+    await Bun.write(prompt_tmp, retry_prompt)
+
+    const retry_cmd: string[] = ["gemini", "-p", ""]
     if (model) retry_cmd.push("--model", model)
     const r2 = await spawn_async({
       cmd: retry_cmd,
       cwd: sandbox.cwd,
       env: sandbox.env,
+      stdin: Bun.file(prompt_tmp),
       stdout: "pipe",
       stderr: "inherit",
       assassin_dir: resolve(root, "bny"),
@@ -368,10 +379,13 @@ context and gets more adversarial.
       response = parse_json<TestGenResponse>(r2.stdout)
     }
     if (!response) {
+      try { unlinkSync(prompt_tmp) } catch {}
       process.stderr.write(`error: could not get structured test-gen response from gemini\n`)
       return 1
     }
   }
+
+  try { unlinkSync(prompt_tmp) } catch {}
 
   if (!response.files || response.files.length === 0) {
     process.stderr.write(`error: gemini generated no test files\n`)
