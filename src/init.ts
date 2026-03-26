@@ -114,6 +114,39 @@ function strip_marker_content(text: string, start_marker: string, end_marker: st
   return (before + after).replace(/\n{3,}/g, "\n\n").trim() + "\n"
 }
 
+// -- auto-init (quiet, idempotent) --
+
+/**
+ * Ensure bny/ state exists at root. Creates minimum scaffolding silently.
+ * Returns true if it created anything, false if already initialized.
+ * Called automatically by find_root() — bny init without the ceremony.
+ */
+export function ensure_initialized(root: string): boolean {
+  const bny_dir = resolve(root, "bny")
+  if (existsSync(bny_dir)) return false
+
+  // need a git repo
+  if (!existsSync(resolve(root, ".git"))) return false
+
+  mkdirSync(bny_dir, { recursive: true })
+
+  const files: [string, string][] = [
+    ["bny/roadmap.md",   ROADMAP],
+    ["bny/decisions.md", DECISIONS],
+    ["bny/constitution.md", CONSTITUTION],
+    ["bny/guardrails.json", GUARDRAILS],
+    ["bny/todos.md",     TODOS],
+  ]
+
+  for (const [rel, content] of files) {
+    const abs = resolve(root, rel)
+    if (!existsSync(abs)) writeFileSync(abs, content)
+  }
+
+  process.stderr.write("[bny] auto-initialized bny/ (run 'bny init' for full scaffold)\n")
+  return true
+}
+
 // -- main --
 
 export async function main(argv: string[]): Promise<number> {
@@ -302,7 +335,7 @@ flags:
   if (skipped > 0 && !force) {
     process.stderr.write(`  use --force to overwrite state/dev files\n`)
   }
-  process.stderr.write(`\n  next: edit bny/roadmap.md, then run 'bny ipm' to plan\n`)
+  process.stderr.write(`\n  next: bny hop "description" (or edit bny/roadmap.md, then 'bny ipm' to plan)\n`)
 
   return 0
 }
@@ -314,14 +347,15 @@ if (import.meta.main) process.exit(await main(process.argv.slice(2)))
 const AGENT_BLOCK = `## bny
 
 you have \`bny\` available — a persistent knowledge graph and build factory.
+bny auto-initializes on first use — no setup required.
 
 commands:
+- \`bny hop "description"\` — full pipeline: spec → plan → test → build
+- \`bny spike "description"\` — exploratory build, guardrails off
 - \`bny digest <source>\` — ingest file, URL, or directory into the knowledge graph
 - \`bny brane ask "question"\` — query accumulated knowledge
+- \`bny brane storm "topic"\` — divergent brainstorming
 - \`bny brane tldr\` — instant outline of what the graph knows
-- \`bny build "description"\` — full pipeline: specify → plan → tasks → review → implement → ruminate
-- \`bny spike "description"\` — exploratory build (no review)
-- \`bny proposal "topic"\` — generate proposals from the graph
 
 workflow:
 - read \`bny/state.md\` if it exists — shows current build pipeline state

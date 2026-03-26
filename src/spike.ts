@@ -123,7 +123,7 @@ export async function main(argv: string[]): Promise<number> {
     write_state(root, state)
 
     process.stderr.write(`\n=== phase 1: spec ===\n`)
-    const spec_code = await run_spec(description, root, { mode: "auto", interactive: false })
+    const spec_code = await run_spec(description, root, { mode: "evolve", interactive: false })
     if (spec_code !== 0) {
       state = update_state(state, "spec", "failed")
       write_state(root, state)
