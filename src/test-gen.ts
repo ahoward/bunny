@@ -93,10 +93,13 @@ function build_round_instructions(round: number, project: ReturnType<typeof dete
     "",
     "Rules:",
     `- Tests MUST be runnable with \`${project.test_cmd}\``,
+    `- CRITICAL: Import from \`${project.test_framework}\` ONLY. Do NOT use jest, vitest, mocha, @jest/globals, or any other test framework. Every test file MUST start with: import { describe, test, expect } from "${project.test_framework}"`,
     "- Import paths must match the plan's file structure",
     "- Use the project's idiomatic test patterns",
     "- No mocks unless absolutely necessary — test real behavior",
     "- Each test file should be self-contained and focused on one concern",
+    "- For every error/failure path: assert the specific error type, message, or shape — not just that it throws. `expect(() => ...).toThrow()` alone is INSUFFICIENT. Use `.toThrow(/pattern/)` or check error properties.",
+    "- If the spec contains an Edge Cases table or section, you MUST generate a test for EVERY edge case listed. This is not optional — missing edge case coverage is a test generation failure.",
   ]
 
   const json_schema = [
@@ -121,9 +124,13 @@ function build_round_instructions(round: number, project: ReturnType<typeof dete
       body = [
         "## Round 1: Contract Tests",
         "",
-        "Generate ONLY contract tests — one test per acceptance scenario from the spec.",
+        "Generate contract tests — one test per acceptance scenario from the spec.",
         "These are the specification as code: Given/When/Then → test case.",
         "Test the public interface, not internals.",
+        "",
+        "MANDATORY: If the spec has an Edge Cases section or table, generate a dedicated test",
+        "for EVERY edge case listed. Each row in the edge case table = one test. Name the test",
+        "after the edge case ID or description. This coverage is required, not optional.",
         "",
         "Do NOT generate property tests, golden file tests, or boundary tests.",
         "Those come in later rounds.",
@@ -146,6 +153,15 @@ function build_round_instructions(round: number, project: ReturnType<typeof dete
         project.property_lib
           ? `Use \`${project.property_lib}\` for generators and assertions.`
           : "No property library available — write manual property-style tests with varied inputs.",
+        "",
+        "IMPORTANT: Generators MUST include adversarial inputs — boundary values, empty strings,",
+        "maximum sizes, special characters that commonly break parsers (hyphens, dots, backslashes,",
+        "quotes, unicode, null bytes, extremely long strings). Do NOT restrict generators to",
+        "safe/simple/alphanumeric values. The entire point is to find bugs that safe inputs miss.",
+        "",
+        "Also test security-relevant invariants: prototype pollution (keys like __proto__,",
+        "constructor, prototype), injection vectors, and denial-of-service inputs (deeply nested",
+        "structures, very large inputs).",
         "",
         "Do NOT regenerate contract tests. Only add property tests.",
         "Focus on what the contract tests miss.",

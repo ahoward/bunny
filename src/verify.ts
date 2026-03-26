@@ -43,27 +43,25 @@ function collect_test_files(root: string, test_dir: string): string {
   return files.length > 0 ? files.join("\n\n") : "(no test files found)"
 }
 
-function collect_source_listing(root: string): string {
-  // try bny map first, fall back to simple listing
-  const r = spawn_sync({ cmd: ["bny", "map", "--format", "outline"], cwd: root, label: "bny map" })
-  if (r.ok && r.stdout.trim().length > 0) return r.stdout.trim()
-
-  // fallback: list src/ files
+function collect_source_code(root: string): string {
+  // inline full source code so gemini can actually find bugs
   const src_dir = resolve(root, "src")
   if (!existsSync(src_dir)) return "(no src/ directory)"
-  const files: string[] = []
+  const parts: string[] = []
   function walk(dir: string, prefix: string) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name.startsWith(".")) continue
       const rel = prefix ? `${prefix}/${entry.name}` : entry.name
       if (entry.isDirectory()) {
         walk(resolve(dir, entry.name), rel)
       } else {
-        files.push(`src/${rel}`)
+        const content = readFileSync(resolve(dir, entry.name), "utf-8")
+        parts.push(`## src/${rel}\n\n\`\`\`\n${content}\n\`\`\``)
       }
     }
   }
   walk(src_dir, "")
-  return files.join("\n")
+  return parts.length > 0 ? parts.join("\n\n") : "(no source files)"
 }
 
 export async function main(argv: string[]): Promise<number> {
@@ -104,7 +102,7 @@ export async function main(argv: string[]): Promise<number> {
 
   const project = detect_project_type(root)
   const test_content = collect_test_files(root, project.test_dir)
-  const source_listing = collect_source_listing(root)
+  const source_code = collect_source_code(root)
 
   // run tests and capture output
   const test_result = spawn_sync({ cmd: project.test_cmd.split(" "), cwd: root, label: "test run" })
@@ -119,7 +117,7 @@ export async function main(argv: string[]): Promise<number> {
     read_section("Feature Specification", paths.spec),
     read_section("Adversary Challenge", challenge_path),
     { heading: "Test Suite", content: test_content },
-    { heading: "Source Files", content: source_listing },
+    { heading: "Source Code (full implementation)", content: source_code },
     { heading: "Test Results", content: test_output },
   ].filter((s): s is NonNullable<typeof s> => s !== null)
 
