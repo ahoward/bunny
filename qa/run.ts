@@ -315,11 +315,11 @@ function build_suite(suite: Suite): BuildResult {
 
 const EVAL_SCHEMA = `{
   "scores": {
-    "correctness": <1-5>,
-    "test_quality": <1-5>,
-    "code_quality": <1-5>,
-    "spec_fidelity": <1-5>,
-    "defect_count": <number of bugs you found>
+    "correctness": 3,
+    "test_quality": 3,
+    "code_quality": 3,
+    "spec_fidelity": 3,
+    "defect_count": 0
   },
   "defects": ["description of each bug found"],
   "soft_tests": ["tests that are too easy / don't test real behavior"],
@@ -361,7 +361,7 @@ For each defect, explain the bug and why the tests miss it.
 For each soft test, explain what it fails to actually verify.
 For each missing test, explain the scenario and why it matters.
 
-Respond with this exact JSON structure:
+Respond ONLY with valid JSON. No markdown fences, no commentary. Use the exact structure below, replacing the placeholder numbers with your actual scores (1-5 scale):
 ${EVAL_SCHEMA}`
 }
 

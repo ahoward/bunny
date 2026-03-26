@@ -115,7 +115,8 @@ export async function main(argv: string[]): Promise<number> {
     "Do NOT modify test files — they are locked by the antagonist.",
     "If a test seems wrong, note it but implement to make it pass anyway.",
     "Mark tasks as [x] in tasks.md as you complete them.",
-    "If you get stuck on a task after 3 attempts, stop and report the blocker.",
+    "CRITICAL: Do NOT give up or stop if tests fail. Read the test output carefully, diagnose the failure, fix the code, and run tests again.",
+    "You MUST NOT finish your work or exit until `./dev/test` runs successfully and exits 0 (all tests passing).",
     "Do not move to the next task until the current one passes tests.",
     "Before committing, run `./dev/post_flight`.",
   ].join("\n")

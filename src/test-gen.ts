@@ -100,6 +100,8 @@ function build_round_instructions(round: number, project: ReturnType<typeof dete
     "- Each test file should be self-contained and focused on one concern",
     "- For every error/failure path: assert the specific error type, message, or shape — not just that it throws. `expect(() => ...).toThrow()` alone is INSUFFICIENT. Use `.toThrow(/pattern/)` or check error properties.",
     "- If the spec contains an Edge Cases table or section, you MUST generate a test for EVERY edge case listed. This is not optional — missing edge case coverage is a test generation failure.",
+    "- CORRECTNESS: Validate every assertion against real domain rules BEFORE writing it. Do NOT generate tests with factually wrong expected values (e.g., asserting 2.0.0 satisfies ^1.0.0 in semver is WRONG). A test with an incorrect assertion is worse than no test.",
+    "- API RIGOR: For HTTP/API tests, assert exact status codes, Content-Type response headers, and JSON error response shapes — not just status code families.",
   ]
 
   const json_schema = [
