@@ -17,6 +17,7 @@ import { error } from "./lib/result.ts"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { read_section, build_prompt } from "./lib/prompt.ts"
 import { spawn_async, which_check, create_sandbox, session_id_for } from "./lib/spawn.ts"
+import { load_boot_context_async, render_boot_context } from "./lib/context.ts"
 
 export async function main(argv: string[]): Promise<number> {
   // -- parse args --
@@ -119,7 +120,25 @@ export async function main(argv: string[]): Promise<number> {
     "Before committing, run `./dev/post_flight`.",
   ].join("\n")
 
-  const prompt = build_prompt(sections, instructions)
+  // -- boot context: decisions + guardrails + compact file list --
+
+  const boot_ctx = await load_boot_context_async(root, "implement")
+  const boot_block = render_boot_context(root, boot_ctx)
+
+  const base_prompt = build_prompt(sections, instructions)
+  const prompt = [
+    boot_block,
+    "",
+    "---",
+    "",
+    base_prompt,
+    "",
+    "---",
+    "",
+    "# Reminder",
+    "",
+    "Implement the tasks. Follow project decisions. Import existing utilities — do not duplicate code.",
+  ].join("\n")
 
   // -- shell out to claude --
 
