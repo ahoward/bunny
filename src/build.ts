@@ -141,14 +141,6 @@ export async function main(argv: string[]): Promise<number> {
   const description = input_text ?? positional.join(" ").trim()
   const root = find_root()
 
-  // guard: build requires a roadmap — use bny spike for ad-hoc builds
-  const roadmap_path = resolve(root, "bny/roadmap.md")
-  if (!existsSync(roadmap_path)) {
-    process.stderr.write("error: no bny/roadmap.md found — bny build requires a roadmap\n")
-    process.stderr.write("  use 'bny spike \"description\"' for ad-hoc builds\n")
-    return 1
-  }
-
   // -- single step mode --
 
   if (step) {

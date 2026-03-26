@@ -2,7 +2,20 @@
 
 ## What This Is
 
-Bunny is a Bun + TypeScript CLI that manages a persistent knowledge graph for software projects.
+Bunny is a Bun + TypeScript CLI that manages a persistent knowledge graph and build factory for software projects. Auto-initializes on first use — no setup required.
+
+## TL;DR
+
+```bash
+bny hop "add user auth"         # the whole thing: spec → plan → test → build
+bny spike "prototype X"         # same thing, no guardrails
+bny brane ask "how does X work" # query the knowledge graph
+bny digest docs/                # feed it knowledge
+bny brane storm "topic"         # brainstorm
+bny brane tldr                  # what does the brane know?
+```
+
+`hop` is the main loop. `spike` is the sandbox. `brane` is the memory. Everything else is plumbing.
 
 ## Key Files
 
@@ -83,7 +96,7 @@ src/              # CLI source code (the dark factory)
   test-phase.ts   # phase 3: 3×3 narrowing
   build-phase.ts  # phase 4: implement + verify + retro + ruminate
   build.ts        # legacy full pipeline (deprecated, use hop)
-  init.ts         # scaffold a project (guest mode)
+  init.ts         # scaffold a project (guest mode, auto-runs on first use)
   uninit.ts       # cleanly remove all bny traces
   ...             # specify, plan, tasks, implement, review, ruminate, etc.
   handlers/       # app.call handlers (one file per endpoint)

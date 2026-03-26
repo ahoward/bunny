@@ -175,7 +175,7 @@ flags:
   write_state(root, state)
 
   process.stderr.write(`\n=== phase 1: spec ===\n`)
-  const spec_code = await run_spec(item_name, root, { mode: "auto", interactive })
+  const spec_code = await run_spec(item_name, root, { mode: "evolve", interactive })
   if (spec_code !== 0) {
     state = update_state(state, "spec", "failed")
     write_state(root, state)

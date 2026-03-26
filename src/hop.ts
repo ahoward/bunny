@@ -14,8 +14,7 @@
 //   bny hop --interactive "..."          # pause at checkpoints
 //
 
-import { existsSync, readFileSync, openSync, readSync, closeSync } from "node:fs"
-import { resolve } from "node:path"
+import { openSync, readSync, closeSync } from "node:fs"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { read_input } from "./lib/input.ts"
 import { run_spec } from "./spec.ts"
@@ -29,7 +28,7 @@ import { init_state, update_state, write_state, load_constraints } from "./lib/s
 
 const HELP = `usage: bny hop [--force-new|--force-evolve] [--dry-run] [--interactive] [--max-iter N] <description>
 
-the dark factory. 4 phases, one command:
+the dark factory. 4 phases, one command. auto-initializes on first use.
 
   phase 1: spec     specify (claude) + challenge (gemini)
   phase 2: plan     plan (claude) + tasks (claude)
@@ -100,14 +99,6 @@ export async function main(argv: string[]): Promise<number> {
   if (!feature && !description) {
     process.stderr.write("error: no current feature and no description given\n")
     process.stderr.write("usage: bny hop \"description\"\n")
-    return 1
-  }
-
-  // guard: roadmap required (use bny spike for ad-hoc)
-  const roadmap_path = resolve(root, "bny/roadmap.md")
-  if (!existsSync(roadmap_path)) {
-    process.stderr.write("error: no bny/roadmap.md found — bny hop requires a roadmap\n")
-    process.stderr.write("  use 'bny spike \"description\"' for ad-hoc builds\n")
     return 1
   }
 

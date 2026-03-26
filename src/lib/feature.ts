@@ -8,6 +8,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { resolve, relative, dirname, basename } from "node:path"
 import { spawn_sync } from "./spawn.ts"
+import { ensure_initialized } from "../init.ts"
 
 // -- types --
 
@@ -36,11 +37,12 @@ export function find_root(): string {
   let dir = process.cwd()
   while (dir !== "/") {
     if (existsSync(resolve(dir, "bny"))) return dir
-    if (existsSync(resolve(dir, "bny"))) return dir
     dir = dirname(dir)
   }
-  process.stderr.write("warning: no bny/ or bny/ directory found, using cwd as project root\n")
-  return process.cwd()
+  // no bny/ found — auto-init at cwd if it's a git repo
+  const cwd = process.cwd()
+  ensure_initialized(cwd)
+  return cwd
 }
 
 // -- feature detection --
