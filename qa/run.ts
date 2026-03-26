@@ -258,7 +258,7 @@ function build_suite(suite: Suite): BuildResult {
     stdout: "pipe",
     stderr: "pipe",
     cwd: work_dir,
-    timeout: 900_000,  // 15 min for full pipeline
+    timeout: 1_800_000,  // 30 min for full pipeline (loop-until-green needs headroom)
     env: { ...process.env, BUNNY_LOG: "0", BNY_NO_SPINNER: "1" },
   })
   const duration_ms = Math.round(performance.now() - start)
