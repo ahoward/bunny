@@ -35,3 +35,5 @@ Append-only record of decisions made during development.
 | 2026-03-26 | `ensure_initialized()` auto-creates `bny/` on first use | `find_root()` calls it when no `bny/` found. Requires `.git` (won't init in random dirs). Quiet, idempotent. Removes need for explicit `bny init` before `bny hop`. |
 | 2026-03-26 | Roadmap guard removed from `hop.ts` and `build.ts` | Auto-init creates roadmap.md, so the guard was dead code. `bny hop` just works now. |
 | 2026-03-26 | Fixed stale `mode: "auto"` in spike.ts and next.ts | SpecMode was changed to "evolve"/"new" but spike.ts and next.ts still passed "auto". Changed to "evolve". |
+| 2026-03-26 | `session_id_for()` hashes slug to UUID v4 format | Claude CLI rejects non-UUID session IDs. MD5 hash of human-readable slug, formatted as UUID v4 with version/variant bits set. Deterministic and reproducible. |
+| 2026-03-26 | QA harness: black-box adversarial testing at `qa/run.ts` | 3 canonical suites (semver, kv-store, json-patch). Runs `bny hop`, evaluates with both claude and gemini. KPI tracking over time. Zero shared code with bunny. |

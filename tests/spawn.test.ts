@@ -336,16 +336,36 @@ describe("create_sandbox", () => {
 })
 
 describe("session_id_for", () => {
-  test("feature + step", () => {
-    expect(session_id_for("001-auth", "implement")).toBe("bny-001-auth-implement")
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+
+  test("feature + step returns valid UUID v4", () => {
+    const id = session_id_for("001-auth", "implement")
+    expect(id).toMatch(UUID_RE)
   })
 
-  test("feature + step + round", () => {
-    expect(session_id_for("001-auth", "implement", 2)).toBe("bny-001-auth-implement-r2")
+  test("feature + step + round returns valid UUID v4", () => {
+    const id = session_id_for("001-auth", "implement", 2)
+    expect(id).toMatch(UUID_RE)
   })
 
-  test("round 0 is included", () => {
-    expect(session_id_for("feat", "step", 0)).toBe("bny-feat-step-r0")
+  test("round 0 is included (different from no round)", () => {
+    const with_round = session_id_for("feat", "step", 0)
+    const without_round = session_id_for("feat", "step")
+    expect(with_round).toMatch(UUID_RE)
+    expect(without_round).toMatch(UUID_RE)
+    expect(with_round).not.toBe(without_round)
+  })
+
+  test("deterministic — same inputs produce same UUID", () => {
+    const a = session_id_for("001-auth", "implement")
+    const b = session_id_for("001-auth", "implement")
+    expect(a).toBe(b)
+  })
+
+  test("different inputs produce different UUIDs", () => {
+    const a = session_id_for("001-auth", "implement")
+    const b = session_id_for("001-auth", "verify")
+    expect(a).not.toBe(b)
   })
 })
 

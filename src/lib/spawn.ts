@@ -93,11 +93,23 @@ export function create_sandbox(root: string, opts?: SandboxOpts): Sandbox {
   }
 }
 
-// generate a deterministic session id scoped to feature + step + optional round
+// generate a deterministic UUID session id scoped to feature + step + optional round.
+// claude CLI requires UUID format — we hash the slug to produce a reproducible v4-shaped UUID.
 export function session_id_for(feature: string, step: string, round?: number): string {
   const parts = ["bny", feature, step]
   if (round !== undefined) parts.push(`r${round}`)
-  return parts.join("-")
+  const slug = parts.join("-")
+  const hasher = new Bun.CryptoHasher("md5")
+  hasher.update(slug)
+  const hex = hasher.digest("hex")
+  // format as UUID v4 (set version nibble to 4, variant bits to 10xx)
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    "4" + hex.slice(13, 16),
+    ((parseInt(hex[16], 16) & 0x3) | 0x8).toString(16) + hex.slice(17, 20),
+    hex.slice(20, 32),
+  ].join("-")
 }
 
 // -- legacy: scrub_agent_env --

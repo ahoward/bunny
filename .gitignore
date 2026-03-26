@@ -44,3 +44,6 @@ coverage/
 
 # model caches
 .fastembed_cache/
+
+# QA run data (local, not tracked)
+qa/data/
