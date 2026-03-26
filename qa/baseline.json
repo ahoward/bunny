@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-03-26T17:29:12.226Z",
+  "git_sha": "ca32d84",
+  "bny_version": "0.0.1",
+  "suites": {
+    "semver": {
+      "correctness": 2.5,
+      "test_quality": 2,
+      "code_quality": 3,
+      "spec_fidelity": 2.5,
+      "defect_count": 14,
+      "overall": 1.08
+    },
+    "kv-store": {
+      "correctness": 2.5,
+      "test_quality": 3,
+      "code_quality": 3,
+      "spec_fidelity": 3.5,
+      "defect_count": 9,
+      "overall": 2.08
+    },
+    "json-patch": {
+      "correctness": 3,
+      "test_quality": 2.5,
+      "code_quality": 3.5,
+      "spec_fidelity": 3.5,
+      "defect_count": 9,
+      "overall": 2.2
+    }
+  },
+  "aggregate": {
+    "correctness": 2.7,
+    "test_quality": 2.5,
+    "code_quality": 3.2,
+    "spec_fidelity": 3.2,
+    "defect_count": 11,
+    "overall": 1.79
+  }
+}

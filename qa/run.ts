@@ -12,6 +12,8 @@
 //   bun qa/run.ts --list           # show available suites
 //   bun qa/run.ts --history        # show KPI history
 //   bun qa/run.ts --compare        # compare last 2 runs
+//   bun qa/run.ts --summary        # latest score per suite vs baseline
+//   bun qa/run.ts --baseline       # snapshot current scores as baseline
 //
 
 import { mkdtempSync, mkdirSync, existsSync, writeFileSync, readFileSync, readdirSync, rmSync, cpSync } from "node:fs"
@@ -107,10 +109,11 @@ const SUITES: Suite[] = [
 
 // -- constants --
 
-const QA_DIR   = dirname(import.meta.path)
-const ROOT     = resolve(QA_DIR, "..")
-const DATA_DIR = join(QA_DIR, "data")
-const BNY      = resolve(ROOT, "bin/bny.ts")
+const QA_DIR       = dirname(import.meta.path)
+const ROOT         = resolve(QA_DIR, "..")
+const DATA_DIR     = join(QA_DIR, "data")
+const BASELINE_PATH = join(QA_DIR, "baseline.json")
+const BNY          = resolve(ROOT, "bin/bny.ts")
 
 // -- helpers --
 
@@ -564,13 +567,145 @@ function print_compare(): void {
   console.log()
 }
 
+// -- baseline --
+
+interface Baseline {
+  timestamp:    string
+  git_sha:      string
+  bny_version:  string
+  suites:       Record<string, CompositeScore>
+  aggregate:    CompositeScore
+}
+
+function load_baseline(): Baseline | null {
+  if (!existsSync(BASELINE_PATH)) return null
+  try {
+    return JSON.parse(readFileSync(BASELINE_PATH, "utf-8")) as Baseline
+  } catch {
+    return null
+  }
+}
+
+function save_baseline(): void {
+  const history = load_history()
+  if (history.length === 0) {
+    process.stderr.write("no runs yet — run suites first.\n")
+    return
+  }
+
+  // build baseline from latest score for each suite across all runs
+  const latest_by_suite: Record<string, { score: CompositeScore, entry: HistoryEntry }> = {}
+  for (const h of history) {
+    for (const [suite, score] of Object.entries(h.suites)) {
+      latest_by_suite[suite] = { score, entry: h }
+    }
+  }
+
+  const suites: Record<string, CompositeScore> = {}
+  for (const [suite, { score }] of Object.entries(latest_by_suite)) {
+    suites[suite] = score
+  }
+
+  const composites = Object.values(suites)
+  const avg = (key: keyof CompositeScore) => {
+    const vals = composites.map(c => c[key])
+    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
+  }
+
+  const last = history[history.length - 1]
+  const baseline: Baseline = {
+    timestamp:   new Date().toISOString(),
+    git_sha:     last.git_sha,
+    bny_version: last.bny_version,
+    suites,
+    aggregate: {
+      correctness:  Math.round(avg("correctness") * 10) / 10,
+      test_quality: Math.round(avg("test_quality") * 10) / 10,
+      code_quality: Math.round(avg("code_quality") * 10) / 10,
+      spec_fidelity: Math.round(avg("spec_fidelity") * 10) / 10,
+      defect_count: Math.round(avg("defect_count")),
+      overall:      Math.round(avg("overall") * 100) / 100,
+    },
+  }
+
+  writeFileSync(BASELINE_PATH, JSON.stringify(baseline, null, 2) + "\n")
+  console.log(`\n  baseline saved to qa/baseline.json`)
+  console.log(`  sha: ${baseline.git_sha}  suites: ${Object.keys(suites).join(", ")}`)
+  console.log(`  overall: ${baseline.aggregate.overall.toFixed(2)}  defects: ${baseline.aggregate.defect_count}\n`)
+}
+
+function print_summary(): void {
+  const history = load_history()
+  if (history.length === 0) {
+    process.stderr.write("no runs yet.\n")
+    return
+  }
+
+  // latest score for each suite
+  const latest: Record<string, { score: CompositeScore, sha: string, ts: string }> = {}
+  for (const h of history) {
+    for (const [suite, score] of Object.entries(h.suites)) {
+      latest[suite] = { score, sha: h.git_sha, ts: h.timestamp }
+    }
+  }
+
+  const baseline = load_baseline()
+
+  console.log("\n  bny QA summary — latest scores per suite\n")
+  console.log(`  ${pad("suite", 13)} ${pad("corr", 6)} ${pad("test", 6)} ${pad("code", 6)} ${pad("spec", 6)} ${pad("defs", 5)} ${pad("overall", 8)} ${baseline ? "vs baseline" : ""}`)
+  console.log("  " + "-".repeat(baseline ? 75 : 58))
+
+  const suite_names = ["semver", "kv-store", "json-patch"]
+  for (const name of suite_names) {
+    const entry = latest[name]
+    if (!entry) {
+      console.log(`  ${pad(name, 13)} ${"—".padEnd(40)}`)
+      continue
+    }
+    const s = entry.score
+    let delta_str = ""
+    if (baseline?.suites[name]) {
+      const bd = s.overall - baseline.suites[name].overall
+      const dir = Math.abs(bd) < 0.005 ? "same" : bd > 0 ? "better" : "worse"
+      const sign = bd >= 0 ? "+" : ""
+      delta_str = `${sign}${bd.toFixed(2)} (${dir})`
+    }
+    console.log(`  ${pad(name, 13)} ${pad(s.correctness.toFixed(1), 6)} ${pad(s.test_quality.toFixed(1), 6)} ${pad(s.code_quality.toFixed(1), 6)} ${pad(s.spec_fidelity.toFixed(1), 6)} ${pad(String(s.defect_count), 5)} ${pad(s.overall.toFixed(2), 8)} ${delta_str}`)
+  }
+
+  // aggregate
+  const all_scores = Object.values(latest).map(e => e.score)
+  const avg = (key: keyof CompositeScore) => {
+    const vals = all_scores.map(c => c[key])
+    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
+  }
+  const agg_overall = avg("overall")
+  const agg_defects = Math.round(avg("defect_count"))
+
+  console.log("  " + "-".repeat(baseline ? 75 : 58))
+
+  let agg_delta = ""
+  if (baseline) {
+    const bd = agg_overall - baseline.aggregate.overall
+    const dir = Math.abs(bd) < 0.005 ? "same" : bd > 0 ? "better" : "worse"
+    const sign = bd >= 0 ? "+" : ""
+    agg_delta = `${sign}${bd.toFixed(2)} (${dir})`
+  }
+  console.log(`  ${pad("AGGREGATE", 13)} ${pad(avg("correctness").toFixed(1), 6)} ${pad(avg("test_quality").toFixed(1), 6)} ${pad(avg("code_quality").toFixed(1), 6)} ${pad(avg("spec_fidelity").toFixed(1), 6)} ${pad(String(agg_defects), 5)} ${pad(agg_overall.toFixed(2), 8)} ${agg_delta}`)
+
+  if (baseline) {
+    console.log(`\n  baseline: ${baseline.git_sha.slice(0, 7)} (${baseline.timestamp.slice(0, 10)})`)
+  }
+  console.log()
+}
+
 // -- main --
 
 async function main(): Promise<number> {
   const args = process.argv.slice(2)
 
   if (args.includes("--help") || args.includes("-h")) {
-    console.log(`usage: bun qa/run.ts [--suite NAME] [--list] [--history] [--compare]
+    console.log(`usage: bun qa/run.ts [--suite NAME] [--list] [--history] [--compare] [--summary] [--baseline]
 
 bunny QA harness. builds canonical apps, evaluates with adversarial AI review.
 
@@ -579,6 +714,8 @@ flags:
   --list         show available suites
   --history      show KPI history
   --compare      compare last 2 runs
+  --summary      latest score per suite vs baseline
+  --baseline     snapshot current scores as baseline (tracked in git)
 `)
     return 0
   }
@@ -599,6 +736,16 @@ flags:
 
   if (args.includes("--compare")) {
     print_compare()
+    return 0
+  }
+
+  if (args.includes("--summary")) {
+    print_summary()
+    return 0
+  }
+
+  if (args.includes("--baseline")) {
+    save_baseline()
     return 0
   }
 

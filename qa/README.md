@@ -7,8 +7,10 @@ black-box QA harness for bunny. treats `bny` as an opaque binary. zero shared co
 ```bash
 bun qa/run.ts                     # run all 3 suites
 bun qa/run.ts --suite semver      # run one
+bun qa/run.ts --summary           # latest score per suite vs baseline
 bun qa/run.ts --history           # KPI history
 bun qa/run.ts --compare           # diff last 2 runs
+bun qa/run.ts --baseline          # snapshot current scores as baseline
 ```
 
 ## suites
@@ -47,4 +49,8 @@ bun qa/run.ts --compare           # diff last 2 runs
 - after upgrading claude or gemini models
 - before and after any PR that touches `src/`
 
-run data lives in `qa/data/` (gitignored). the harness itself is tracked.
+## baseline
+
+`qa/baseline.json` is tracked in git — the scores travel with the repo. run `--baseline` to snapshot current scores. `--summary` shows delta from baseline.
+
+run data lives in `qa/data/` (gitignored). the harness and baseline are tracked.
