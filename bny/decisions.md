@@ -50,3 +50,5 @@ Append-only record of decisions made during development.
 | 2026-03-27 | spec-doc.ts: mkdir before write + try/catch wrapper | ENOENT crash when tests/ didn't exist in fresh projects killed the entire hop pipeline. Root cause fix + defense-in-depth catch in spec.ts. |
 | 2026-03-27 | `dev/bg` — detached background job runner | Long-running processes (QA suites, 30+ min) get killed by tool session recycling. setsid + disown gives jobs their own process group. Status/output/tail/kill via simple CLI. |
 | 2026-03-27 | QA baseline updated: 1.79 → 2.47 (+0.68) | Round 2 prompt improvements + issue #25 pipeline changes. semver +1.67, json-patch +0.75, kv-store -0.38 (build failure). Gemini eval JSON parsing still broken (returns 0s). |
+| 2026-03-27 | Fix gemini eval: remove `-p ""`, robust JSON extraction | `-p ""` overrode stdin so gemini never saw the eval prompt. Added brace-matching JSON extractor for when LLMs wrap JSON in markdown/commentary. |
+| 2026-03-27 | Close #11 — already implemented | Path traversal guard, fd leak fix, parseInt validation all present in codebase with tests. |
