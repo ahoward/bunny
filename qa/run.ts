@@ -135,11 +135,7 @@ function run_cmd(cmd: string[], opts: { cwd?: string, timeout?: number } = {}): 
 }
 
 function call_claude(prompt: string): string {
-  const result = run_cmd(["claude", "-p", "--output-format", "json", "-"], {
-    timeout: 120_000,
-  })
-  // claude -p reads from... we need to write to stdin
-  const proc = Bun.spawnSync(["claude", "-p", "--output-format", "text", "-"], {
+  const proc = Bun.spawnSync(["claude", "-p", "--output-format", "text"], {
     stdout: "pipe",
     stderr: "pipe",
     stdin: new TextEncoder().encode(prompt),
@@ -149,29 +145,53 @@ function call_claude(prompt: string): string {
 }
 
 function call_gemini(prompt: string): string {
-  const tmp = join(tmpdir(), `qa-gemini-${process.pid}-${Date.now()}.txt`)
-  writeFileSync(tmp, prompt)
-  try {
-    const proc = Bun.spawnSync(["gemini", "-p", ""], {
-      stdout: "pipe",
-      stderr: "pipe",
-      stdin: Bun.file(tmp),
-      timeout: 120_000,
-    })
-    return new TextDecoder().decode(proc.stdout).trim()
-  } finally {
-    try { rmSync(tmp) } catch {}
+  const proc = Bun.spawnSync(["gemini"], {
+    stdout: "pipe",
+    stderr: "pipe",
+    stdin: new TextEncoder().encode(prompt),
+    timeout: 120_000,
+  })
+  return new TextDecoder().decode(proc.stdout).trim()
+}
+
+function extract_json(raw: string): string {
+  // try markdown fence first (greedy — take the largest fenced block)
+  const fence_match = raw.match(/```(?:json)?\s*\n([\s\S]*?)\n\s*```/)
+  if (fence_match) return fence_match[1].trim()
+
+  // try to find the first { ... } or [ ... ] block
+  const brace_start = raw.indexOf("{")
+  const bracket_start = raw.indexOf("[")
+  if (brace_start === -1 && bracket_start === -1) return raw
+
+  const start = brace_start === -1 ? bracket_start
+    : bracket_start === -1 ? brace_start
+    : Math.min(brace_start, bracket_start)
+  const open = raw[start]
+  const close = open === "{" ? "}" : "]"
+
+  // find matching close (simple depth tracking)
+  let depth = 0
+  let in_string = false
+  let escape = false
+  for (let i = start; i < raw.length; i++) {
+    const ch = raw[i]
+    if (escape) { escape = false; continue }
+    if (ch === "\\") { escape = true; continue }
+    if (ch === '"') { in_string = !in_string; continue }
+    if (in_string) continue
+    if (ch === open) depth++
+    if (ch === close) { depth--; if (depth === 0) return raw.slice(start, i + 1) }
   }
+
+  return raw.slice(start)
 }
 
 function call_llm_json<T>(caller: "claude" | "gemini", prompt: string): T | null {
   const json_prompt = prompt + "\n\nRespond with ONLY valid JSON. No markdown fences, no commentary."
   const raw = caller === "claude" ? call_claude(json_prompt) : call_gemini(json_prompt)
 
-  // strip markdown fences if present
-  let cleaned = raw
-  const fence_match = raw.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/)
-  if (fence_match) cleaned = fence_match[1]
+  const cleaned = extract_json(raw)
 
   try {
     return JSON.parse(cleaned) as T
@@ -179,14 +199,14 @@ function call_llm_json<T>(caller: "claude" | "gemini", prompt: string): T | null
     process.stderr.write(`warning: ${caller} returned unparseable JSON, retrying...\n`)
     // one retry with stronger prompt
     const retry_raw = caller === "claude"
-      ? call_claude(json_prompt + "\n\nYour previous response was not valid JSON. Return ONLY the JSON object.")
-      : call_gemini(json_prompt + "\n\nYour previous response was not valid JSON. Return ONLY the JSON object.")
-    const retry_match = retry_raw.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/)
-    const retry_cleaned = retry_match ? retry_match[1] : retry_raw
+      ? call_claude(json_prompt + "\n\nYour previous response was not valid JSON. Return ONLY the JSON object, starting with { and ending with }.")
+      : call_gemini(json_prompt + "\n\nYour previous response was not valid JSON. Return ONLY the JSON object, starting with { and ending with }.")
+    const retry_cleaned = extract_json(retry_raw)
     try {
       return JSON.parse(retry_cleaned) as T
     } catch {
       process.stderr.write(`error: ${caller} failed to return valid JSON after retry\n`)
+      process.stderr.write(`  raw (first 500 chars): ${retry_raw.slice(0, 500)}\n`)
       return null
     }
   }
