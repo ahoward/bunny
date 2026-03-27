@@ -13,11 +13,13 @@ import { ensure_initialized } from "../init.ts"
 // -- types --
 
 export interface FeaturePaths {
-  dir:   string
-  spec:  string
-  plan:  string
-  tasks: string
-  issue: string
+  dir:      string
+  spec:     string
+  plan:     string
+  tasks:    string
+  issue:    string
+  spec_md:  string   // behavioral spec (SPEC.md) — human-readable, traceable
+  review:   string   // review artifact — build summary for human approval
 }
 
 export interface FeatureState {
@@ -87,10 +89,12 @@ export function feature_paths(root: string, name: string): FeaturePaths {
   }
   return {
     dir,
-    spec:  resolve(dir, "spec.md"),
-    plan:  resolve(dir, "plan.md"),
-    tasks: resolve(dir, "tasks.md"),
-    issue: resolve(dir, "issue.txt"),
+    spec:    resolve(dir, "spec.md"),
+    plan:    resolve(dir, "plan.md"),
+    tasks:   resolve(dir, "tasks.md"),
+    issue:   resolve(dir, "issue.txt"),
+    spec_md: resolve(root, "tests", "SPEC.md"),
+    review:  resolve(dir, "review.md"),
   }
 }
 

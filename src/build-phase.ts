@@ -18,6 +18,7 @@ import { find_root, current_feature } from "./lib/feature.ts"
 import { read_input } from "./lib/input.ts"
 import { main as implement_main } from "./implement.ts"
 import { main as verify_main } from "./verify.ts"
+import { main as review_artifact_main } from "./review-artifact.ts"
 import { main as retro_main } from "./retro.ts"
 import { main as ruminate_main } from "./ruminate.ts"
 import { ralph } from "./lib/ralph.ts"
@@ -77,10 +78,12 @@ export async function main(argv: string[]): Promise<number> {
 
   if (dry_run) {
     process.stderr.write(`[bny build] dry-run:\n`)
-    process.stderr.write(`  1. implement (claude, ralph, max-iter ${max_iter})\n`)
-    process.stderr.write(`  2. verify (gemini)\n`)
-    process.stderr.write(`  3. retro (claude)\n`)
-    process.stderr.write(`  4. ruminate → worldview (claude)\n`)
+    process.stderr.write(`  1.  implement (claude, ralph, max-iter ${max_iter})\n`)
+    process.stderr.write(`  2a. verify:adversarial (gemini reads source)\n`)
+    process.stderr.write(`  2b. verify:behavioral (gemini reads SPEC.md + artifact)\n`)
+    process.stderr.write(`  3.  review artifact\n`)
+    process.stderr.write(`  4.  retro (claude)\n`)
+    process.stderr.write(`  5.  ruminate → worldview (claude)\n`)
     return 0
   }
 
@@ -113,16 +116,34 @@ export async function run_build_phase(root: string, opts: BuildOpts): Promise<nu
     return 1
   }
 
-  // -- 2. verify (gemini) --
+  // -- 2a. verify:adversarial (gemini reads source — finds bugs) --
 
-  process.stderr.write(`\n--- verify (gemini) ---\n`)
-  const verify_code = await verify_main([])
-  if (verify_code !== 0) {
-    process.stderr.write(`warning: verify failed (exit ${verify_code}), continuing...\n`)
-    warnings.push("verify")
+  process.stderr.write(`\n--- verify:adversarial (gemini) ---\n`)
+  const verify_adv_code = await verify_main(["--adversarial"])
+  if (verify_adv_code !== 0) {
+    process.stderr.write(`warning: verify:adversarial failed (exit ${verify_adv_code}), continuing...\n`)
+    warnings.push("verify:adversarial")
   }
 
-  // -- 3. retro (claude) --
+  // -- 2b. verify:behavioral (gemini reads SPEC.md + artifact — checks completeness) --
+
+  process.stderr.write(`\n--- verify:behavioral (gemini) ---\n`)
+  const verify_beh_code = await verify_main(["--behavioral"])
+  if (verify_beh_code !== 0) {
+    process.stderr.write(`warning: verify:behavioral failed (exit ${verify_beh_code}), continuing...\n`)
+    warnings.push("verify:behavioral")
+  }
+
+  // -- 3. review artifact --
+
+  process.stderr.write(`\n--- review artifact ---\n`)
+  const review_code = await review_artifact_main([])
+  if (review_code !== 0) {
+    process.stderr.write(`warning: review artifact failed (exit ${review_code}), continuing...\n`)
+    warnings.push("review-artifact")
+  }
+
+  // -- 4. retro (claude) --
 
   process.stderr.write(`\n--- retro (claude) ---\n`)
   const retro_code = await retro_main([])
@@ -131,7 +152,7 @@ export async function run_build_phase(root: string, opts: BuildOpts): Promise<nu
     warnings.push("retro")
   }
 
-  // -- 4. ruminate → worldview (claude, auto-yes) --
+  // -- 5. ruminate → worldview (claude, auto-yes) --
 
   process.stderr.write(`\n--- ruminate → worldview (claude) ---\n`)
   const ruminate_code = await ruminate_main(["--yes"])

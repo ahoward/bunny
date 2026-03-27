@@ -15,6 +15,7 @@ import { find_root } from "./lib/feature.ts"
 import { ralph } from "./lib/ralph.ts"
 import { main as testgen_main } from "./test-gen.ts"
 import { main as implement_main } from "./implement.ts"
+import { main as lock_tests_main } from "./lock-tests.ts"
 
 // -- constants --
 
@@ -122,6 +123,14 @@ export async function run_test_phase(root: string, opts: TestOpts): Promise<numb
     opts.on_step?.(`implement:${label}`, "completed", round)
 
     process.stderr.write(`\n--- round ${round} (${label}) complete ---\n`)
+  }
+
+  // -- lock adversarial tests --
+
+  process.stderr.write(`\n--- locking adversarial tests ---\n`)
+  const lock_code = await lock_tests_main([])
+  if (lock_code !== 0) {
+    process.stderr.write(`warning: test locking failed (exit ${lock_code}), continuing...\n`)
   }
 
   return 0

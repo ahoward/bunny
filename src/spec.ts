@@ -18,6 +18,7 @@ import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { read_input } from "./lib/input.ts"
 import { main as specify_main } from "./specify.ts"
 import { main as challenge_main } from "./challenge.ts"
+import { main as spec_doc_main } from "./spec-doc.ts"
 import { init_state, update_state, write_state, load_constraints } from "./lib/state.ts"
 
 // -- types --
@@ -149,6 +150,15 @@ export async function run_spec(
   if (challenge_code !== 0) {
     process.stderr.write(`warning: challenge failed (exit ${challenge_code}), continuing without spec hardening\n`)
     // non-fatal — spec is still usable without hardening
+  }
+
+  // -- 3. spec-doc (claude) — update SPEC.md --
+
+  process.stderr.write(`\n--- spec-doc (SPEC.md) ---\n`)
+  const spec_doc_code = await spec_doc_main([])
+  if (spec_doc_code !== 0) {
+    process.stderr.write(`warning: spec-doc failed (exit ${spec_doc_code}), continuing without SPEC.md update\n`)
+    // non-fatal — pipeline can continue without SPEC.md
   }
 
   process.stderr.write(`\n${label} — complete\n`)

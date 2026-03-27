@@ -67,14 +67,21 @@ function collect_source_code(root: string): string {
 export async function main(argv: string[]): Promise<number> {
   let target: string | null = null
   let prompt_only = false
+  let mode: "adversarial" | "behavioral" = "adversarial"
 
   for (const arg of argv) {
     if (arg === "--prompt-only") {
       prompt_only = true
+    } else if (arg === "--behavioral") {
+      mode = "behavioral"
+    } else if (arg === "--adversarial") {
+      mode = "adversarial"
     } else if (arg === "--help" || arg === "-h") {
-      process.stdout.write("usage: bny verify [--prompt-only] [feature-name]\n")
+      process.stdout.write("usage: bny verify [--behavioral|--adversarial] [--prompt-only] [feature-name]\n")
       process.stdout.write("\npost-implementation adversary review via gemini.\n")
-      process.stdout.write("checks whether tests actually test behavior and finds gaps.\n")
+      process.stdout.write("\nmodes:\n")
+      process.stdout.write("  --adversarial  (default) reads full source — finds bugs, security issues\n")
+      process.stdout.write("  --behavioral   reads SPEC.md + review artifact — checks behavioral completeness\n")
       return 0
     } else if (!arg.startsWith("-")) {
       target = arg
@@ -102,7 +109,7 @@ export async function main(argv: string[]): Promise<number> {
 
   const project = detect_project_type(root)
   const test_content = collect_test_files(root, project.test_dir)
-  const source_code = collect_source_code(root)
+  const challenge_path = resolve(paths.dir, "challenge.md")
 
   // run tests and capture output
   const test_result = spawn_sync({ cmd: project.test_cmd.split(" "), cwd: root, label: "test run" })
@@ -110,40 +117,87 @@ export async function main(argv: string[]): Promise<number> {
     ? `Tests PASS:\n${test_result.stdout}`
     : `Tests FAIL (exit ${test_result.exit_code}):\n${test_result.detail}`
 
-  // -- build prompt --
+  // -- build prompt (mode-dependent) --
 
-  const challenge_path = resolve(paths.dir, "challenge.md")
-  const sections = [
-    read_section("Feature Specification", paths.spec),
-    read_section("Adversary Challenge", challenge_path),
-    { heading: "Test Suite", content: test_content },
-    { heading: "Source Code (full implementation)", content: source_code },
-    { heading: "Test Results", content: test_output },
-  ].filter((s): s is NonNullable<typeof s> => s !== null)
+  let sections: { heading: string, content: string }[]
+  let instructions: string
 
-  const instructions = [
-    "You are the POST-IMPLEMENTATION ADVERSARY. Code has been written. Tests exist.",
-    "Your job: find what the tests missed.",
-    "",
-    "Review:",
-    "1. Do tests actually test **behavior**, or just exercise code paths?",
-    "2. Are there untested code paths in the implementation?",
-    "3. Does the implementation match **spec intent**, not just test assertions?",
-    "4. Any security, performance, or correctness issues the tests don't catch?",
-    "5. Are property tests actually testing meaningful invariants?",
-    "6. Do golden file tests capture the right outputs?",
-    "7. Are boundary tests covering the edge cases from the challenge?",
-    "",
-    "For each finding:",
-    "- **Issue**: What was missed",
-    "- **Severity**: critical / high / medium / low",
-    "- **Suggested Test**: A concrete test case that would catch this",
-    "",
-    "Do NOT rubber-stamp. If all tests are perfect, look harder.",
-    "A verify that finds zero issues is a failed verify.",
-    "",
-    "Output ONLY markdown. No preamble or commentary.",
-  ].join("\n")
+  if (mode === "behavioral") {
+    // behavioral mode: reads SPEC.md + review artifact, NOT source code.
+    // preserves adversarial independence — gemini doesn't see implementation it influenced.
+    const spec_md_content = existsSync(paths.spec_md)
+      ? readFileSync(paths.spec_md, "utf-8")
+      : "(no SPEC.md found)"
+    const review_content = existsSync(paths.review)
+      ? readFileSync(paths.review, "utf-8")
+      : "(no review artifact found)"
+
+    sections = [
+      read_section("Feature Specification", paths.spec),
+      read_section("Adversary Challenge", challenge_path),
+      { heading: "Behavioral Specification (SPEC.md)", content: spec_md_content },
+      { heading: "Build Review Artifact", content: review_content },
+      { heading: "Test Suite", content: test_content },
+      { heading: "Test Results", content: test_output },
+    ].filter((s): s is NonNullable<typeof s> => s !== null)
+
+    instructions = [
+      "You are the BEHAVIORAL VERIFIER. Your job: confirm the behavioral spec is correct and complete.",
+      "You do NOT see the implementation source code. You verify behavior, not code.",
+      "",
+      "Review:",
+      "1. Does SPEC.md cover every behavior described in the feature spec?",
+      "2. Does every SPEC.md line have a corresponding test?",
+      "3. Are the adversarial tests still present and unmodified?",
+      "4. Does the behavioral delta in the review artifact match what was asked for?",
+      "5. Are there missing behaviors that should be in SPEC.md but aren't?",
+      "6. Are any SPEC.md entries redundant, contradictory, or ambiguous?",
+      "",
+      "For each finding:",
+      "- **Issue**: What behavioral gap or inconsistency was found",
+      "- **Severity**: critical / high / medium / low",
+      "- **Resolution**: What should be added, changed, or removed",
+      "",
+      "Do NOT rubber-stamp. A verify that finds zero issues is a failed verify.",
+      "",
+      "Output ONLY markdown. No preamble or commentary.",
+    ].join("\n")
+  } else {
+    // adversarial mode (default): reads full source — finds bugs, security issues.
+    const source_code = collect_source_code(root)
+
+    sections = [
+      read_section("Feature Specification", paths.spec),
+      read_section("Adversary Challenge", challenge_path),
+      { heading: "Test Suite", content: test_content },
+      { heading: "Source Code (full implementation)", content: source_code },
+      { heading: "Test Results", content: test_output },
+    ].filter((s): s is NonNullable<typeof s> => s !== null)
+
+    instructions = [
+      "You are the POST-IMPLEMENTATION ADVERSARY. Code has been written. Tests exist.",
+      "Your job: find what the tests missed.",
+      "",
+      "Review:",
+      "1. Do tests actually test **behavior**, or just exercise code paths?",
+      "2. Are there untested code paths in the implementation?",
+      "3. Does the implementation match **spec intent**, not just test assertions?",
+      "4. Any security, performance, or correctness issues the tests don't catch?",
+      "5. Are property tests actually testing meaningful invariants?",
+      "6. Do golden file tests capture the right outputs?",
+      "7. Are boundary tests covering the edge cases from the challenge?",
+      "",
+      "For each finding:",
+      "- **Issue**: What was missed",
+      "- **Severity**: critical / high / medium / low",
+      "- **Suggested Test**: A concrete test case that would catch this",
+      "",
+      "Do NOT rubber-stamp. If all tests are perfect, look harder.",
+      "A verify that finds zero issues is a failed verify.",
+      "",
+      "Output ONLY markdown. No preamble or commentary.",
+    ].join("\n")
+  }
 
   const prompt = build_prompt(sections, instructions)
 
@@ -165,7 +219,7 @@ export async function main(argv: string[]): Promise<number> {
     return 1
   }
 
-  process.stderr.write(`[verify] post-implementation review for: ${name}\n`)
+  process.stderr.write(`[verify:${mode}] post-implementation review for: ${name}\n`)
 
   const sandbox = create_sandbox(root)
   const model = process.env.BNY_MODEL || null
@@ -189,10 +243,11 @@ export async function main(argv: string[]): Promise<number> {
 
   // strip preamble and write
   const cleaned = strip_index_preamble(r.stdout) ?? r.stdout.trim()
-  const verify_path = resolve(paths.dir, "verify.md")
-  writeFileSync(verify_path, `# Verification: ${name}\n\n${cleaned}\n`)
+  const suffix = mode === "behavioral" ? "-behavioral" : ""
+  const verify_path = resolve(paths.dir, `verify${suffix}.md`)
+  writeFileSync(verify_path, `# Verification (${mode}): ${name}\n\n${cleaned}\n`)
 
-  process.stderr.write(`[verify] wrote ${verify_path}\n`)
+  process.stderr.write(`[verify:${mode}] wrote ${verify_path}\n`)
 
   const meta = { path: "/bny/verify", timestamp: new Date().toISOString(), duration_ms: 0 }
   process.stdout.write(JSON.stringify(success({ feature: name, verify_file: verify_path }, meta), null, 2) + "\n")
