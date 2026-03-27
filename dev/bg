@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# dev/bg — run a command in the background, fully detached.
+#
+# usage:
+#   dev/bg <job-name> <command...>
+#   dev/bg --status <job-name>
+#   dev/bg --output <job-name>
+#   dev/bg --list
+#
+# jobs write to /tmp/bny-bg/<job-name>/{pid,status,output}
+#   status: "running", "done:<exit-code>", or "killed"
+#
+
+set -euo pipefail
+
+BG_DIR="/tmp/bny-bg"
+
+case "${1:-}" in
+  --status)
+    job="${2:?usage: dev/bg --status <job-name>}"
+    dir="$BG_DIR/$job"
+    if [[ ! -d "$dir" ]]; then echo "unknown"; exit 0; fi
+    cat "$dir/status"
+    ;;
+  --output)
+    job="${2:?usage: dev/bg --output <job-name>}"
+    dir="$BG_DIR/$job"
+    if [[ ! -f "$dir/output" ]]; then echo "(no output)"; exit 0; fi
+    cat "$dir/output"
+    ;;
+  --tail)
+    job="${2:?usage: dev/bg --tail <job-name>}"
+    n="${3:-30}"
+    dir="$BG_DIR/$job"
+    if [[ ! -f "$dir/output" ]]; then echo "(no output)"; exit 0; fi
+    tail -n "$n" "$dir/output"
+    ;;
+  --list)
+    if [[ ! -d "$BG_DIR" ]]; then echo "(none)"; exit 0; fi
+    for d in "$BG_DIR"/*/; do
+      [[ -d "$d" ]] || continue
+      name=$(basename "$d")
+      status=$(cat "$d/status" 2>/dev/null || echo "unknown")
+      echo "$name: $status"
+    done
+    ;;
+  --kill)
+    job="${2:?usage: dev/bg --kill <job-name>}"
+    dir="$BG_DIR/$job"
+    if [[ -f "$dir/pid" ]]; then
+      pid=$(cat "$dir/pid")
+      kill -TERM "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+      echo "killed:$pid" > "$dir/status"
+    fi
+    ;;
+  --help|-h)
+    sed -n '2,/^$/s/^# \?//p' "$0"
+    ;;
+  *)
+    job="${1:?usage: dev/bg <job-name> <command...>}"
+    shift
+    [[ $# -gt 0 ]] || { echo "error: no command given" >&2; exit 1; }
+
+    dir="$BG_DIR/$job"
+    mkdir -p "$dir"
+
+    echo "running" > "$dir/status"
+
+    # launch fully detached — setsid gives it its own process group
+    setsid bash -c '
+      echo $$ > "'"$dir"'/pid"
+      "$@" > "'"$dir"'/output" 2>&1
+      echo "done:$?" > "'"$dir"'/status"
+    ' _ "$@" &
+    disown
+
+    echo "started: $job (dir: $dir)"
+    ;;
+esac
