@@ -145,13 +145,20 @@ function call_claude(prompt: string): string {
 }
 
 function call_gemini(prompt: string): string {
-  const proc = Bun.spawnSync(["gemini"], {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: new TextEncoder().encode(prompt),
-    timeout: 120_000,
-  })
-  return new TextDecoder().decode(proc.stdout).trim()
+  // write prompt to temp file — Bun.spawnSync stdin can truncate large payloads
+  const tmp = join(tmpdir(), `qa-gemini-${process.pid}-${Date.now()}.txt`)
+  writeFileSync(tmp, prompt)
+  try {
+    const proc = Bun.spawnSync(["gemini"], {
+      stdout: "pipe",
+      stderr: "pipe",
+      stdin: Bun.file(tmp),
+      timeout: 120_000,
+    })
+    return new TextDecoder().decode(proc.stdout).trim()
+  } finally {
+    try { rmSync(tmp) } catch {}
+  }
 }
 
 function extract_json(raw: string): string {
