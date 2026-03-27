@@ -14,8 +14,8 @@
 //   bny spec-doc --dry-run          # show prompt, don't execute
 //
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
-import { resolve } from "node:path"
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs"
+import { resolve, dirname } from "node:path"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { call_claude, strip_index_preamble } from "./lib/brane.ts"
 import { which_check } from "./lib/spawn.ts"
@@ -139,6 +139,7 @@ export async function main(argv: string[]): Promise<number> {
 
   const cleaned = strip_index_preamble(raw) ?? raw
 
+  mkdirSync(dirname(paths.spec_md), { recursive: true })
   writeFileSync(paths.spec_md, cleaned.trim() + "\n")
   process.stderr.write(`[spec-doc] wrote ${paths.spec_md}\n`)
 

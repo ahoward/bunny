@@ -155,9 +155,13 @@ export async function run_spec(
   // -- 3. spec-doc (claude) — update SPEC.md --
 
   process.stderr.write(`\n--- spec-doc (SPEC.md) ---\n`)
-  const spec_doc_code = await spec_doc_main([])
-  if (spec_doc_code !== 0) {
-    process.stderr.write(`warning: spec-doc failed (exit ${spec_doc_code}), continuing without SPEC.md update\n`)
+  try {
+    const spec_doc_code = await spec_doc_main([])
+    if (spec_doc_code !== 0) {
+      process.stderr.write(`warning: spec-doc failed (exit ${spec_doc_code}), continuing without SPEC.md update\n`)
+    }
+  } catch (e: any) {
+    process.stderr.write(`warning: spec-doc crashed (${e?.message ?? e}), continuing without SPEC.md update\n`)
     // non-fatal — pipeline can continue without SPEC.md
   }
 
