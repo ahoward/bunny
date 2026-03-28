@@ -226,6 +226,12 @@ export function spawn_sync(opts: SpawnSyncOpts): SpawnResult {
   const ok = exit_code === 0
   progress.spawn_done(opts.cmd, opts.label ?? null, exit_code, ok, timed_out, start_ts, stdout.length)
 
+  // non-zero exit: always relay stderr so failures are never silent
+  if (!ok && detail) {
+    const label = opts.label || opts.cmd[0] || "spawn"
+    process.stderr.write(`[${label}] failed (exit ${exit_code}): ${detail.slice(0, 2000)}\n`)
+  }
+
   return { ok, exit_code, stdout, stderr, detail, timed_out }
 }
 
@@ -280,6 +286,12 @@ export async function spawn_async(opts: SpawnAsyncOpts): Promise<SpawnAsyncResul
 
   const ok = exit_code === 0
   progress.spawn_done(opts.cmd, opts.label ?? null, exit_code, ok, false, start_ts, stdout?.length ?? 0)
+
+  // non-zero exit: always relay stderr so failures are never silent
+  if (!ok && detail) {
+    const label = opts.label || opts.cmd[0] || "spawn"
+    process.stderr.write(`[${label}] failed (exit ${exit_code}): ${detail.slice(0, 2000)}\n`)
+  }
 
   return { ok, exit_code, stdout, stderr, detail, timed_out: false }
 }

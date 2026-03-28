@@ -58,6 +58,9 @@ interface BuildResult {
   test_content:   string
   spec_content:   string | null
   plan_content:   string | null
+  hop_stdout:     string
+  hop_stderr:     string
+  work_dir:       string
 }
 
 interface RunResult {
@@ -280,7 +283,7 @@ function build_suite(suite: Suite): BuildResult {
   run_cmd(["git", "add", "."], { cwd: work_dir })
   run_cmd(["git", "commit", "-m", "init"], { cwd: work_dir })
 
-  // run bny hop
+  // run bny hop — capture everything
   const start = performance.now()
   const hop = Bun.spawnSync(["bun", BNY, "hop", suite.prompt], {
     stdout: "pipe",
@@ -291,6 +294,13 @@ function build_suite(suite: Suite): BuildResult {
   })
   const duration_ms = Math.round(performance.now() - start)
   const exit_code = hop.exitCode ?? 1
+  const hop_stdout = new TextDecoder().decode(hop.stdout).trim()
+  const hop_stderr = new TextDecoder().decode(hop.stderr).trim()
+
+  // persist logs for post-mortem — never fire and forget
+  writeFileSync(join(work_dir, "hop-stdout.log"), hop_stdout)
+  writeFileSync(join(work_dir, "hop-stderr.log"), hop_stderr)
+  writeFileSync(join(work_dir, "hop-exit.log"), `exit: ${exit_code}\nduration_ms: ${duration_ms}\n`)
 
   // collect artifacts — search broadly for source and test files
   const code_pattern = /\.(ts|js|py|rs|go|rb)$/
@@ -336,6 +346,9 @@ function build_suite(suite: Suite): BuildResult {
     test_content,
     spec_content,
     plan_content,
+    hop_stdout,
+    hop_stderr,
+    work_dir,
   }
 }
 
@@ -805,6 +818,14 @@ flags:
     process.stderr.write(`  building: "${suite.prompt}"\n`)
     const build = build_suite(suite)
     process.stderr.write(`  exit: ${build.exit_code}  duration: ${(build.duration_ms / 1000).toFixed(1)}s  tests: ${build.test_count}  source: ${build.source_lines} lines\n`)
+
+    // non-zero exit: always show why
+    if (build.exit_code !== 0 && build.hop_stderr) {
+      const lines = build.hop_stderr.split("\n")
+      const tail = lines.slice(-20).join("\n")
+      process.stderr.write(`  stderr (last 20 lines):\n${tail}\n`)
+    }
+    process.stderr.write(`  logs: ${build.work_dir}/hop-{stdout,stderr,exit}.log\n`)
 
     if (build.source_content.length === 0 && build.test_content.length === 0) {
       process.stderr.write(`  FAIL: pipeline produced no artifacts\n\n`)

@@ -36,6 +36,12 @@ case "${1:-}" in
     if [[ ! -f "$dir/output" ]]; then echo "(no output)"; exit 0; fi
     tail -n "$n" "$dir/output"
     ;;
+  --stderr)
+    job="${2:?usage: dev/bg --stderr <job-name>}"
+    dir="$BG_DIR/$job"
+    if [[ ! -f "$dir/stderr" ]]; then echo "(no stderr)"; exit 0; fi
+    cat "$dir/stderr"
+    ;;
   --list)
     if [[ ! -d "$BG_DIR" ]]; then echo "(none)"; exit 0; fi
     for d in "$BG_DIR"/*/; do
@@ -68,10 +74,17 @@ case "${1:-}" in
     echo "running" > "$dir/status"
 
     # launch fully detached — setsid gives it its own process group
+    # capture stdout+stderr combined in output, stderr separately in stderr
     setsid bash -c '
       echo $$ > "'"$dir"'/pid"
-      "$@" > "'"$dir"'/output" 2>&1
-      echo "done:$?" > "'"$dir"'/status"
+      "$@" > "'"$dir"'/stdout" 2> "'"$dir"'/stderr"
+      rc=$?
+      cat "'"$dir"'/stdout" "'"$dir"'/stderr" > "'"$dir"'/output"
+      if [ $rc -ne 0 ] && [ -s "'"$dir"'/stderr" ]; then
+        echo "[bg:'"$job"'] FAILED (exit $rc) — stderr tail:" >> "'"$dir"'/output"
+        tail -20 "'"$dir"'/stderr" >> "'"$dir"'/output"
+      fi
+      echo "done:$rc" > "'"$dir"'/status"
     ' _ "$@" &
     disown
 
