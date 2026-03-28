@@ -74,15 +74,17 @@ case "${1:-}" in
     echo "running" > "$dir/status"
 
     # launch fully detached — setsid gives it its own process group
-    # capture stdout+stderr combined in output, stderr separately in stderr
+    # "output" gets combined stdout+stderr in real time (for --tail monitoring).
+    # "stderr" gets stderr only (for --stderr post-mortem).
+    # uses process substitution to tee stderr to its own file while
+    # merging both streams into "output".
     setsid bash -c '
       echo $$ > "'"$dir"'/pid"
-      "$@" > "'"$dir"'/stdout" 2> "'"$dir"'/stderr"
+      "$@" > "'"$dir"'/output" 2> >(tee "'"$dir"'/stderr" >> "'"$dir"'/output")
       rc=$?
-      cat "'"$dir"'/stdout" "'"$dir"'/stderr" > "'"$dir"'/output"
-      if [ $rc -ne 0 ] && [ -s "'"$dir"'/stderr" ]; then
-        echo "[bg:'"$job"'] FAILED (exit $rc) — stderr tail:" >> "'"$dir"'/output"
-        tail -20 "'"$dir"'/stderr" >> "'"$dir"'/output"
+      if [ $rc -ne 0 ]; then
+        echo "" >> "'"$dir"'/output"
+        echo "[bg:'"$job"'] exit $rc" >> "'"$dir"'/output"
       fi
       echo "done:$rc" > "'"$dir"'/status"
     ' _ "$@" &
