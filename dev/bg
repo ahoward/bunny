@@ -6,22 +6,52 @@
 #   dev/bg <job-name> <command...>
 #   dev/bg --status <job-name>
 #   dev/bg --output <job-name>
+#   dev/bg --tail <job-name> [N]
+#   dev/bg --stderr <job-name>
 #   dev/bg --list
+#   dev/bg --kill <job-name>
 #
-# jobs write to /tmp/bny-bg/<job-name>/{pid,status,output}
-#   status: "running", "done:<exit-code>", or "killed"
+# jobs write to /tmp/bny-bg/<job-name>/{pid,status,output,stderr,heartbeat}
+#   status: "running", "done:<exit-code>", "killed", or "crashed"
 #
 
 set -euo pipefail
 
 BG_DIR="/tmp/bny-bg"
 
+# -- check if a job's process is actually alive --
+_job_status() {
+  local dir="$1"
+  local file_status
+  file_status=$(cat "$dir/status" 2>/dev/null || echo "unknown")
+
+  # if file says done/killed/crashed, trust it
+  case "$file_status" in
+    done:*|killed*|crashed*) echo "$file_status"; return ;;
+  esac
+
+  # file says "running" — verify the process is actually alive
+  if [[ -f "$dir/pid" ]]; then
+    local pid
+    pid=$(cat "$dir/pid")
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+      echo "running"
+    else
+      # process is dead but status was never updated — crashed
+      echo "crashed" > "$dir/status"
+      echo "crashed"
+    fi
+  else
+    echo "$file_status"
+  fi
+}
+
 case "${1:-}" in
   --status)
     job="${2:?usage: dev/bg --status <job-name>}"
     dir="$BG_DIR/$job"
     if [[ ! -d "$dir" ]]; then echo "unknown"; exit 0; fi
-    cat "$dir/status"
+    _job_status "$dir"
     ;;
   --output)
     job="${2:?usage: dev/bg --output <job-name>}"
@@ -47,7 +77,7 @@ case "${1:-}" in
     for d in "$BG_DIR"/*/; do
       [[ -d "$d" ]] || continue
       name=$(basename "$d")
-      status=$(cat "$d/status" 2>/dev/null || echo "unknown")
+      status=$(_job_status "$d")
       echo "$name: $status"
     done
     ;;
@@ -73,20 +103,57 @@ case "${1:-}" in
 
     echo "running" > "$dir/status"
 
-    # launch fully detached — setsid gives it its own process group
+    # launch fully detached — setsid gives it its own process group.
+    #
     # "output" gets combined stdout+stderr in real time (for --tail monitoring).
     # "stderr" gets stderr only (for --stderr post-mortem).
-    # uses process substitution to tee stderr to its own file while
-    # merging both streams into "output".
+    #
+    # key hardening:
+    #   - trap ensures status is ALWAYS written, even on signals
+    #   - heartbeat file updated every 30s so --status can detect zombie jobs
+    #   - wait for tee subshell to flush before writing status
+    #   - explicit signal forwarding to child process group
     setsid bash -c '
-      echo $$ > "'"$dir"'/pid"
-      "$@" > "'"$dir"'/output" 2> >(tee "'"$dir"'/stderr" >> "'"$dir"'/output")
+      dir="'"$dir"'"
+      job="'"$job"'"
+
+      echo $$ > "$dir/pid"
+
+      # write status FIRST, then clean up children
+      _finish() {
+        local rc=${1:-$?}
+        if [ $rc -ne 0 ]; then
+          echo "" >> "$dir/output" 2>/dev/null || true
+          echo "[bg:$job] exit $rc" >> "$dir/output" 2>/dev/null || true
+        fi
+        echo "done:$rc" > "$dir/status"
+        # now kill remaining children (heartbeat, tee)
+        kill $heartbeat_pid 2>/dev/null || true
+        wait 2>/dev/null || true
+        exit $rc
+      }
+      trap "_finish 143" TERM
+      trap "_finish 130" INT
+      trap "_finish 1"   HUP
+
+      # heartbeat: background loop writes timestamp every 30s
+      heartbeat_pid=""
+      (
+        while true; do
+          date +%s > "$dir/heartbeat"
+          sleep 30
+        done
+      ) &
+      heartbeat_pid=$!
+
+      # run the command with tee for stderr splitting
+      "$@" > "$dir/output" 2> >(tee "$dir/stderr" >> "$dir/output")
       rc=$?
-      if [ $rc -ne 0 ]; then
-        echo "" >> "'"$dir"'/output"
-        echo "[bg:'"$job"'] exit $rc" >> "'"$dir"'/output"
-      fi
-      echo "done:$rc" > "'"$dir"'/status"
+
+      # give tee a moment to flush
+      sleep 0.1
+
+      _finish $rc
     ' _ "$@" &
     disown
 

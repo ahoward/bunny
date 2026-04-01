@@ -17,12 +17,21 @@
 import { openSync, readSync, closeSync } from "node:fs"
 import { find_root, current_feature, feature_paths } from "./lib/feature.ts"
 import { read_input } from "./lib/input.ts"
+import { spawn_sync } from "./lib/spawn.ts"
 import { run_spec } from "./spec.ts"
 import type { SpecMode } from "./spec.ts"
 import { run_plan_phase } from "./plan-phase.ts"
 import { run_test_phase } from "./test-phase.ts"
 import { run_build_phase } from "./build-phase.ts"
 import { init_state, update_state, write_state, load_constraints } from "./lib/state.ts"
+import {
+  create_pipeline_pr,
+  update_pipeline_phase,
+  post_phase_comment,
+  close_pipeline_pr,
+  find_active_pr,
+  type PhaseDetail,
+} from "./lib/gh.ts"
 
 // -- help --
 
@@ -133,6 +142,11 @@ export async function main(argv: string[]): Promise<number> {
     return 0
   }
 
+  // -- git sha --
+
+  const sha_r = spawn_sync({ cmd: ["git", "rev-parse", "--short", "HEAD"], label: "git" })
+  const sha = sha_r.ok && sha_r.stdout ? sha_r.stdout.trim() : "unknown"
+
   // -- durable state --
 
   let state = init_state({
@@ -143,11 +157,22 @@ export async function main(argv: string[]): Promise<number> {
   })
   write_state(root, state)
 
+  // -- github PR --
+
+  let pr_num: number | null = find_active_pr()
+
+  if (!pr_num && description) {
+    pr_num = create_pipeline_pr({ description, pipeline: "hop" })
+  }
+
   process.stderr.write(`\n[bny hop] ${label}\n`)
   process.stderr.write(`  mode: ${mode}\n`)
-  process.stderr.write(`  max-iter: ${max_iter}\n\n`)
+  process.stderr.write(`  max-iter: ${max_iter}\n`)
+  if (pr_num) process.stderr.write(`  PR: #${pr_num}\n`)
+  process.stderr.write(`\n`)
 
   const warnings: string[] = []
+  const phase_start: Record<string, number> = {}
 
   // -- confirm helper --
 
@@ -176,23 +201,37 @@ export async function main(argv: string[]): Promise<number> {
   if (need_spec) {
     state = update_state(state, "spec", "in_progress")
     write_state(root, state)
+    if (pr_num) update_pipeline_phase(pr_num, "spec")
+    phase_start.spec = Date.now()
 
     process.stderr.write(`\n=== phase 1: spec ===\n`)
     const spec_code = await run_spec(description, root, { mode, interactive })
     if (spec_code !== 0) {
       state = update_state(state, "spec", "failed")
       write_state(root, state)
+      if (pr_num) {
+        post_phase_comment(pr_num, { phase: "spec", status: "failed", duration_ms: Date.now() - phase_start.spec, artifacts: [], summary: "", error: "spec phase exited " + spec_code })
+      }
       return 1
     }
 
     state = update_state(state, "spec", "completed")
     write_state(root, state)
 
+    const feat_now = current_feature()
+    const spec_artifacts: string[] = []
+    if (feat_now) {
+      spec_artifacts.push(`specs/${feat_now}/spec.md`, `specs/${feat_now}/challenge.md`)
+    }
+    if (pr_num) {
+      post_phase_comment(pr_num, { phase: "spec", status: "completed", duration_ms: Date.now() - phase_start.spec, artifacts: spec_artifacts, summary: "specify + challenge complete", error: null })
+      update_pipeline_phase(pr_num, "plan", "spec")
+    }
+
     // interactive checkpoint after spec
     if (interactive) {
-      const feat = current_feature()
-      if (feat) {
-        const paths = feature_paths(root, feat)
+      if (feat_now) {
+        const paths = feature_paths(root, feat_now)
         process.stderr.write(`\n--- review spec ---\n`)
         process.stderr.write(`spec: ${paths.spec}\n`)
         if (!confirm("continue to phase 2? [Y/n] ")) {
@@ -211,17 +250,24 @@ export async function main(argv: string[]): Promise<number> {
 
   state = update_state(state, "plan", "in_progress")
   write_state(root, state)
+  if (pr_num) update_pipeline_phase(pr_num, "plan")
+  phase_start.plan = Date.now()
 
   process.stderr.write(`\n=== phase 2: plan ===\n`)
   const plan_code = await run_plan_phase([])
   if (plan_code !== 0) {
     state = update_state(state, "plan", "failed")
     write_state(root, state)
+    if (pr_num) post_phase_comment(pr_num, { phase: "plan", status: "failed", duration_ms: Date.now() - phase_start.plan, artifacts: [], summary: "", error: "plan phase exited " + plan_code })
     return 1
   }
 
   state = update_state(state, "plan", "completed")
   write_state(root, state)
+  if (pr_num) {
+    post_phase_comment(pr_num, { phase: "plan", status: "completed", duration_ms: Date.now() - phase_start.plan, artifacts: ["plan.md", "tasks.md"], summary: "plan + tasks generated", error: null })
+    update_pipeline_phase(pr_num, "test", "plan")
+  }
 
   if (interactive) {
     if (!confirm("continue to phase 3 (test)? [Y/n] ")) {
@@ -236,6 +282,8 @@ export async function main(argv: string[]): Promise<number> {
 
   state = update_state(state, "test", "in_progress")
   write_state(root, state)
+  if (pr_num) update_pipeline_phase(pr_num, "test")
+  phase_start.test = Date.now()
 
   process.stderr.write(`\n=== phase 3: test ===\n`)
   const test_code = await run_test_phase(root, {
@@ -249,6 +297,7 @@ export async function main(argv: string[]): Promise<number> {
   if (test_code !== 0) {
     state = update_state(state, "test", "failed")
     write_state(root, state)
+    if (pr_num) post_phase_comment(pr_num, { phase: "test", status: "failed", duration_ms: Date.now() - phase_start.test, artifacts: [], summary: "3×3 narrowing failed", error: "test phase exited " + test_code })
 
     if (interactive) {
       if (!confirm("test phase failed. continue to build anyway? [y/N] ")) {
@@ -262,6 +311,10 @@ export async function main(argv: string[]): Promise<number> {
   } else {
     state = update_state(state, "test", "completed")
     write_state(root, state)
+    if (pr_num) {
+      post_phase_comment(pr_num, { phase: "test", status: "completed", duration_ms: Date.now() - phase_start.test, artifacts: [], summary: "3×3 narrowing complete — all tests passing", error: null })
+      update_pipeline_phase(pr_num, "build", "test")
+    }
   }
 
   if (interactive && test_code === 0) {
@@ -277,27 +330,42 @@ export async function main(argv: string[]): Promise<number> {
 
   state = update_state(state, "build", "in_progress")
   write_state(root, state)
+  if (pr_num) update_pipeline_phase(pr_num, "build")
+  phase_start.build = Date.now()
 
   process.stderr.write(`\n=== phase 4: build ===\n`)
   const build_code = await run_build_phase(root, { max_iter, interactive })
   if (build_code !== 0) {
     state = update_state(state, "build", "failed")
     write_state(root, state)
+    if (pr_num) {
+      post_phase_comment(pr_num, { phase: "build", status: "failed", duration_ms: Date.now() - phase_start.build, artifacts: [], summary: "", error: "build phase exited " + build_code })
+      close_pipeline_pr(pr_num, "pipeline failed at build phase", false)
+    }
     return 1
   }
 
   state = update_state(state, "build", "completed")
   write_state(root, state)
+  if (pr_num) {
+    post_phase_comment(pr_num, { phase: "build", status: "completed", duration_ms: Date.now() - phase_start.build, artifacts: [], summary: "implement + verify + retro + ruminate complete", error: null })
+    update_pipeline_phase(pr_num, "build", "build")
+  }
 
   // -- done --
+
+  const total_ms = Date.now() - (phase_start.spec || phase_start.plan || Date.now())
+  const total_s = (total_ms / 1000).toFixed(0)
 
   if (warnings.length > 0) {
     process.stderr.write(`\n[bny hop] complete with warnings: ${warnings.join(", ")}\n`)
     process.stderr.write(`  ${label}\n`)
+    if (pr_num) close_pipeline_pr(pr_num, `pipeline complete with warnings (${warnings.join(", ")}). duration: ${total_s}s`, true)
     return 2
   }
 
   process.stderr.write(`\n[bny hop] complete: ${label}\n`)
+  if (pr_num) close_pipeline_pr(pr_num, `pipeline complete. duration: ${total_s}s`, true)
   return 0
 }
 
