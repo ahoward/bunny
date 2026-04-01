@@ -1,5 +1,7 @@
 # Roadmap
 
+*This is the development roadmap for the bunny CLI tool itself. For the roadmap of a project being built with bunny, see `bny/roadmap.md`.*
+
 ## Next
 
 - [ ] P1: `bny next` output is a wall of text — should be quiet progress lines on stderr, full JSON to a log file

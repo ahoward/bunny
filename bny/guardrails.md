@@ -1,6 +1,12 @@
 # Guardrails
 
-Machine-readable constraints for autonomous agents. Source of truth: `guardrails.json`.
+Machine-readable constraints for autonomous agents.
+
+**Source of truth: `bny/guardrails.json`** (created by `bny init` in target projects).
+
+This markdown file is a human-readable summary. Agents must read and enforce `guardrails.json`, not this file.
+
+## Categories
 
 - **protected_files** — agents must never modify these without human approval
 - **protected_patterns** — glob patterns for files that must not be deleted

@@ -2,6 +2,8 @@
 
 each demo was built from a single sentence. zero human intervention.
 
+*prerequisites: `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` must be set in your environment. see the main [README](../README.md#prerequisites) for full requirements.*
+
 ## three experiment types
 
 ### quick experiments (Bun/TypeScript)
@@ -17,7 +19,7 @@ each demo was built from a single sentence. zero human intervention.
 
 one command per project. seed → digest → storm → build → test. ~15 minutes each.
 
-### SaaS discovery (Bun/TypeScript, heavy brane)
+### SaaS discovery (Bun/TypeScript, deeper knowledge graph usage)
 
 ```bash
 ./demos/run-saas-experiment waitlist-api "a product launch waitlist API with referral tracking"
@@ -25,13 +27,13 @@ one command per project. seed → digest → storm → build → test. ~15 minut
 
 research → brainstorm → autonomous loop → propose → build. exercises the brane more deeply.
 
-### Rails experiment (Ruby/Rails, heaviest brane)
+### Rails experiment (Ruby/Rails, full knowledge graph pipeline)
 
 ```bash
 ./demos/run-rails-experiment
 ```
 
-the showcase. bootstraps a Rails API project, then runs **5 brane operations** (3 storms + autonomous research loop + enhance) before writing any code. proves language-agnostic claims and demonstrates knowledge accumulation across the full pipeline. ~87 minutes. see [event-rsvp/README.md](event-rsvp/README.md) for the full writeup.
+the showcase. bootstraps a Rails API project, then runs **5 knowledge graph operations** (3 storms + autonomous research loop + enhance) before writing any code. proves language-agnostic claims and demonstrates knowledge accumulation across the full pipeline. ~87 minutes. see [event-rsvp/README.md](event-rsvp/README.md) for the full writeup.
 
 ## what happens inside
 
@@ -40,7 +42,7 @@ the showcase. bootstraps a Rails API project, then runs **5 brane operations** (
 1. `bny init` — scaffold dev scripts and agent config
 2. `bny digest seed.md` — feed the idea into the brane
 3. `bny brane storm` + `bny brane ask` — brainstorm and query
-4. `bny build --yes` — the dark factory: specify → challenge → plan → tasks → narrow[1→2→3] → verify → ruminate
+4. `bny hop --yes` — the full pipeline: spec → plan → test (3×3 narrowing) → build (implement + verify + retro + ruminate)
 5. `./dev/test` — run the generated tests
 
 **rails experiment** adds before step 4:

@@ -1,8 +1,10 @@
 # Bunny - Agent Protocol
 
+*This file is for AI agents (Claude, Gemini, etc.) working inside a bunny-managed project. For human documentation, see [README.md](README.md).*
+
 ## What This Is
 
-Bunny is a Bun + TypeScript CLI that manages a persistent knowledge graph and build factory for software projects. Auto-initializes on first use — no setup required.
+Bunny is a Bun + TypeScript CLI that coordinates adversarial LLMs to build and test software. It manages a persistent knowledge graph and build pipeline. Auto-initializes on first use.
 
 ## TL;DR
 
@@ -38,7 +40,7 @@ All scripts return structured output (Result envelope or exit codes). Parse them
 
 ### Guardrails
 
-Read `bny/guardrails.md` before starting work. It defines:
+Read `bny/guardrails.json` before starting work. It defines:
 - **protected_files** — never modify without human approval
 - **blast_radius** — max files/lines per PR, dependency rules
 - **forbidden_actions** — never do these autonomously
@@ -132,5 +134,5 @@ dev/              # dev tooling (shebang, chmod +x, per-project customizable)
 - Skip Gemini review
 - Change tests after review without human approval
 - Commit without running `./dev/post_flight`
-- Ignore `bny/guardrails.md` constraints
+- Ignore `bny/guardrails.json` constraints
 - Modify protected files without human approval

@@ -6,7 +6,7 @@
   <em>"why are you wearing that stupid man suit?"</em>
 </p>
 
-a dark factory for solo developers. two adversarial AIs, one pipeline, a knowledge graph that compounds.
+an autonomous build system for solo developers. two adversarial LLMs (Claude writes code, Gemini writes tests to break it), one pipeline, and a persistent knowledge graph that compounds across builds.
 
 ```
 bny hop "add user auth"         # spec → plan → test → build
@@ -17,12 +17,12 @@ bny brane storm "topic"         # brainstorm against it
 bny brane tldr                  # what does it know?
 ```
 
-auto-initializes. no setup required.
+auto-initializes on first `bny` command. no explicit setup required.
 
 
 ## how it works
 
-gemini writes tests to break things. claude writes code to survive. neither sees the other's prompt.
+gemini writes tests to break things. claude writes code to survive them. neither sees the other's prompt.
 
 ```
 bny hop "description"
@@ -36,29 +36,45 @@ bny hop "description"
 code ships when claude beats gemini's tests. then the graph learns.
 
 
+## prerequisites
+
+- [bun](https://bun.sh) >= 1.1.0
+- [claude CLI](https://docs.anthropic.com/en/docs/claude-code) (Anthropic)
+- [gemini CLI](https://github.com/google-gemini/gemini-cli) (Google)
+- `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` in your environment
+
+
 ## install
 
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-export GEMINI_API_KEY="..."
-
-cd my-project
-curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
-
-bny hop "add rate limiting"
-```
-
-or from source:
+from source:
 
 ```bash
 git clone https://github.com/ahoward/bunny.git && cd bunny
 ./dev/setup
 ```
 
+or via the install script:
 
-## the knowledge graph
+```bash
+curl -fsSL https://raw.githubusercontent.com/ahoward/bunny/main/install.sh | bash
+```
 
-every build feeds it. every build reads it. the tenth build knows what the first nine learned.
+then add bunny's `bin/` to your PATH (or symlink `bin/bny` somewhere in your PATH):
+
+```bash
+export PATH="$PWD/bin:$PATH"  # or add to your shell profile
+```
+
+now, in any project directory:
+
+```bash
+bny hop "add rate limiting"
+```
+
+
+## the knowledge graph (brane)
+
+the "brane" is a local file-based knowledge graph stored in `bny/brane/`. when you `digest` files, bunny extracts structure and context, storing them as markdown nodes that get injected into LLM prompts during builds. every build feeds it. every build reads it. the tenth build knows what the first nine learned.
 
 ```bash
 bny digest README.md docs/ src/            # ingest anything
@@ -96,6 +112,21 @@ single sentence in, tested code out, zero human intervention:
 | "a cron expression parser that computes the next N scheduled times" | 12 | clean |
 
 see [demos/](demos/)
+
+
+## how is this different
+
+most AI coding tools are either cooperative multi-agent systems (MetaGPT, ChatDev), human-in-the-loop pair programmers (Aider, Cursor), or cloud-hosted autonomous agents (Devin, Replit Agent). bunny is none of these.
+
+| approach | examples | bunny's difference |
+|----------|----------|--------------------|
+| cooperative multi-agent | MetaGPT, ChatDev | agents collaborate — bunny's agents fight. gemini tries to break what claude builds. |
+| pair programmer | Aider, Cursor, Cline | human stays in the loop — bunny runs unattended. |
+| cloud autonomous agent | Devin, Factory.ai, Replit Agent | SaaS, team-oriented — bunny is local CLI, solo-developer, runs on your machine. |
+| AI test generation | Qodo (CodiumAI) | generates tests only — bunny generates tests *and* code *and* verifies adversarially. |
+| research | AgentCoder, Reflexion | papers, not tools — bunny ships. |
+
+the specific combination — adversarial multi-LLM, phased pipeline, 3×3 narrowing, persistent knowledge graph, local-first CLI — is unoccupied.
 
 
 ## commands
@@ -156,7 +187,13 @@ bny map                         # structural codebase map (tree-sitter)
 bun. typescript. tree-sitter. no frameworks.
 
 
+## status
+
+v0.0.1 — working but early. expect sharp edges.
+
+
 ## links
 
-- [AGENTS.md](AGENTS.md) — agent protocol
-- [demos/](demos/) — complete projects from a single sentence
+- [AGENTS.md](AGENTS.md) — agent protocol (also symlinked as CLAUDE.md and GEMINI.md)
+- [demos/](demos/) — complete projects built from a single sentence
+- [ROADMAP.md](ROADMAP.md) — bunny CLI development roadmap
